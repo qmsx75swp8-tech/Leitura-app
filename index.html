@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Leituras</title>
+<meta name="application-name" content="Leituras">
+<meta name="description" content="O teu diario de leitura pessoal">
+<meta name="theme-color" content="#8B5E3C" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1C1A16" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Leituras">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%238B5E3C'/%3E%3Ctext y='.85em' font-size='72' x='10'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%238B5E3C'/%3E%3Ctext y='.85em' font-size='120' x='15'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+
+</head>
+<body>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F4EE;--surface:#FFFFFF;--surface2:#F0EDE6;--surface3:#E8E4DC;
+  --text:#1A1714;--text2:#6B6560;--text3:#A09890;
+  --accent:#8B5E3C;--accent-light:#F5EDE3;--accent-mid:#C4956A;--accent-dark:#6B4528;
+  --border:#E2DDD6;--danger:#C0392B;--success:#2E7D52;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+  --nav-h:52px;
+}
+[data-theme=dark]{
+  --bg:#111009;--surface:#1C1A16;--surface2:#242118;--surface3:#2E2B24;
+  --text:#F0EDE6;--text2:#9E9890;--text3:#5C5850;
+  --accent:#C4956A;--accent-light:#2A2218;--accent-mid:#C4956A;--accent-dark:#E0B990;
+  --border:#302D26;--danger:#E05252;--success:#4CAF7D;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1rem;height:var(--nav-h);gap:0;position:sticky;top:0;z-index:100;transition:background .25s,border .25s}
+.nav-logo{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--accent);margin-right:auto;white-space:nowrap}
+.nav-tab{padding:.5rem .85rem;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;height:var(--nav-h);display:flex;align-items:center;transition:all .15s;white-space:nowrap}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tab:hover:not(.active){color:var(--text)}
+.theme-btn{margin-left:.5rem;padding:.4rem .6rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;white-space:nowrap}
+.theme-btn:hover{background:var(--surface3);color:var(--text)}
+.user-btn{margin-left:.35rem;padding:.4rem .6rem;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;color:var(--accent);transition:all .15s;white-space:nowrap;font-weight:500}
+.user-btn:hover{background:var(--accent);color:#fff}
+.view{display:none;padding:1.5rem;max-width:860px;margin:0 auto;width:100%}
+.view.active{display:block}
+h2{font-family:'Lora',serif;font-size:21px;font-weight:600;margin-bottom:1.25rem;color:var(--text)}
+h3{font-size:15px;font-weight:500;margin-bottom:.5rem;color:var(--text)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:background .25s,border .25s}
+label{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-bottom:.3rem;letter-spacing:.05em;text-transform:uppercase}
+input,select,textarea{width:100%;padding:.55rem .8rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface2);outline:none;transition:border .15s,background .25s,color .25s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent-mid)}
+textarea{resize:vertical;min-height:76px;line-height:1.6}
+select option{background:var(--surface)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
+.fr1{grid-template-columns:1fr;margin-bottom:.85rem}
+.btn{padding:.5rem 1rem;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent-dark)}
+.btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-g:hover{background:var(--surface2);color:var(--text)}
+.btn-d{background:transparent;color:var(--danger);border:1px solid var(--danger)}.btn-d:hover{opacity:.8}
+.btn-s{padding:.35rem .7rem;font-size:12px}
+.bgrp{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.modal-wrap.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius);width:100%;max-width:520px;padding:1.5rem;margin:auto;transition:background .25s}
+.modal-hd{font-family:'Lora',serif;font-size:17px;font-weight:600;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+.xbtn{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1;padding:.25rem}.xbtn:hover{color:var(--text)}
+.book-card{display:grid;grid-template-columns:auto 1fr auto;gap:.85rem;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1.1rem;cursor:pointer;transition:all .15s;margin-bottom:.6rem}
+.book-card:hover{border-color:var(--accent-mid)}
+.bspine{width:46px;height:62px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:16px;font-weight:600;color:#fff;flex-shrink:0}
+.binfo{min-width:0}
+.btitle{font-family:'Lora',serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.bauthor{font-size:12px;color:var(--text2);margin-top:1px}
+.bmeta{display:flex;gap:.4rem;margin-top:.4rem;flex-wrap:wrap}
+.bdg{font-size:11px;padding:2px 7px;border-radius:20px;font-weight:500}
+.bdg-r{background:#FFF3E0;color:#BF360C}[data-theme=dark] .bdg-r{background:#2A1A0A;color:#FFAB76}
+.bdg-d{background:#E8F5E9;color:#1B5E20}[data-theme=dark] .bdg-d{background:#0A1F0C;color:#81C784}
+.bdg-w{background:#EDE7F6;color:#311B92}[data-theme=dark] .bdg-w{background:#140E2A;color:#B39DDB}
+.bdg-p{background:var(--surface2);color:var(--text2)}
+.pbar{height:3px;background:var(--border);border-radius:2px;margin-top:.4rem}
+.pfill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+.stats-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.25rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.85rem;text-align:center;transition:background .25s}
+.stat-n{font-family:'Lora',serif;font-size:26px;font-weight:600;color:var(--accent);display:block}
+.stat-l{font-size:11px;color:var(--text2);margin-top:2px}
+.sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.detail-hd{display:flex;align-items:flex-start;gap:1.1rem;margin-bottom:1.25rem}
+.dspine{width:68px;height:90px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;flex-shrink:0}
+.dtabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.25rem;gap:0;overflow-x:auto}
+.dtab{padding:.55rem .9rem;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.dtab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.dsec{display:none}.dsec.active{display:block}
+.pg-tracker{display:flex;align-items:center;gap:.85rem;padding:.9rem 1rem;background:var(--accent-light);border-radius:var(--radius-sm);margin-bottom:1rem;flex-wrap:wrap;transition:background .25s}
+.note-item{padding:.8rem 1rem;border-left:3px solid var(--accent-mid);background:var(--accent-light);border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:.65rem;transition:background .25s}
+.note-meta{font-size:11px;color:var(--text3);margin-bottom:.3rem;display:flex;gap:.75rem;flex-wrap:wrap}
+.note-txt{font-size:14px;line-height:1.6;color:var(--text)}
+.note-actions{margin-top:.4rem;display:flex;gap:.4rem}
+.chip-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
+.chip{padding:.28rem .65rem;border-radius:20px;font-size:12px;border:1px solid var(--border);cursor:pointer;transition:all .12s;background:var(--surface);color:var(--text2)}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip:hover:not(.active){background:var(--surface2)}
+.sumbox{background:var(--surface2);border-radius:var(--radius-sm);padding:1.1rem;font-size:14px;line-height:1.7;color:var(--text);border-left:3px solid var(--accent-mid);white-space:pre-wrap;min-height:80px;transition:background .25s}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--text3)}
+.empty-ico{font-size:40px;margin-bottom:.75rem;opacity:.4}
+.empty p{font-size:13px;line-height:1.7}
+.dict-search-row{display:flex;gap:.6rem;margin-bottom:1.1rem}
+.dict-search-row input{flex:1}
+.word-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.9rem 1rem;margin-bottom:.6rem;transition:background .25s}
+.word-title{font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--accent);margin-bottom:.3rem}
+.word-class{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem}
+.word-def{font-size:13px;line-height:1.65;color:var(--text)}
+.word-book{font-size:11px;color:var(--text3);margin-top:.4rem}
+.word-meta{display:flex;justify-content:space-between;align-items:flex-start}
+.word-date{font-size:11px;color:var(--text3)}
+.infopedia-note{font-size:12px;color:var(--text3);margin-top:.5rem;line-height:1.5}
+.infopedia-note a{color:var(--accent-mid);text-decoration:none}
+.infopedia-note a:hover{text-decoration:underline}
+
+/* Login screen */
+.login-wrap{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;padding:1.5rem;transition:background .25s}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:400px;padding:2rem;text-align:center}
+.login-logo{font-family:'Lora',serif;font-size:28px;font-weight:600;color:var(--accent);margin-bottom:.25rem}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:1.75rem;line-height:1.5}
+.login-box label{text-align:left}
+.login-box input{margin-bottom:.85rem}
+.login-info{font-size:11px;color:var(--text3);margin-top:.85rem;line-height:1.6;background:var(--surface2);border-radius:var(--radius-sm);padding:.65rem .85rem;text-align:left}
+.session-badge{background:var(--accent-light);border:1px solid var(--border);border-radius:var(--radius-xs);padding:.25rem .55rem;font-size:11px;color:var(--text2);display:inline-flex;align-items:center;gap:.3rem}
+
+/* Sync / Export section */
+.sync-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.sync-box h3{margin-bottom:.65rem}
+.sync-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem}
+.sync-key{font-family:monospace;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:.3rem .6rem;color:var(--text2);word-break:break-all;flex:1}
+
+@media(max-width:520px){
+  .fr{grid-template-columns:1fr}
+  .stats-g{grid-template-columns:repeat(2,1fr)}
+  .nav-tab{padding:.5rem .55rem;font-size:11px}
+  .nav-logo{font-size:14px}
+  .user-btn{font-size:11px;padding:.35rem .45rem}
+}
+
+/* PWA & v4 additions */
+.btn-ai{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;border:none}
+.btn-ai:hover{opacity:.9}
+.ai-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;background:linear-gradient(135deg,#7C3AED22,#A855F722);border:1px solid #7C3AED44;border-radius:20px;padding:.2rem .6rem;color:#7C3AED;margin-bottom:.5rem}
+[data-theme=dark] .ai-badge{color:#A855F7}
+.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid #A855F744;border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-indicator{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;padding:.2rem .5rem;border-radius:20px;margin-left:.4rem}
+.sync-ok{background:#E8F5E9;color:#1B5E20}[data-theme=dark] .sync-ok{background:#0A1F0C;color:#81C784}
+.sync-err{background:#FFF3E0;color:#BF360C}[data-theme=dark] .sync-err{background:#2A1A0A;color:#FFAB76}
+.sync-pending{background:var(--surface2);color:var(--text3)}
+.install-banner{background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;font-size:13px;color:var(--accent)}
+.install-banner-text{flex:1;line-height:1.4}
+.install-banner strong{display:block;font-weight:600;margin-bottom:.1rem}
+/* Book covers */
+.bspine{overflow:hidden}
+.bspine img,.dspine img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
+.cover-search-row{display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;background:var(--accent-light);border-radius:var(--radius-sm);margin-bottom:.75rem;font-size:12px;color:var(--text2);transition:background .25s}
+.cover-preview-img{width:36px;height:48px;border-radius:4px;object-fit:cover;display:none;border:1px solid var(--border);flex-shrink:0}
+.cover-preview-img.loaded{display:block}
+
+</style>
+
+<!-- LOGIN SCREEN -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">📚 Leituras</div>
+    <div class="login-sub">O teu diário de leitura pessoal.<br>Usa o mesmo utilizador em vários dispositivos.</div>
+
+    <label>Nome de utilizador</label>
+    <input id="login-user" placeholder="ex: joana, pedro123..." autocomplete="username" autocapitalize="none">
+    <label>Código de sessão</label>
+    <input id="login-pass" type="password" placeholder="Cria ou introduz o teu código" autocomplete="current-password">
+    <button class="btn btn-p" style="width:100%;margin-top:.25rem" onclick="doLogin()">Entrar</button>
+    <div id="login-status" style="min-height:1.2rem;font-size:12px;margin-top:.4rem;color:var(--text2);text-align:center"></div>
+    <div class="login-info">
+      <strong>Como funciona?</strong><br>
+      Se é a primeira vez, escolhe um nome e um código — a tua conta é criada automaticamente.<br>
+      Para aceder noutro dispositivo, usa exatamente o mesmo nome e código.<br>
+      Os dados são guardados na cloud e sincronizados em todos os dispositivos. Usa o mesmo nome e código em qualquer dispositivo.
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none">
+
+<nav class="nav">
+  <span class="nav-logo">📚 Leituras</span>
+  <div class="nav-tab active" onclick="showView('biblioteca')">Biblioteca</div>
+  <div class="nav-tab" onclick="showView('a-ler')">A ler</div>
+  <div class="nav-tab" onclick="showView('lidos')">Lidos</div>
+  <div class="nav-tab" onclick="showView('quero-ler')">Quero ler</div>
+  <button class="user-btn" onclick="showView('conta')" id="user-display-btn" title="A minha conta">👤 —</button>
+  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙 Noturno</button>
+</nav>
+
+<div class="view active" id="view-biblioteca">
+  <div id="install-banner-container"></div>
+  <div class="sec-hd"><h2>A minha biblioteca</h2><button class="btn btn-p" onclick="openM('m-add')">+ Adicionar livro</button></div>
+  <div class="stats-g" id="stats-g"></div>
+  <div id="list-biblioteca"></div>
+</div>
+
+<div class="view" id="view-a-ler"><h2>A ler agora</h2><div id="list-a-ler"></div></div>
+<div class="view" id="view-lidos"><h2>Livros lidos</h2><div id="list-lidos"></div></div>
+<div class="view" id="view-quero-ler"><h2>Quero ler</h2><div id="list-quero-ler"></div></div>
+
+<div class="view" id="view-detail">
+  <button class="btn btn-g btn-s" onclick="goBack()" style="margin-bottom:1rem">← Voltar</button>
+  <div id="detail-content"></div>
+</div>
+
+<div class="view" id="view-conta">
+  <h2>A minha conta</h2>
+  <div class="sync-box">
+    <h3>Sessão ativa</h3>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.65rem">
+      <span style="font-size:13px;color:var(--text2)">Utilizador: <strong id="acc-user"></strong></span>
+      <span id="sync-status-badge" class="sync-indicator sync-pending">⏳ A sincronizar...</span>
+    </div>
+    <div style="font-size:12px;color:var(--text3);line-height:1.6;background:var(--surface2);border-radius:var(--radius-sm);padding:.65rem .85rem;margin-bottom:1rem">
+      Os teus dados estão guardados na cloud e sincronizam automaticamente em todos os dispositivos. Basta iniciar sessão com o mesmo utilizador e código.
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-p btn-s" onclick="forceSyncToCloud()">☁️ Sincronizar agora</button>
+      <button class="btn btn-g btn-s" onclick="exportData()">⬇ Exportar (JSON)</button>
+      <button class="btn btn-g btn-s" onclick="document.getElementById('import-file').click()">⬆ Importar</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+  <div class="sync-box">
+    <h3>Instalar a app</h3>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:.75rem;line-height:1.6">Instala a Leituras no teu dispositivo para acesso direto como uma app nativa.</div>
+    <div style="font-size:13px;color:var(--text2);line-height:2">
+      <strong>📱 iPhone/iPad:</strong> Safari → Partilhar → "Adicionar ao ecrã principal"<br>
+      <strong>🤖 Android:</strong> Chrome → Menu ⋮ → "Instalar app" ou "Adicionar ao ecrã inicial"<br>
+      <strong>💻 Windows/Mac:</strong> Barra de endereço → ícone ⊕ Instalar
+    </div>
+    <div id="pwa-install-btn-container" style="margin-top:.75rem"></div>
+  </div>
+  <div style="margin-top:1.5rem">
+    <button class="btn btn-d btn-s" onclick="confirmLogout()">Terminar sessão</button>
+  </div>
+</div>
+
+</div>
+
+<!-- MODALS -->
+<div class="modal-wrap" id="m-add">
+<div class="modal">
+  <div class="modal-hd">Adicionar livro <button class="xbtn" onclick="closeM('m-add')">✕</button></div>
+  <div class="fr"><div><label>Título</label><input id="f-title" placeholder="Título do livro" oninput="debounceSearchCover()"></div><div><label>Autor</label><input id="f-author" placeholder="Nome do autor" oninput="debounceSearchCover()"></div></div>
+  <div id="cover-search-row" class="cover-search-row" style="display:none">
+    <img id="cover-preview-img" class="cover-preview-img" alt="Capa">
+    <span id="cover-search-text" style="flex:1">A pesquisar capa...</span>
+  </div>
+  <div class="fr"><div><label>Nº de páginas</label><input id="f-pages" type="number" placeholder="ex: 320"></div><div><label>Estado</label><select id="f-status"><option value="reading">A ler</option><option value="done">Lido</option><option value="want">Quero ler</option></select></div></div>
+  <div class="fr fr1"><label>Capítulos (separados por vírgula)</label><input id="f-chapters" placeholder="ex: Parte 1, Parte 2, Epílogo"></div>
+  <div class="fr fr1"><label>Notas iniciais / sinopse pessoal</label><textarea id="f-synopsis" placeholder="Breve descrição ou porquê de querer ler..."></textarea></div>
+  <div class="bgrp"><button class="btn btn-g" onclick="closeM('m-add')">Cancelar</button><button class="btn btn-p" onclick="addBook()">Guardar livro</button></div>
+</div></div>
+
+<div class="modal-wrap" id="m-note">
+<div class="modal">
+  <div class="modal-hd">Nova nota <button class="xbtn" onclick="closeM('m-note')">✕</button></div>
+  <div class="fr"><div><label>Página</label><input id="n-page" type="number" placeholder="ex: 47"></div><div><label>Capítulo</label><select id="n-chapter"></select></div></div>
+  <div class="fr fr1"><label>Nota</label><textarea id="n-text" placeholder="Escreve aqui a tua nota, reflexão ou citação..."></textarea></div>
+  <div class="bgrp"><button class="btn btn-g" onclick="closeM('m-note')">Cancelar</button><button class="btn btn-p" onclick="saveNote()">Guardar nota</button></div>
+</div></div>
+
+<div class="modal-wrap" id="m-edit-note">
+<div class="modal">
+  <div class="modal-hd">Editar nota <button class="xbtn" onclick="closeM('m-edit-note')">✕</button></div>
+  <div class="fr"><div><label>Página</label><input id="en-page" type="number"></div><div><label>Capítulo</label><select id="en-chapter"></select></div></div>
+  <div class="fr fr1"><label>Nota</label><textarea id="en-text"></textarea></div>
+  <div class="bgrp"><button class="btn btn-g" onclick="closeM('m-edit-note')">Cancelar</button><button class="btn btn-p" onclick="updateNote()">Guardar alterações</button></div>
+</div></div>
+
+<script>
+var COLORS=['#8B5E3C','#4A7C59','#3D5A8A','#7B4F8E','#8E4F4F','#4F7E7E','#7A6E3A','#5C6E4F','#6E4F5C'];
+var currentUser=null,currentRawPass='',currentStorageKey=null;
+var db={books:[],words:[],version:4};
+var cBook=null,cNote=null;
+var syncTimeout=null,pendingCoverUrl=null,coverSearchTimer=null;
+
+// Storage key functions
+function makeStorageKey(user,pass){
+  var raw='leituras:'+user.toLowerCase().trim()+':'+pass;
+  var h=0;
+  for(var i=0;i<raw.length;i++){h=((h<<5)-h)+raw.charCodeAt(i);h|=0;}
+  return 'leituras-v4:'+Math.abs(h).toString(36)+':'+user.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
+}
+function makeCloudKey(user,pass){
+  var raw='cloud:'+user.toLowerCase().trim()+':'+pass;
+  var h=5381;
+  for(var i=0;i<raw.length;i++){h=((h<<5)+h)+raw.charCodeAt(i);h|=0;}
+  return 'leituras_user_'+Math.abs(h).toString(36);
+}
+
+// Cloud storage (safe - never throws)
+function cloudSave(data){
+  if(!currentStorageKey)return;
+  try{localStorage.setItem(currentStorageKey,JSON.stringify(data));}catch(e){}
+  updateSyncBadge('local');
+  try{
+    if(typeof window.storage!=='undefined'&&window.storage&&window.storage.set){
+      window.storage.set(makeCloudKey(currentUser,currentRawPass),JSON.stringify(data))
+        .then(function(){updateSyncBadge('ok');})
+        .catch(function(){});
+    }
+  }catch(e){}
+}
+function cloudLoadLocal(user,pass){
+  var sk=makeStorageKey(user,pass);
+  try{var s=localStorage.getItem(sk);return s?JSON.parse(s):null;}catch(e){return null;}
+}
+function cloudLoadRemote(user,pass,callback){
+  var ck=makeCloudKey(user,pass);
+  var sk=makeStorageKey(user,pass);
+  try{
+    if(typeof window.storage!=='undefined'&&window.storage&&window.storage.get){
+      var p=window.storage.get(ck);
+      var timer=setTimeout(function(){callback(null);},2500);
+      p.then(function(r){
+        clearTimeout(timer);
+        if(r&&r.value){
+          var d=JSON.parse(r.value);
+          try{localStorage.setItem(sk,JSON.stringify(d));}catch(e){}
+          callback(d);
+        } else {callback(null);}
+      }).catch(function(){clearTimeout(timer);callback(null);});
+    } else {callback(null);}
+  }catch(e){callback(null);}
+}
+
+function updateSyncBadge(status){
+  var b=document.getElementById('sync-status-badge');
+  if(!b)return;
+  if(status==='ok'){b.className='sync-indicator sync-ok';b.textContent='[cloud] Sincronizado';}
+  else if(status==='err'){b.className='sync-indicator sync-err';b.textContent='Erro de sync';}
+  else if(status==='local'){b.className='sync-indicator sync-pending';b.textContent='Guardado localmente';}
+  else{b.className='sync-indicator sync-pending';b.textContent='A sincronizar...';}
+}
+
+// Login
+function doLogin(){
+  var user=document.getElementById('login-user').value.trim();
+  var pass=document.getElementById('login-pass').value;
+  var statusEl=document.getElementById('login-status');
+  if(!user){alert('Introduz um nome de utilizador');return;}
+  if(!pass||pass.length<3){alert('O codigo deve ter pelo menos 3 caracteres');return;}
+  if(statusEl)statusEl.textContent='A carregar os teus dados...';
+  currentUser=user;currentRawPass=pass;currentStorageKey=makeStorageKey(user,pass);
+  // Load local first (instant), then try cloud
+  var localData=cloudLoadLocal(user,pass);
+  if(localData){db=localData;if(!db.words)db.words=[];if(!db.version)db.version=4;}
+  else{db={books:[],words:[],version:4};}
+  // Show app immediately with local data
+  if(statusEl)statusEl.textContent='';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('user-display-btn').textContent='Conta: '+user;
+  document.getElementById('acc-user').textContent=user;
+  try{localStorage.setItem('leituras-last-user',user);}catch(e){}
+  renderAll();updateSyncBadge('local');
+  // Then try cloud in background
+  cloudLoadRemote(user,pass,function(remoteData){
+    if(remoteData&&remoteData.books){
+      db=remoteData;if(!db.words)db.words=[];
+      renderAll();updateSyncBadge('ok');
+    }else{
+      cloudSave(db);
+    }
+  });
+}
+
+function confirmLogout(){
+  if(!confirm('Terminar sessao? Os dados ficam guardados.'))return;
+  currentUser=null;currentRawPass='';currentStorageKey=null;
+  db={books:[],words:[],version:4};
+  try{localStorage.removeItem('leituras-last-user');}catch(e){}
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+}
+function save(){
+  if(!currentStorageKey)return;
+  try{localStorage.setItem(currentStorageKey,JSON.stringify(db));}catch(e){}
+  if(syncTimeout)clearTimeout(syncTimeout);
+  updateSyncBadge('pending');
+  syncTimeout=setTimeout(function(){cloudSave(db);},1500);
+}
+function forceSyncToCloud(){
+  updateSyncBadge('pending');
+  cloudSave(db);
+  setTimeout(function(){alert('Dados guardados!');},500);
+}
+function exportData(){
+  var blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='leituras-'+(currentUser||'dados')+'-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(url);
+}
+function importData(e){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var imported=JSON.parse(ev.target.result);
+      if(!imported.books){alert('Ficheiro invalido');return;}
+      if(!confirm('Importar '+imported.books.length+' livro(s)?'))return;
+      db=imported;if(!db.words)db.words=[];
+      save();renderAll();showView('biblioteca');alert('Importado!');
+    }catch(err){alert('Erro ao ler o ficheiro.');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+// Book covers via Open Library
+function fetchBookCover(title,author,callback){
+  if(!title){callback(null);return;}
+  var q=encodeURIComponent((title+' '+(author||'')).trim());
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET','https://openlibrary.org/search.json?q='+q+'&limit=5&fields=cover_i',true);
+  xhr.timeout=5000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var hit=d.docs&&d.docs.filter(function(x){return x.cover_i;})[0];
+      callback(hit?'https://covers.openlibrary.org/b/id/'+hit.cover_i+'-M.jpg':null);
+    }catch(e){callback(null);}
+  };
+  xhr.onerror=function(){callback(null);};
+  xhr.ontimeout=function(){callback(null);};
+  xhr.send();
+}
+function debounceSearchCover(){
+  if(coverSearchTimer)clearTimeout(coverSearchTimer);
+  coverSearchTimer=setTimeout(searchCoverForForm,900);
+}
+function searchCoverForForm(){
+  var titleEl=document.getElementById('f-title');
+  var authorEl=document.getElementById('f-author');
+  var title=titleEl?titleEl.value.trim():'';
+  var author=authorEl?authorEl.value.trim():'';
+  if(!title||title.length<2)return;
+  var row=document.getElementById('cover-search-row');
+  var txt=document.getElementById('cover-search-text');
+  var img=document.getElementById('cover-preview-img');
+  if(row)row.style.display='flex';
+  if(txt)txt.textContent='A pesquisar capa...';
+  if(img)img.classList.remove('loaded');
+  fetchBookCover(title,author,function(url){
+    pendingCoverUrl=url;
+    if(url&&img&&txt){
+      img.src=url;
+      img.onload=function(){img.classList.add('loaded');txt.textContent='Capa encontrada';};
+      img.onerror=function(){txt.textContent='Sem capa';pendingCoverUrl=null;};
+    }else if(txt){txt.textContent='Sem capa (usara cor)';}
+  });
+}
+
+// Theme
+function toggleTheme(){
+  var d=document.documentElement;
+  var isDark=d.getAttribute('data-theme')==='dark';
+  d.setAttribute('data-theme',isDark?'':'dark');
+  document.getElementById('theme-btn').textContent=isDark?'Noturno':'Dia';
+  try{localStorage.setItem('leituras-theme',isDark?'light':'dark');}catch(e){}
+}
+
+// Navigation
+function showView(v){
+  var views=document.querySelectorAll('.view');
+  for(var i=0;i<views.length;i++)views[i].classList.remove('active');
+  var tabs=document.querySelectorAll('.nav-tab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
+  var map={biblioteca:'view-biblioteca','a-ler':'view-a-ler',lidos:'view-lidos','quero-ler':'view-quero-ler',detail:'view-detail',conta:'view-conta'};
+  var el=document.getElementById(map[v]||'view-biblioteca');
+  if(el)el.classList.add('active');
+  var ti={biblioteca:0,'a-ler':1,lidos:2,'quero-ler':3};
+  if(ti[v]!==undefined&&tabs[ti[v]])tabs[ti[v]].classList.add('active');
+  if(v!=='detail')renderAll();
+}
+function openM(id){var el=document.getElementById(id);if(el)el.classList.add('open');}
+function closeM(id){var el=document.getElementById(id);if(el)el.classList.remove('open');}
+
+// Helpers
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function colorFor(i){return COLORS[i%COLORS.length];}
+function initials(t){
+  var words=(t||'?').split(' ').slice(0,2);
+  var r='';for(var i=0;i<words.length;i++)if(words[i][0])r+=words[i][0];
+  return r.toUpperCase()||'?';
+}
+function renderSpine(b,i,large){
+  var color=colorFor(b.colorIdx!=null?b.colorIdx:i);
+  var cls=large?'dspine':'bspine';
+  var sty=large?'width:68px;height:90px;':'width:46px;height:62px;';
+  if(b.coverUrl){
+    var ini=initials(b.title);
+    return '<div class="'+cls+'" style="'+sty+'"><img src="'+b.coverUrl+'" alt="Capa" loading="lazy" onerror="this.parentElement.style.background=\''+color+'\';this.parentElement.innerHTML=\''+ini+'\';this.remove()"></div>';
+  }
+  return '<div class="'+cls+'" style="'+sty+'background:'+color+'">'+initials(b.title)+'</div>';
+}
+
+// Books
+function addBook(){
+  var title=document.getElementById('f-title').value.trim();
+  if(!title){alert('Titulo obrigatorio');return;}
+  var chapStr=document.getElementById('f-chapters').value;
+  var chapters=chapStr.split(',').map(function(c){return c.trim();}).filter(function(c){return c;});
+  var book={id:uid(),title:title,author:document.getElementById('f-author').value.trim(),
+    pages:parseInt(document.getElementById('f-pages').value)||0,
+    status:document.getElementById('f-status').value,currentPage:0,notes:[],summary:'',summaryByAI:false,
+    synopsis:document.getElementById('f-synopsis').value.trim(),
+    chapters:chapters.length?chapters:['Geral'],addedAt:Date.now(),colorIdx:db.books.length,
+    coverUrl:pendingCoverUrl||null};
+  db.books.push(book);
+  save();
+  ['f-title','f-author','f-pages','f-chapters','f-synopsis'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('f-status').value='reading';
+  pendingCoverUrl=null;
+  var row=document.getElementById('cover-search-row');if(row)row.style.display='none';
+  // Try to get cover
+  if(!book.coverUrl&&title){
+    fetchBookCover(title,book.author,function(url){
+      if(url){book.coverUrl=url;save();renderAll();}
+    });
+  }
+  closeM('m-add');renderAll();
+}
+
+function renderAll(){
+  var t=db.books.length,r=0,d=0;
+  for(var i=0;i<db.books.length;i++){
+    if(db.books[i].status==='reading')r++;
+    if(db.books[i].status==='done')d++;
+  }
+  document.getElementById('stats-g').innerHTML='<div class="stat"><span class="stat-n">'+t+'</span><div class="stat-l">Total</div></div><div class="stat"><span class="stat-n">'+r+'</span><div class="stat-l">A ler</div></div><div class="stat"><span class="stat-n">'+d+'</span><div class="stat-l">Lidos</div></div>';
+  renderList('list-biblioteca',db.books);
+  renderList('list-a-ler',db.books.filter(function(b){return b.status==='reading';}));
+  renderList('list-lidos',db.books.filter(function(b){return b.status==='done';}));
+  renderList('list-quero-ler',db.books.filter(function(b){return b.status==='want';}));
+}
+
+function renderList(cid,books){
+  var el=document.getElementById(cid);
+  if(!el)return;
+  if(!books.length){el.innerHTML='<div class="empty"><div class="empty-ico">&#128214;</div><p>Sem livros aqui ainda.</p></div>';return;}
+  var html='';
+  for(var i=0;i<books.length;i++){
+    var b=books[i];
+    var pct=b.pages?Math.round((b.currentPage/b.pages)*100):0;
+    var sb=b.status==='reading'?'<span class="bdg bdg-r">A ler</span>':b.status==='done'?'<span class="bdg bdg-d">Lido</span>':'<span class="bdg bdg-w">Quero ler</span>';
+    var nb=b.notes.length?'<span class="bdg bdg-p">'+b.notes.length+' nota'+(b.notes.length!==1?'s':'')+'</span>':'';
+    var pg=b.pages?'<span class="bdg bdg-p">p.'+b.currentPage+'/'+b.pages+'</span>':'';
+    var bar=b.pages&&b.status==='reading'?'<div class="pbar"><div class="pfill" style="width:'+pct+'%"></div></div>':'';
+    html+='<div class="book-card" onclick="openBook(\''+b.id+'\')">'+renderSpine(b,i,false)+'<div class="binfo"><div class="btitle">'+b.title+'</div><div class="bauthor">'+(b.author||'Autor desconhecido')+'</div><div class="bmeta">'+sb+pg+nb+'</div>'+bar+'</div><div style="display:flex;flex-direction:column;gap:.4rem;align-items:flex-end" onclick="event.stopPropagation()"><button class="btn btn-g btn-s" onclick="openBook(\''+b.id+'\')">Ver</button><button class="btn btn-d btn-s" onclick="delBook(\''+b.id+'\')">x</button></div></div>';
+  }
+  el.innerHTML=html;
+}
+
+function openBook(id){
+  cBook=id;
+  var b=db.books.filter(function(x){return x.id===id;})[0];
+  if(!b)return;
+  renderDetail(b);showView('detail');
+}
+function goBack(){showView('biblioteca');}
+
+function renderDetail(b){
+  var pct=b.pages?Math.round((b.currentPage/b.pages)*100):0;
+  var ci=b.colorIdx!=null?b.colorIdx:0;
+  var wc=db.words.filter(function(w){return w.bookId===b.id;}).length;
+  var sb=b.status==='reading'?'bdg-r':b.status==='done'?'bdg-d':'bdg-w';
+  var sl=b.status==='reading'?'A ler':b.status==='done'?'Lido':'Quero ler';
+  var html=renderSpine(b,ci,true);
+  html+='<div style="flex:1;min-width:0">';
+  html+='<div style="font-family:\'Lora\',serif;font-size:19px;font-weight:600;line-height:1.3;color:var(--text)">'+b.title+'</div>';
+  html+='<div style="color:var(--text2);margin-top:2px;font-size:13px">'+(b.author||'Autor desconhecido')+'</div>';
+  html+='<div class="bmeta" style="margin-top:.5rem"><span class="bdg '+sb+'">'+sl+'</span>'+(b.pages?'<span class="bdg bdg-p">'+b.pages+' pags.</span>':'')+(wc?'<span class="bdg bdg-p">'+wc+' palavra'+(wc!==1?'s':'')+'</span>':'')+'</div>';
+  html+='<div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">';
+  html+='<select onchange="changeStatus(\''+b.id+'\',this.value)" style="font-size:12px;padding:.28rem .55rem;width:auto">';
+  html+='<option value="reading"'+(b.status==='reading'?' selected':'')+'>A ler</option>';
+  html+='<option value="done"'+(b.status==='done'?' selected':'')+'>Lido</option>';
+  html+='<option value="want"'+(b.status==='want'?' selected':'')+'>Quero ler</option>';
+  html+='</select>';
+  html+='<button class="btn btn-g btn-s" onclick="refreshCover(\''+b.id+'\')" title="Atualizar capa">Capa</button>';
+  html+='</div></div>';
+  
+  var detailHtml='<div class="detail-hd">'+html+'</div>';
+  detailHtml+='<div class="dtabs"><div class="dtab active" onclick="switchTab(\'t-prog\',this)">Progresso</div><div class="dtab" onclick="switchTab(\'t-notes\',this)">Notas</div><div class="dtab" onclick="switchTab(\'t-words\',this)">Dicionario</div><div class="dtab" onclick="switchTab(\'t-sum\',this)">Resumo</div></div>';
+
+  // Progress tab
+  var prog='';
+  if(b.status!=='want'){
+    prog+='<div class="pg-tracker"><div><label>Pagina atual</label><div style="display:flex;align-items:center;gap:.4rem"><input type="number" id="pg-cur" value="'+b.currentPage+'" min="0" max="'+(b.pages||9999)+'" style="width:80px;font-size:17px;font-weight:600;text-align:center">'+(b.pages?'<span style="font-size:13px;color:var(--text2)">de '+b.pages+'</span>':'')+'</div></div>'+(b.pages?'<div style="flex:1"><div class="pbar" style="height:7px"><div class="pfill" style="width:'+pct+'%"></div></div><div style="font-size:12px;color:var(--text2);margin-top:.3rem">'+pct+'% concluido</div></div>':'')+'<button class="btn btn-p btn-s" onclick="savePage(\''+b.id+'\')">Guardar</button></div>';
+  }
+  prog+='<div class="card"><h3>Informacao</h3><table style="font-size:13px;width:100%">';
+  prog+='<tr><td style="color:var(--text2);padding:3px 0;width:110px">Titulo</td><td>'+b.title+'</td></tr>';
+  prog+='<tr><td style="color:var(--text2);padding:3px 0">Autor</td><td>'+(b.author||'-')+'</td></tr>';
+  prog+='<tr><td style="color:var(--text2);padding:3px 0">Paginas</td><td>'+(b.pages||'-')+'</td></tr>';
+  prog+='<tr><td style="color:var(--text2);padding:3px 0">Capitulos</td><td>'+b.chapters.join(', ')+'</td></tr>';
+  prog+='<tr><td style="color:var(--text2);padding:3px 0">Notas</td><td>'+b.notes.length+'</td></tr>';
+  prog+='<tr><td style="color:var(--text2);padding:3px 0">Palavras</td><td>'+wc+'</td></tr>';
+  prog+='</table>'+(b.synopsis?'<div style="margin-top:.7rem;padding:.7rem;background:var(--surface2);border-radius:var(--radius-sm);font-size:13px;line-height:1.6;color:var(--text2)">'+b.synopsis+'</div>':'')+'</div>';
+
+  detailHtml+='<div class="dsec active" id="t-prog">'+prog+'</div>';
+  detailHtml+='<div class="dsec" id="t-notes">'+renderNotesSection(b)+'</div>';
+  detailHtml+='<div class="dsec" id="t-words">'+renderDictSection(b)+'</div>';
+  detailHtml+='<div class="dsec" id="t-sum">'+renderSumSection(b)+'</div>';
+
+  document.getElementById('detail-content').innerHTML=detailHtml;
+}
+
+function refreshCover(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  if(!b)return;
+  fetchBookCover(b.title,b.author,function(url){
+    if(url){b.coverUrl=url;save();renderDetail(b);}
+    else{alert('Capa nao encontrada.');}
+  });
+}
+
+function switchTab(id,el){
+  var secs=document.querySelectorAll('.dsec');
+  for(var i=0;i<secs.length;i++)secs[i].classList.remove('active');
+  var tabs=document.querySelectorAll('.dtab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+
+// Notes
+function renderNotesSection(b){
+  var html='<div class="sec-hd"><div style="font-size:13px;color:var(--text2)">'+b.notes.length+' nota'+(b.notes.length!==1?'s':'')+'</div><button class="btn btn-p btn-s" onclick="openAddNote(\''+b.id+'\')">+ Nova nota</button></div>';
+  html+='<div class="chip-row">'+renderChips(b,'Todos')+'</div>';
+  html+='<div id="notes-list">'+renderNotes(b,'Todos')+'</div>';
+  return html;
+}
+function renderChips(b,active){
+  var arr=['Todos'].concat(b.chapters);
+  var html='';
+  for(var i=0;i<arr.length;i++){
+    var c=arr[i];
+    html+='<div class="chip'+(c===active?' active':'')+'" onclick="filterNotes(\''+b.id+'\',\''+c+'\',this)">'+c+'</div>';
+  }
+  return html;
+}
+function filterNotes(bid,chapter,el){
+  var chips=document.querySelectorAll('.chip');
+  for(var i=0;i<chips.length;i++)chips[i].classList.remove('active');
+  el.classList.add('active');
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  document.getElementById('notes-list').innerHTML=renderNotes(b,chapter);
+}
+function renderNotes(b,filter){
+  var notes=b.notes.slice().sort(function(a,z){return a.page-z.page;});
+  if(filter&&filter!=='Todos')notes=notes.filter(function(n){return n.chapter===filter;});
+  if(!notes.length)return '<div class="empty" style="padding:1.5rem"><div class="empty-ico">&#128221;</div><p>Sem notas ainda.</p></div>';
+  var html='';
+  for(var i=0;i<notes.length;i++){
+    var n=notes[i];
+    html+='<div class="note-item"><div class="note-meta">'+(n.page?'<span>Pag. '+n.page+'</span>':'')+'<span>'+n.chapter+'</span><span>'+new Date(n.at).toLocaleDateString('pt-PT')+'</span></div><div class="note-txt">'+n.text+'</div><div class="note-actions"><button class="btn btn-g btn-s" onclick="startEditNote(\''+b.id+'\',\''+n.id+'\')">Editar</button><button class="btn btn-d btn-s" onclick="delNote(\''+b.id+'\',\''+n.id+'\')">Apagar</button></div></div>';
+  }
+  return html;
+}
+function openAddNote(bid){
+  cBook=bid;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var sel=document.getElementById('n-chapter');
+  sel.innerHTML='';
+  for(var i=0;i<b.chapters.length;i++){var o=document.createElement('option');o.textContent=b.chapters[i];sel.appendChild(o);}
+  document.getElementById('n-page').value='';
+  document.getElementById('n-text').value='';
+  openM('m-note');
+}
+function saveNote(){
+  var b=db.books.filter(function(x){return x.id===cBook;})[0];if(!b)return;
+  var text=document.getElementById('n-text').value.trim();
+  if(!text){alert('Escreve a nota primeiro');return;}
+  b.notes.push({id:uid(),page:parseInt(document.getElementById('n-page').value)||0,chapter:document.getElementById('n-chapter').value,text:text,at:Date.now()});
+  save();closeM('m-note');renderDetail(b);
+  setTimeout(function(){switchTab('t-notes',document.querySelectorAll('.dtab')[1]);},50);
+}
+function startEditNote(bid,nid){
+  cBook=bid;cNote=nid;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var n=b.notes.filter(function(x){return x.id===nid;})[0];
+  var sel=document.getElementById('en-chapter');
+  sel.innerHTML='';
+  for(var i=0;i<b.chapters.length;i++){var o=document.createElement('option');o.textContent=b.chapters[i];if(b.chapters[i]===n.chapter)o.selected=true;sel.appendChild(o);}
+  document.getElementById('en-page').value=n.page||'';
+  document.getElementById('en-text').value=n.text;
+  openM('m-edit-note');
+}
+function updateNote(){
+  var b=db.books.filter(function(x){return x.id===cBook;})[0];
+  var n=b.notes.filter(function(x){return x.id===cNote;})[0];
+  if(!n)return;
+  n.page=parseInt(document.getElementById('en-page').value)||0;
+  n.chapter=document.getElementById('en-chapter').value;
+  n.text=document.getElementById('en-text').value.trim();
+  save();closeM('m-edit-note');renderDetail(b);
+  setTimeout(function(){switchTab('t-notes',document.querySelectorAll('.dtab')[1]);},50);
+}
+function delNote(bid,nid){
+  if(!confirm('Apagar esta nota?'))return;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  b.notes=b.notes.filter(function(n){return n.id!==nid;});
+  save();renderDetail(b);
+  setTimeout(function(){switchTab('t-notes',document.querySelectorAll('.dtab')[1]);},50);
+}
+function savePage(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  b.currentPage=parseInt(document.getElementById('pg-cur').value)||0;
+  if(b.pages&&b.currentPage>=b.pages)b.status='done';
+  save();renderDetail(b);
+}
+function changeStatus(bid,status){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  b.status=status;save();renderDetail(b);
+}
+function delBook(id){
+  if(!confirm('Remover este livro e todas as suas notas?'))return;
+  db.books=db.books.filter(function(b){return b.id!==id;});
+  save();renderAll();
+}
+
+// Dictionary
+function renderDictSection(b){
+  var words=db.words.filter(function(w){return w.bookId===b.id;}).sort(function(a,z){return z.at-a.at;});
+  var html='<div style="margin-bottom:1rem"><div class="dict-search-row"><input type="text" id="dict-input" placeholder="Pesquisar palavra no Infopedia..."><button class="btn btn-p" onclick="searchWord(\''+b.id+'\')">Pesquisar</button></div><div id="dict-result"></div><div class="infopedia-note"><a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/" target="_blank">Abrir Infopedia</a></div></div>';
+  html+='<div style="border-top:1px solid var(--border);padding-top:.9rem"><div class="sec-hd" style="margin-bottom:.75rem"><div style="font-size:13px;color:var(--text2)">'+words.length+' palavra'+(words.length!==1?'s':'')+' registada'+(words.length!==1?'s':'')+'</div><button class="btn btn-p btn-s" onclick="openAddWord(\''+b.id+'\')">+ Registar</button></div>';
+  if(words.length){
+    for(var i=0;i<words.length;i++){
+      var w=words[i];
+      html+='<div class="word-card"><div class="word-meta"><div><div class="word-title">'+w.word+'</div>'+(w.wordClass?'<div class="word-class">'+w.wordClass+'</div>':'')+'</div><div class="word-date">'+new Date(w.at).toLocaleDateString('pt-PT')+'</div></div><div class="word-def">'+w.def+'</div>'+(w.page||w.chapter?'<div class="word-book">'+(w.page?'Pag. '+w.page+' - ':'')+' '+(w.chapter||'')+'</div>':'')+'<div class="note-actions" style="margin-top:.4rem"><button class="btn btn-d btn-s" onclick="delWord(\''+w.id+'\')">Apagar</button></div></div>';
+    }
+  }else{
+    html+='<div class="empty" style="padding:1.5rem"><div class="empty-ico">&#128214;</div><p>Sem palavras registadas ainda.</p></div>';
+  }
+  html+='</div>';
+  return html;
+}
+var pendingWordBook=null;
+function searchWord(bid){
+  var q=document.getElementById('dict-input').value.trim();if(!q)return;
+  window.open('https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q),'_blank');
+  pendingWordBook=bid;
+  document.getElementById('dict-result').innerHTML='<div style="font-size:13px;color:var(--text2);background:var(--accent-light);border-radius:var(--radius-sm);padding:.6rem .8rem;margin-top:.4rem">Pesquisa aberta. Usa "+ Registar" para guardar a definicao.</div>';
+}
+function openAddWord(bid){
+  pendingWordBook=bid;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var w='';
+  var di=document.getElementById('dict-input');if(di)w=di.value.trim();
+  var chOpts='';
+  for(var i=0;i<b.chapters.length;i++)chOpts+='<option>'+b.chapters[i]+'</option>';
+  var html='<div class="modal-wrap open" id="m-word" onclick="if(event.target===this)closeWordM()"><div class="modal"><div class="modal-hd">Registar palavra <button class="xbtn" onclick="closeWordM()">x</button></div><div class="fr"><div><label>Palavra</label><input id="w-word" value="'+w+'" placeholder="ex: efemero"></div><div><label>Classe gramatical</label><input id="w-class" placeholder="ex: adjetivo..."></div></div><div class="fr fr1"><label>Definicao</label><textarea id="w-def" placeholder="Cola a definicao do Infopedia..."></textarea></div><div class="fr"><div><label>Pagina</label><input id="w-page" type="number" placeholder="opcional"></div><div><label>Capitulo</label><select id="w-chapter">'+chOpts+'</select></div></div><div class="bgrp"><button class="btn btn-g" onclick="closeWordM()">Cancelar</button><button class="btn btn-p" onclick="saveWord()">Guardar</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function closeWordM(){var m=document.getElementById('m-word');if(m)m.remove();}
+function saveWord(){
+  var b=db.books.filter(function(x){return x.id===pendingWordBook;})[0];if(!b)return;
+  var word=document.getElementById('w-word').value.trim();
+  var def=document.getElementById('w-def').value.trim();
+  if(!word||!def){alert('Palavra e definicao sao obrigatorias');return;}
+  db.words.push({id:uid(),bookId:b.id,word:word,wordClass:document.getElementById('w-class').value.trim(),def:def,page:parseInt(document.getElementById('w-page').value)||0,chapter:document.getElementById('w-chapter').value,at:Date.now()});
+  save();closeWordM();renderDetail(b);
+  setTimeout(function(){switchTab('t-words',document.querySelectorAll('.dtab')[2]);},50);
+}
+function delWord(id){
+  if(!confirm('Apagar esta palavra?'))return;
+  var w=db.words.filter(function(x){return x.id===id;})[0];
+  var bid=w&&w.bookId;
+  db.words=db.words.filter(function(x){return x.id!==id;});
+  save();
+  if(bid){var b=db.books.filter(function(x){return x.id===bid;})[0];if(b){renderDetail(b);setTimeout(function(){switchTab('t-words',document.querySelectorAll('.dtab')[2]);},50);}}
+}
+
+// Summary
+function renderSumSection(b){
+  if(b.summary){
+    var ai=b.summaryByAI?'<div class="ai-badge">* Gerado com Claude AI</div><br>':'';
+    return '<div>'+ai+'<div class="sumbox" id="sum-box">'+b.summary+'</div><div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="editSum(\''+b.id+'\')">Editar</button><button class="btn btn-g btn-s" onclick="genSummaryLocal(\''+b.id+'\')">Das notas</button><button class="btn btn-ai btn-s" onclick="genSummaryAI(\''+b.id+'\')">* Claude AI</button></div></div>';
+  }
+  return '<div><textarea id="sum-edit" style="min-height:110px" placeholder="Escreve o resumo..."></textarea><div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="saveManualSum(\''+b.id+'\')">Guardar manual</button><button class="btn btn-g btn-s" onclick="genSummaryLocal(\''+b.id+'\')">Das notas</button><button class="btn btn-ai btn-s" onclick="genSummaryAI(\''+b.id+'\')">* Claude AI</button></div></div>';
+}
+function genSummaryLocal(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var notes=b.notes.slice().sort(function(a,z){return a.page-z.page;});
+  var words=db.words.filter(function(w){return w.bookId===b.id;});
+  var pct=b.pages?Math.round((b.currentPage/b.pages)*100):null;
+  var lines=['"'+b.title+'"'+(b.author?' de '+b.author:'')];
+  if(b.pages)lines.push(b.pages+' paginas'+(pct!==null?' - progresso: '+pct+'%':''));
+  if(b.synopsis)lines.push('\nSinopse: '+b.synopsis);
+  if(notes.length){
+    lines.push('\nNotas ('+notes.length+'):');
+    for(var i=0;i<notes.length;i++){var n=notes[i];var loc=(n.page?'p.'+n.page:''+(n.chapter&&n.chapter!=='Geral'?' '+n.chapter:'')).trim();lines.push('- '+(loc?'['+loc+'] ':'')+n.text);}
+  }
+  if(words.length)lines.push('\nPalavras: '+words.map(function(w){return w.word+(w.wordClass?' ('+w.wordClass+')':'');}).join(', '));
+  if(!notes.length&&!b.synopsis){alert('Adiciona pelo menos uma nota para gerar resumo.');return;}
+  b.summary=lines.join('\n');b.summaryByAI=false;save();renderDetail(b);
+  setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
+}
+function genSummaryAI(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var notes=b.notes.slice().sort(function(a,z){return a.page-z.page;});
+  var words=db.words.filter(function(w){return w.bookId===b.id;});
+  if(!notes.length&&!b.synopsis){alert('Adiciona pelo menos uma nota para usar Claude AI.');return;}
+  var tab=document.getElementById('t-sum');
+  if(tab)tab.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2)"><div class="ai-spinner" style="width:28px;height:28px;border-width:3px;margin:0 auto 1rem"></div><div>Claude AI a gerar resumo...</div></div>';
+  var prompt='Livro: "'+b.title+'"'+(b.author?' de '+b.author:'')+'\n';
+  if(b.pages)prompt+='Paginas: '+b.pages+' (li ate a pagina '+(b.currentPage||0)+')\n';
+  if(b.synopsis)prompt+='Sinopse: '+b.synopsis+'\n';
+  if(notes.length){prompt+='\nNotas:\n';for(var i=0;i<notes.length;i++){var n=notes[i];prompt+='- '+(n.page?'[p.'+n.page+'] ':'')+n.text+'\n';}}
+  if(words.length)prompt+='\nPalavras consultadas: '+words.map(function(w){return w.word;}).join(', ')+'\n';
+  prompt+='\nEscreve um resumo reflexivo em portugues europeu (max 200 palavras) baseado nestas notas. So o resumo, sem introducao.';
+  var xhr=new XMLHttpRequest();
+  xhr.open('POST','https://api.anthropic.com/v1/messages',true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.timeout=30000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var text=d.content&&d.content[0]&&d.content[0].text;
+      if(text){b.summary=text;b.summaryByAI=true;save();}
+      else{b.summaryByAI=false;genSummaryLocal(bid);return;}
+    }catch(e){b.summaryByAI=false;genSummaryLocal(bid);return;}
+    renderDetail(b);setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
+  };
+  xhr.onerror=function(){genSummaryLocal(bid);};
+  xhr.ontimeout=function(){genSummaryLocal(bid);};
+  xhr.send(JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]}));
+}
+function editSum(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var box=document.getElementById('sum-box');if(!box)return;
+  var ta=document.createElement('textarea');
+  ta.id='sum-edit-inline';ta.style.cssText='width:100%;min-height:110px;padding:.8rem;border-radius:8px;border:1px solid var(--border);font-size:14px;line-height:1.7;font-family:DM Sans,sans-serif;background:var(--surface2);color:var(--text)';
+  ta.value=b.summary;box.replaceWith(ta);
+  var div=ta.nextElementSibling;
+  if(div)div.innerHTML='<button class="btn btn-p btn-s" onclick="saveSumEdit(\''+bid+'\')">Guardar</button><button class="btn btn-g btn-s" onclick="renderDetail(db.books.filter(function(x){return x.id===\''+bid+'\';})[0]);setTimeout(function(){switchTab(\'t-sum\',document.querySelectorAll(\'.dtab\')[3]);},50)">Cancelar</button>';
+}
+function saveSumEdit(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var ta=document.getElementById('sum-edit-inline');
+  if(ta&&ta.value.trim()){b.summary=ta.value.trim();b.summaryByAI=false;}
+  save();renderDetail(b);setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
+}
+function saveManualSum(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var ta=document.getElementById('sum-edit');
+  if(!ta||!ta.value.trim()){alert('Escreve o resumo primeiro');return;}
+  b.summary=ta.value.trim();b.summaryByAI=false;save();renderDetail(b);
+  setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded',function(){
+  // Restore theme
+  try{
+    var t=localStorage.getItem('leituras-theme')||'light';
+    if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');var tb=document.getElementById('theme-btn');if(tb)tb.textContent='Dia';}
+  }catch(e){}
+  // Restore last user
+  try{var u=localStorage.getItem('leituras-last-user');if(u){var el=document.getElementById('login-user');if(el)el.value=u;}}catch(e){}
+  // Keyboard enter on login
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){
+      var ls=document.getElementById('login-screen');
+      if(ls&&ls.style.display!=='none'){
+        var a=document.activeElement;
+        if(a&&(a.id==='login-user'||a.id==='login-pass'))doLogin();
+      }
+    }
+  });
+  document.addEventListener('click',function(e){
+    if(e.target.classList.contains('modal-wrap'))e.target.classList.remove('open');
+  });
+});
+</script>
+
+</body>
+</html>
