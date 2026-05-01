@@ -158,6 +158,42 @@ select option{background:var(--surface)}
 .install-banner{background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;font-size:13px;color:var(--accent)}
 .install-banner-text{flex:1;line-height:1.4}
 .install-banner strong{display:block;font-weight:600;margin-bottom:.1rem}
+/* ── ECRÃ RÁPIDO (widget) ───────────────────────────────────── */
+.quick-overlay{position:fixed;inset:0;background:var(--bg);z-index:250;display:flex;flex-direction:column;transition:background .25s}
+.quick-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.quick-logo{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--accent)}
+.quick-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.quick-btn-open{padding:.4rem .85rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.quick-btn-open:hover{background:var(--surface3);color:var(--text)}
+.quick-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem 1rem 2rem}
+.quick-section-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.qw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:.75rem;transition:border .15s,background .25s}
+.qw-card:hover{border-color:var(--accent-mid)}
+.qw-top{display:flex;align-items:center;gap:.85rem;margin-bottom:.85rem}
+.qw-spine{width:42px;height:58px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:15px;font-weight:600;color:#fff;flex-shrink:0;overflow:hidden}
+.qw-spine img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
+.qw-info{flex:1;min-width:0}
+.qw-title{font-family:'Lora',serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.qw-author{font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qw-pct{font-size:11px;color:var(--accent);font-weight:500;margin-top:3px}
+.qw-controls{display:flex;align-items:center;gap:.5rem}
+.qw-pbar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.qw-pfill{height:100%;background:linear-gradient(90deg,var(--accent-mid),var(--accent));border-radius:3px;transition:width .4s}
+.qw-input-row{display:flex;align-items:center;gap:.5rem;margin-top:.6rem}
+.qw-minus,.qw-plus{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:18px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-family:'DM Sans',sans-serif;line-height:1}
+.qw-minus:hover,.qw-plus:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.qw-page-input{flex:1;text-align:center;font-size:22px;font-weight:600;font-family:'Lora',serif;padding:.3rem .5rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);outline:none;transition:border .15s}
+.qw-page-input:focus{border-color:var(--accent-mid)}
+.qw-of{font-size:13px;color:var(--text3);white-space:nowrap}
+.qw-save{padding:.45rem .9rem;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;flex-shrink:0}
+.qw-save:hover{background:var(--accent-dark)}
+.qw-saved{background:var(--success)!important}
+.qw-open-link{display:block;text-align:right;font-size:11px;color:var(--text3);margin-top:.5rem;cursor:pointer;text-decoration:none}
+.qw-open-link:hover{color:var(--accent)}
+.quick-empty{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.quick-empty .empty-ico{font-size:44px;margin-bottom:.75rem;opacity:.35}
+.quick-empty p{font-size:13px;line-height:1.7}
+
 /* Book covers */
 .bspine{overflow:hidden}
 .bspine img,.dspine img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
@@ -166,6 +202,18 @@ select option{background:var(--surface)}
 .cover-preview-img.loaded{display:block}
 
 </style>
+
+<!-- ECRÃ RÁPIDO -->
+<div class="quick-overlay" id="quick-screen" style="display:none">
+  <div class="quick-header">
+    <div>
+      <div class="quick-logo">📚 Leituras</div>
+      <div class="quick-sub" id="quick-user-label"></div>
+    </div>
+    <button class="quick-btn-open" onclick="openFullApp()">Abrir app completa →</button>
+  </div>
+  <div class="quick-scroll" id="quick-body"></div>
+</div>
 
 <!-- LOGIN SCREEN -->
 <div class="login-wrap" id="login-screen">
@@ -368,6 +416,8 @@ function doLogin(){
   document.getElementById('user-display-btn').textContent='Conta: '+user;
   document.getElementById('acc-user').textContent=user;
   try{localStorage.setItem('leituras-last-user',user);}catch(e){}
+  // Guardar sessão para auto-login em visitas futuras
+  try{localStorage.setItem('leituras-session-user',user);localStorage.setItem('leituras-session-pass',pass);}catch(e){}
   renderAll();updateSyncBadge('local');
   // Then try cloud in background
   cloudLoadRemote(user,pass,function(remoteData){
@@ -379,6 +429,97 @@ function doLogin(){
     }
   });
 }
+
+// ── ECRÃ RÁPIDO ──────────────────────────────────────────────
+function showQuickScreen(){
+  var reading=db.books.filter(function(b){return b.status==='reading';});
+  var qs=document.getElementById('quick-screen');
+  var body=document.getElementById('quick-body');
+  var lbl=document.getElementById('quick-user-label');
+  if(lbl)lbl.textContent='Olá, '+currentUser;
+  if(!qs||!body)return;
+
+  if(!reading.length){
+    body.innerHTML='<div class="quick-empty"><div class="empty-ico">📖</div><p>Não estás a ler nenhum livro.<br>Abre a app completa para adicionar um.</p></div>';
+  } else {
+    var html='<div class="quick-section-title">A ler agora — marcar página</div>';
+    for(var i=0;i<reading.length;i++){
+      var b=reading[i];
+      var pct=b.pages?Math.round((b.currentPage/b.pages)*100):null;
+      var spineContent=b.coverUrl
+        ?'<img src="'+b.coverUrl+'" alt="Capa" onerror="this.parentElement.style.background=\''+colorFor(b.colorIdx!=null?b.colorIdx:i)+'\';this.parentElement.innerHTML=\''+initials(b.title)+'\';this.remove()">'
+        :initials(b.title);
+      var spineStyle=b.coverUrl?'':'background:'+colorFor(b.colorIdx!=null?b.colorIdx:i)+';';
+      html+='<div class="qw-card" id="qwc-'+b.id+'">';
+      html+='<div class="qw-top">';
+      html+='<div class="qw-spine" style="'+spineStyle+'">'+spineContent+'</div>';
+      html+='<div class="qw-info">';
+      html+='<div class="qw-title">'+b.title+'</div>';
+      html+='<div class="qw-author">'+(b.author||'Autor desconhecido')+'</div>';
+      html+=(pct!==null?'<div class="qw-pct">'+pct+'% concluído</div>':'');
+      html+='</div></div>';
+      if(b.pages!==null){
+        var pbarPct=b.pages?Math.round((b.currentPage/b.pages)*100):0;
+        html+='<div class="qw-controls"><div class="qw-pbar"><div class="qw-pfill" id="qwpf-'+b.id+'" style="width:'+pbarPct+'%"></div></div></div>';
+      }
+      html+='<div class="qw-input-row">';
+      html+='<button class="qw-minus" onclick="qwStep(\''+b.id+'\',-1)">−</button>';
+      html+='<input class="qw-page-input" type="number" id="qwp-'+b.id+'" value="'+b.currentPage+'" min="0"'+(b.pages?' max="'+b.pages+'"':'')+(b.pages?' onchange="qwUpdateBar(\''+b.id+'\','+b.pages+')"':'')+' inputmode="numeric">';
+      html+=(b.pages?'<span class="qw-of">/ '+b.pages+'</span>':'');
+      html+='<button class="qw-save" id="qws-'+b.id+'" onclick="qwSave(\''+b.id+'\')">Guardar</button>';
+      html+='</div>';
+      html+='<span class="qw-open-link" onclick="openBookFromQuick(\''+b.id+'\')">Ver livro completo →</span>';
+      html+='</div>';
+    }
+    body.innerHTML=html;
+  }
+  qs.style.display='flex';
+}
+
+function qwStep(bid,delta){
+  var inp=document.getElementById('qwp-'+bid);
+  if(!inp)return;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var val=Math.max(0,(parseInt(inp.value)||0)+delta);
+  if(b&&b.pages)val=Math.min(val,b.pages);
+  inp.value=val;
+  if(b&&b.pages)qwUpdateBar(bid,b.pages);
+}
+
+function qwUpdateBar(bid,total){
+  var inp=document.getElementById('qwp-'+bid);
+  var bar=document.getElementById('qwpf-'+bid);
+  if(!inp||!bar)return;
+  var pct=total?Math.round((parseInt(inp.value)||0)/total*100):0;
+  bar.style.width=Math.min(pct,100)+'%';
+}
+
+function qwSave(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var inp=document.getElementById('qwp-'+bid);
+  if(!inp)return;
+  var newPage=parseInt(inp.value)||0;
+  b.currentPage=newPage;
+  if(b.pages&&b.currentPage>=b.pages)b.status='done';
+  save();
+  // Feedback visual
+  var btn=document.getElementById('qws-'+bid);
+  if(btn){btn.textContent='✓';btn.classList.add('qw-saved');setTimeout(function(){btn.textContent='Guardar';btn.classList.remove('qw-saved');},1500);}
+  // Se acabou o livro, recarregar ecrã
+  if(b.pages&&b.currentPage>=b.pages){setTimeout(function(){showQuickScreen();},1600);}
+}
+
+function openBookFromQuick(bid){
+  openFullApp();
+  setTimeout(function(){openBook(bid);},100);
+}
+
+function openFullApp(){
+  document.getElementById('quick-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  renderAll();
+}
+// ─────────────────────────────────────────────────────────────
 
 function confirmLogout(){
   if(!confirm('Terminar sessao? Os dados ficam guardados.'))return;
@@ -875,8 +1016,44 @@ document.addEventListener('DOMContentLoaded',function(){
     var t=localStorage.getItem('leituras-theme')||'light';
     if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');var tb=document.getElementById('theme-btn');if(tb)tb.textContent='Dia';}
   }catch(e){}
-  // Restore last user
+
+  // Auto-login se sessão guardada
+  try{
+    var su=localStorage.getItem('leituras-session-user');
+    var sp=localStorage.getItem('leituras-session-pass');
+    if(su&&sp){
+      currentUser=su;currentRawPass=sp;currentStorageKey=makeStorageKey(su,sp);
+      var localData=cloudLoadLocal(su,sp);
+      if(localData){db=localData;if(!db.words)db.words=[];if(!db.version)db.version=4;}
+      else{db={books:[],words:[],version:4};}
+      document.getElementById('login-screen').style.display='none';
+      var uBtn=document.getElementById('user-display-btn');if(uBtn)uBtn.textContent='Conta: '+su;
+      var accU=document.getElementById('acc-user');if(accU)accU.textContent=su;
+      // Mostrar ecrã rápido se tiver livros a ler, senão app completa
+      var reading=db.books.filter(function(b){return b.status==='reading';});
+      if(reading.length>0){
+        showQuickScreen();
+      } else {
+        document.getElementById('app').style.display='flex';
+        renderAll();
+      }
+      updateSyncBadge('local');
+      cloudLoadRemote(su,sp,function(remoteData){
+        if(remoteData&&remoteData.books){
+          db=remoteData;if(!db.words)db.words=[];
+          renderAll();
+          var qs=document.getElementById('quick-screen');
+          if(qs&&qs.style.display!=='none')showQuickScreen();
+          updateSyncBadge('ok');
+        }
+      });
+      return; // não precisa de mais nada
+    }
+  }catch(e){}
+
+  // Sem sessão: preencher último utilizador no campo
   try{var u=localStorage.getItem('leituras-last-user');if(u){var el=document.getElementById('login-user');if(el)el.value=u;}}catch(e){}
+
   // Keyboard enter on login
   document.addEventListener('keydown',function(e){
     if(e.key==='Enter'){
