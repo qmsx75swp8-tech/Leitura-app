@@ -407,7 +407,7 @@ select option{background:var(--surface)}
   <div class="fr"><div><label>Título</label><input id="f-title" placeholder="Título do livro" oninput="debounceSearchCover()"></div><div><label>Autor</label><input id="f-author" placeholder="Nome do autor" oninput="debounceSearchCover()"></div></div>
   <button class="book-search-btn" onclick="aiLookupBook()" id="ai-lookup-btn">
     <span id="ai-lookup-spinner" style="display:none"><span class="ai-spinner-sm"></span></span>
-    ✦ Pesquisar informações com IA
+    ✦ Pesquisar informações do livro
   </button>
   <div id="book-search-status" class="book-search-status"></div>
   <div id="cover-search-row" class="cover-search-row" style="display:none">
@@ -781,7 +781,7 @@ function renderSpine(b,i,large){
 }
 
 
-// AI Book Info Lookup
+// Book Info Lookup via Google Books API (gratuito, sem chave)
 var aiLookupInProgress=false;
 var pendingChapterSummaries={};
 
@@ -796,55 +796,90 @@ function aiLookupBook(){
   var statusDiv=document.getElementById('book-search-status');
   if(btn)btn.disabled=true;
   if(spinner)spinner.style.display='inline';
-  if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent='A pesquisar informacoes do livro...';}
+  if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent='A pesquisar informações do livro...';}
   debounceSearchCover();
-  var p='Fornece informacoes sobre o livro "'+title+'"'+(author?' de '+author:'')+'.';
-  p+=' Responde APENAS com JSON valido (sem markdown) com esta estrutura:';
-  p+=' {"paginas":NUMERO_OU_NULL,"sinopse":"MAX 300 CHARS","capitulos":["cap1","cap2"],"resumos_capitulos":{"cap1":"resumo 1-2 frases","cap2":"resumo"}}';
-  p+=' paginas: numero aproximado, ou null se nao souberes.';
-  p+=' capitulos: lista dos capitulos/partes (max 20). Se desconhecido: ["Capitulo 1","Capitulo 2","Capitulo 3"].';
-  p+=' resumos_capitulos: resumo MUITO breve de cada capitulo (1-2 frases), SEM spoilers.';
-  p+=' sinopse: descricao em portugues europeu, max 300 caracteres.';
-  p+=' Responde APENAS com o JSON.';
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:p}]})
-  }).then(function(resp){return resp.json();}).then(function(d){
-    aiLookupInProgress=false;
-    if(btn)btn.disabled=false;
-    if(spinner)spinner.style.display='none';
-    try{
-      var raw=d.content&&d.content[0]&&d.content[0].text;
-      if(!raw)throw new Error('no text');
-      raw=raw.replace(/```json/g,'').replace(/```/g,'').trim();
-      // Find JSON object in response
-      var jsonStart=raw.indexOf('{');
-      var jsonEnd=raw.lastIndexOf('}');
-      if(jsonStart>=0&&jsonEnd>jsonStart)raw=raw.slice(jsonStart,jsonEnd+1);
-      var info=JSON.parse(raw);
-      var pagesEl=document.getElementById('f-pages');
-      var chapEl=document.getElementById('f-chapters');
-      var synEl=document.getElementById('f-synopsis');
-      if(info.paginas&&pagesEl&&!pagesEl.value)pagesEl.value=info.paginas;
-      if(info.capitulos&&chapEl&&!chapEl.value)chapEl.value=info.capitulos.join(', ');
-      if(info.sinopse&&synEl&&!synEl.value)synEl.value=info.sinopse;
-      pendingChapterSummaries=info.resumos_capitulos||{};
-      var nCh=info.capitulos?info.capitulos.length:0;
-      var msg='Encontrado: '+nCh+' capitulos'+(info.paginas?' / ~'+info.paginas+' paginas':'')+'.';
-      if(Object.keys(pendingChapterSummaries).length>0)msg+=' Resumos de capitulo prontos.';
-      if(statusDiv)statusDiv.textContent=msg;
-    }catch(e){
-      if(statusDiv)statusDiv.textContent='Informacoes obtidas mas nao foi possivel processar. Preenche manualmente.';
+
+  var q=encodeURIComponent(title+(author?' '+author:''));
+  var url='https://www.googleapis.com/books/v1/volumes?q='+q+'&maxResults=3&langRestrict=pt&fields=items(volumeInfo(title,authors,pageCount,description,categories))';
+
+  fetch(url)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      aiLookupInProgress=false;
+      if(btn)btn.disabled=false;
+      if(spinner)spinner.style.display='none';
+
+      var item=null;
+      // Tentar encontrar o melhor resultado (correspondência de título)
+      if(data.items&&data.items.length>0){
+        for(var i=0;i<data.items.length;i++){
+          var t=(data.items[i].volumeInfo.title||'').toLowerCase();
+          if(t.indexOf(title.toLowerCase())>=0){item=data.items[i];break;}
+        }
+        if(!item)item=data.items[0];
+      }
+
+      if(!item||!item.volumeInfo){
+        // Tentar sem restrição de língua
+        var url2='https://www.googleapis.com/books/v1/volumes?q='+q+'&maxResults=3&fields=items(volumeInfo(title,authors,pageCount,description,categories))';
+        return fetch(url2).then(function(r2){return r2.json();}).then(function(data2){
+          if(data2.items&&data2.items.length>0){
+            item=data2.items[0];
+            processGoogleBooksResult(item,statusDiv);
+          } else {
+            if(statusDiv)statusDiv.textContent='Livro não encontrado. Preenche os campos manualmente.';
+          }
+        });
+      }
+      processGoogleBooksResult(item,statusDiv);
+    })
+    .catch(function(){
+      aiLookupInProgress=false;
+      if(btn)btn.disabled=false;
+      if(spinner)spinner.style.display='none';
+      if(statusDiv)statusDiv.textContent='Erro de ligação. Verifica a tua ligação à internet e tenta de novo.';
       pendingChapterSummaries={};
+    });
+}
+
+function processGoogleBooksResult(item,statusDiv){
+  var info=item.volumeInfo||{};
+  var pagesEl=document.getElementById('f-pages');
+  var chapEl=document.getElementById('f-chapters');
+  var synEl=document.getElementById('f-synopsis');
+  var found=[];
+
+  // Páginas
+  if(info.pageCount&&pagesEl&&!pagesEl.value){
+    pagesEl.value=info.pageCount;
+    found.push('~'+info.pageCount+' páginas');
+  }
+
+  // Sinopse — limitar a 400 chars
+  if(info.description&&synEl&&!synEl.value){
+    var desc=info.description.replace(/<[^>]+>/g,'').trim();
+    if(desc.length>400)desc=desc.slice(0,397)+'...';
+    synEl.value=desc;
+    found.push('sinopse');
+  }
+
+  // Capítulos — Google Books não fornece capítulos reais, por isso criamos genéricos
+  if(chapEl&&!chapEl.value){
+    var pages=info.pageCount||0;
+    var caps=[];
+    if(pages>0){
+      var n=Math.min(Math.max(Math.round(pages/60),3),12);
+      for(var i=1;i<=n;i++)caps.push('Capítulo '+i);
+    } else {
+      caps=['Capítulo 1','Capítulo 2','Capítulo 3'];
     }
-  }).catch(function(e){
-    aiLookupInProgress=false;
-    if(btn)btn.disabled=false;
-    if(spinner)spinner.style.display='none';
-    if(statusDiv)statusDiv.textContent='Erro de ligacao. Verifica a tua ligacao e tenta de novo.';
-    pendingChapterSummaries={};
-  });
+    chapEl.value=caps.join(', ');
+    found.push(caps.length+' capítulos');
+  }
+
+  pendingChapterSummaries={};
+  var msg=found.length?'Encontrado: '+found.join(' / ')+'.':'Livro encontrado mas sem dados adicionais. Preenche manualmente.';
+  if(statusDiv)statusDiv.textContent=msg;
 }
 
 // Books
@@ -1316,10 +1351,9 @@ function delWord(id){
 // Summary
 function renderSumSection(b){
   if(b.summary){
-    var ai=b.summaryByAI?'<div class="ai-badge">* Gerado com Claude AI</div><br>':'';
-    return '<div>'+ai+'<div class="sumbox" id="sum-box">'+b.summary+'</div><div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="editSum(\''+b.id+'\')">Editar</button><button class="btn btn-g btn-s" onclick="genSummaryLocal(\''+b.id+'\')">Das notas</button><button class="btn btn-ai btn-s" onclick="genSummaryAI(\''+b.id+'\')">* Claude AI</button></div></div>';
+    return '<div><div class="sumbox" id="sum-box">'+b.summary+'</div><div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="editSum(\''+b.id+'\')">Editar</button><button class="btn btn-p btn-s" onclick="genSummaryLocal(\''+b.id+'\')">↻ Regenerar das notas</button></div></div>';
   }
-  return '<div><textarea id="sum-edit" style="min-height:110px" placeholder="Escreve o resumo..."></textarea><div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="saveManualSum(\''+b.id+'\')">Guardar manual</button><button class="btn btn-g btn-s" onclick="genSummaryLocal(\''+b.id+'\')">Das notas</button><button class="btn btn-ai btn-s" onclick="genSummaryAI(\''+b.id+'\')">* Claude AI</button></div></div>';
+  return '<div><textarea id="sum-edit" style="min-height:110px" placeholder="Escreve o resumo..."></textarea><div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="saveManualSum(\''+b.id+'\')">Guardar manual</button><button class="btn btn-p btn-s" onclick="genSummaryLocal(\''+b.id+'\')">✦ Gerar das notas</button></div></div>';
 }
 function genSummaryLocal(bid){
   var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
@@ -1339,28 +1373,8 @@ function genSummaryLocal(bid){
   setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
 }
 function genSummaryAI(bid){
-  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
-  var notes=b.notes.slice().sort(function(a,z){return a.page-z.page;});
-  var words=db.words.filter(function(w){return w.bookId===b.id;});
-  if(!notes.length&&!b.synopsis){alert('Adiciona pelo menos uma nota para usar Claude AI.');return;}
-  var tab=document.getElementById('t-sum');
-  if(tab)tab.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2)"><div class="ai-spinner" style="width:28px;height:28px;border-width:3px;margin:0 auto 1rem"></div><div>Claude AI a gerar resumo...</div></div>';
-  var prompt='Livro: "'+b.title+'"'+(b.author?' de '+b.author:'')+'\n';
-  if(b.pages)prompt+='Paginas: '+b.pages+' (li ate a pagina '+(b.currentPage||0)+')\n';
-  if(b.synopsis)prompt+='Sinopse: '+b.synopsis+'\n';
-  if(notes.length){prompt+='\nNotas:\n';for(var i=0;i<notes.length;i++){var n=notes[i];prompt+='- '+(n.page?'[p.'+n.page+'] ':'')+n.text+'\n';}}
-  if(words.length)prompt+='\nPalavras consultadas: '+words.map(function(w){return w.word;}).join(', ')+'\n';
-  prompt+='\nEscreve um resumo reflexivo em portugues europeu (max 200 palavras) baseado nestas notas. So o resumo, sem introducao.';
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-  }).then(function(resp){return resp.json();}).then(function(d){
-    var text=d.content&&d.content[0]&&d.content[0].text;
-    if(text){b.summary=text;b.summaryByAI=true;save();}
-    else{b.summaryByAI=false;genSummaryLocal(bid);return;}
-    renderDetail(b);setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
-  }).catch(function(){genSummaryLocal(bid);});
+  // Gera resumo local a partir das notas (sem dependência de API externa)
+  genSummaryLocal(bid);
 }
 function editSum(bid){
   var b=db.books.filter(function(x){return x.id===bid;})[0];
