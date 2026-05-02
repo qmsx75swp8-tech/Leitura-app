@@ -806,19 +806,22 @@ function aiLookupBook(){
   p+=' resumos_capitulos: resumo MUITO breve de cada capitulo (1-2 frases), SEM spoilers.';
   p+=' sinopse: descricao em portugues europeu, max 300 caracteres.';
   p+=' Responde APENAS com o JSON.';
-  var xhr=new XMLHttpRequest();
-  xhr.open('POST','https://api.anthropic.com/v1/messages',true);
-  xhr.setRequestHeader('Content-Type','application/json');
-  xhr.timeout=25000;
-  xhr.onload=function(){
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:p}]})
+  }).then(function(resp){return resp.json();}).then(function(d){
     aiLookupInProgress=false;
     if(btn)btn.disabled=false;
     if(spinner)spinner.style.display='none';
     try{
-      var d=JSON.parse(xhr.responseText);
       var raw=d.content&&d.content[0]&&d.content[0].text;
       if(!raw)throw new Error('no text');
       raw=raw.replace(/```json/g,'').replace(/```/g,'').trim();
+      // Find JSON object in response
+      var jsonStart=raw.indexOf('{');
+      var jsonEnd=raw.lastIndexOf('}');
+      if(jsonStart>=0&&jsonEnd>jsonStart)raw=raw.slice(jsonStart,jsonEnd+1);
       var info=JSON.parse(raw);
       var pagesEl=document.getElementById('f-pages');
       var chapEl=document.getElementById('f-chapters');
@@ -832,21 +835,16 @@ function aiLookupBook(){
       if(Object.keys(pendingChapterSummaries).length>0)msg+=' Resumos de capitulo prontos.';
       if(statusDiv)statusDiv.textContent=msg;
     }catch(e){
-      if(statusDiv)statusDiv.textContent='Nao foi possivel obter informacoes. Preenche manualmente.';
+      if(statusDiv)statusDiv.textContent='Informacoes obtidas mas nao foi possivel processar. Preenche manualmente.';
       pendingChapterSummaries={};
     }
-  };
-  xhr.onerror=function(){
-    aiLookupInProgress=false;if(btn)btn.disabled=false;if(spinner)spinner.style.display='none';
-    if(statusDiv)statusDiv.textContent='Erro de ligacao. Tenta de novo.';
+  }).catch(function(e){
+    aiLookupInProgress=false;
+    if(btn)btn.disabled=false;
+    if(spinner)spinner.style.display='none';
+    if(statusDiv)statusDiv.textContent='Erro de ligacao. Verifica a tua ligacao e tenta de novo.';
     pendingChapterSummaries={};
-  };
-  xhr.ontimeout=function(){
-    aiLookupInProgress=false;if(btn)btn.disabled=false;if(spinner)spinner.style.display='none';
-    if(statusDiv)statusDiv.textContent='Tempo esgotado. Tenta de novo.';
-    pendingChapterSummaries={};
-  };
-  xhr.send(JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:p}]}));
+  });
 }
 
 // Books
@@ -1353,22 +1351,16 @@ function genSummaryAI(bid){
   if(notes.length){prompt+='\nNotas:\n';for(var i=0;i<notes.length;i++){var n=notes[i];prompt+='- '+(n.page?'[p.'+n.page+'] ':'')+n.text+'\n';}}
   if(words.length)prompt+='\nPalavras consultadas: '+words.map(function(w){return w.word;}).join(', ')+'\n';
   prompt+='\nEscreve um resumo reflexivo em portugues europeu (max 200 palavras) baseado nestas notas. So o resumo, sem introducao.';
-  var xhr=new XMLHttpRequest();
-  xhr.open('POST','https://api.anthropic.com/v1/messages',true);
-  xhr.setRequestHeader('Content-Type','application/json');
-  xhr.timeout=30000;
-  xhr.onload=function(){
-    try{
-      var d=JSON.parse(xhr.responseText);
-      var text=d.content&&d.content[0]&&d.content[0].text;
-      if(text){b.summary=text;b.summaryByAI=true;save();}
-      else{b.summaryByAI=false;genSummaryLocal(bid);return;}
-    }catch(e){b.summaryByAI=false;genSummaryLocal(bid);return;}
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+  }).then(function(resp){return resp.json();}).then(function(d){
+    var text=d.content&&d.content[0]&&d.content[0].text;
+    if(text){b.summary=text;b.summaryByAI=true;save();}
+    else{b.summaryByAI=false;genSummaryLocal(bid);return;}
     renderDetail(b);setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
-  };
-  xhr.onerror=function(){genSummaryLocal(bid);};
-  xhr.ontimeout=function(){genSummaryLocal(bid);};
-  xhr.send(JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]}));
+  }).catch(function(){genSummaryLocal(bid);});
 }
 function editSum(bid){
   var b=db.books.filter(function(x){return x.id===bid;})[0];
