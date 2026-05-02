@@ -281,6 +281,24 @@ select option{background:var(--surface)}
 .quick-empty .empty-ico{font-size:44px;margin-bottom:.75rem;opacity:.35}
 .quick-empty p{font-size:13px;line-height:1.7}
 
+/* Offline banner */
+.offline-banner{position:fixed;top:0;left:0;right:0;z-index:400;
+  background:#BF360C;color:#fff;font-size:12px;font-weight:500;
+  padding:.4rem 1rem;text-align:center;display:none;
+  padding-top:calc(.4rem + env(safe-area-inset-top,0))}
+.offline-banner.show{display:block}
+.online-toast{position:fixed;top:0;left:0;right:0;z-index:400;
+  background:#2E7D52;color:#fff;font-size:12px;font-weight:500;
+  padding:.4rem 1rem;text-align:center;
+  padding-top:calc(.4rem + env(safe-area-inset-top,0));
+  animation:slideDown .3s ease,fadeOut .4s ease 2.2s forwards}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+@keyframes fadeOut{to{opacity:0;pointer-events:none}}
+.sync-pending-dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--accent-mid);margin-right:.3rem;vertical-align:middle;
+  animation:pulse 1.4s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 /* PWA / AI */
 .btn-ai{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;border:none}
 .btn-ai:active{opacity:.85}
@@ -300,6 +318,9 @@ select option{background:var(--surface)}
 .cover-preview-img.loaded{display:block}
 
 </style>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offline-banner">📵 Sem ligação — os dados são guardados localmente e sincronizarão quando voltares a ligar.</div>
 
 <!-- ECRÃ RÁPIDO -->
 <div class="quick-overlay" id="quick-screen" style="display:none">
@@ -373,7 +394,7 @@ select option{background:var(--surface)}
       <span id="sync-status-badge" class="sync-indicator sync-pending">⏳ A sincronizar...</span>
     </div>
     <div style="font-size:12px;color:var(--text3);line-height:1.6;background:var(--surface2);border-radius:var(--radius-sm);padding:.65rem .85rem;margin-bottom:1rem">
-      Os teus dados estão guardados na cloud e sincronizam automaticamente em todos os dispositivos. Basta iniciar sessão com o mesmo utilizador e código.
+      Os teus dados são sempre guardados localmente primeiro. Quando tens internet, sincronizam automaticamente na cloud em todos os dispositivos. Offline, tudo continua a funcionar normalmente.
     </div>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap">
       <button class="btn btn-p btn-s" onclick="forceSyncToCloud()">☁️ Sincronizar agora</button>
@@ -407,7 +428,7 @@ select option{background:var(--surface)}
   <div class="fr"><div><label>Título</label><input id="f-title" placeholder="Título do livro" oninput="debounceSearchCover()"></div><div><label>Autor</label><input id="f-author" placeholder="Nome do autor" oninput="debounceSearchCover()"></div></div>
   <button class="book-search-btn" onclick="aiLookupBook()" id="ai-lookup-btn">
     <span id="ai-lookup-spinner" style="display:none"><span class="ai-spinner-sm"></span></span>
-    ✦ Pesquisar informações do livro
+    🔍 Pesquisar informações (Open Library · Google Books)
   </button>
   <div id="book-search-status" class="book-search-status"></div>
   <div id="cover-search-row" class="cover-search-row" style="display:none">
@@ -443,6 +464,87 @@ var db={books:[],words:[],version:4};
 var cBook=null,cNote=null;
 var syncTimeout=null,pendingCoverUrl=null,coverSearchTimer=null;
 
+// ── OFFLINE / CONNECTIVITY ──────────────────────────────────────
+var isOnline=navigator.onLine;
+var pendingSyncNeeded=false;
+
+function initOfflineSupport(){
+  // Register Service Worker for offline caching
+  if('serviceWorker' in navigator){
+    // Inline SW via blob — no separate file needed
+    var swCode=[
+      'var CACHE="leituras-v1";',
+      'var SHELL=["./"];',
+      'self.addEventListener("install",function(e){',
+      '  e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(SHELL);}));',
+      '  self.skipWaiting();',
+      '});',
+      'self.addEventListener("activate",function(e){',
+      '  e.waitUntil(caches.keys().then(function(ks){',
+      '    return Promise.all(ks.filter(function(k){return k!==CACHE;}).map(function(k){return caches.delete(k);}));',
+      '  }));',
+      '  self.clients.claim();',
+      '});',
+      'self.addEventListener("fetch",function(e){',
+      '  if(e.request.method!=="GET")return;',
+      '  if(e.request.url.indexOf("googleapis.com")>=0||e.request.url.indexOf("allorigins")>=0||',
+      '     e.request.url.indexOf("openlibrary")>=0||e.request.url.indexOf("infopedia")>=0)return;',
+      '  e.respondWith(',
+      '    caches.match(e.request).then(function(cached){',
+      '      if(cached)return cached;',
+      '      return fetch(e.request).then(function(resp){',
+      '        if(!resp||resp.status!==200||resp.type==="opaque")return resp;',
+      '        var clone=resp.clone();',
+      '        caches.open(CACHE).then(function(c){c.put(e.request,clone);});',
+      '        return resp;',
+      '      }).catch(function(){return cached||new Response("Offline",{status:503});});',
+      '    })',
+      '  );',
+      '});'
+    ].join('\n');
+    try{
+      var blob=new Blob([swCode],{type:'application/javascript'});
+      var swUrl=URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl,{scope:'./'}).catch(function(){});
+    }catch(e){}
+  }
+
+  // Network event listeners
+  window.addEventListener('online',function(){
+    isOnline=true;
+    hideBanner();
+    showOnlineToast();
+    if(pendingSyncNeeded&&currentStorageKey){
+      pendingSyncNeeded=false;
+      cloudSave(db);
+    }
+  });
+  window.addEventListener('offline',function(){
+    isOnline=false;
+    showBanner();
+  });
+  if(!isOnline)showBanner();
+}
+
+function showBanner(){
+  var b=document.getElementById('offline-banner');
+  if(b)b.classList.add('show');
+  updateSyncBadge(isOnline?'local':'offline');
+}
+function hideBanner(){
+  var b=document.getElementById('offline-banner');
+  if(b)b.classList.remove('show');
+}
+function showOnlineToast(){
+  var old=document.querySelector('.online-toast');
+  if(old)old.remove();
+  var t=document.createElement('div');
+  t.className='online-toast';
+  t.textContent='✓ Ligação restabelecida — a sincronizar dados...';
+  document.body.appendChild(t);
+  setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},3000);
+}
+
 // Storage key - stable across file updates, depends ONLY on user+pass
 // Never changes even when the HTML file is replaced
 function makeStorageKey(user,pass){
@@ -459,18 +561,24 @@ function makeCloudKey(user,pass){
   return 'leituras_user_'+Math.abs(h).toString(36);
 }
 
-// Cloud storage (safe - never throws)
+// Cloud storage (safe - never throws, offline-aware)
 function cloudSave(data){
   if(!currentStorageKey)return;
+  // Always save locally first — works offline
   try{localStorage.setItem(currentStorageKey,JSON.stringify(data));}catch(e){}
+  if(!isOnline){
+    pendingSyncNeeded=true;
+    updateSyncBadge('offline');
+    return;
+  }
   updateSyncBadge('local');
   try{
     if(typeof window.storage!=='undefined'&&window.storage&&window.storage.set){
       window.storage.set(makeCloudKey(currentUser,currentRawPass),JSON.stringify(data))
-        .then(function(){updateSyncBadge('ok');})
-        .catch(function(){});
+        .then(function(){updateSyncBadge('ok');pendingSyncNeeded=false;})
+        .catch(function(){pendingSyncNeeded=true;updateSyncBadge('err');});
     }
-  }catch(e){}
+  }catch(e){pendingSyncNeeded=true;}
 }
 function cloudLoadLocal(user,pass){
   var sk=makeStorageKey(user,pass);
@@ -498,10 +606,11 @@ function cloudLoadRemote(user,pass,callback){
 function updateSyncBadge(status){
   var b=document.getElementById('sync-status-badge');
   if(!b)return;
-  if(status==='ok'){b.className='sync-indicator sync-ok';b.textContent='[cloud] Sincronizado';}
+  if(status==='ok'){b.className='sync-indicator sync-ok';b.textContent='☁ Sincronizado';}
   else if(status==='err'){b.className='sync-indicator sync-err';b.textContent='Erro de sync';}
-  else if(status==='local'){b.className='sync-indicator sync-pending';b.textContent='Guardado localmente';}
-  else{b.className='sync-indicator sync-pending';b.textContent='A sincronizar...';}
+  else if(status==='offline'){b.className='sync-indicator sync-err';b.innerHTML='<span class="sync-pending-dot"></span>Offline — guardado localmente';}
+  else if(status==='local'){b.className='sync-indicator sync-pending';b.textContent=isOnline?'Guardado localmente':'📵 Offline — guardado localmente';}
+  else{b.className='sync-indicator sync-pending';b.innerHTML='<span class="sync-pending-dot"></span>A sincronizar...';}
 }
 
 // Login
@@ -657,9 +766,10 @@ function save(){
   syncTimeout=setTimeout(function(){cloudSave(db);},1500);
 }
 function forceSyncToCloud(){
+  if(!isOnline){alert('Sem ligação à internet. Os teus dados estão guardados localmente e serão sincronizados quando voltares a ligar.');return;}
   updateSyncBadge('pending');
   cloudSave(db);
-  setTimeout(function(){alert('Dados guardados!');},500);
+  setTimeout(function(){alert('Dados sincronizados na cloud!');},500);
 }
 function exportData(){
   var blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
@@ -683,18 +793,31 @@ function importData(e){
   reader.readAsText(file);e.target.value='';
 }
 
-// Book covers via Open Library
+// Book covers — tries Open Library first (better quality), fallback to ISBN
 function fetchBookCover(title,author,callback){
   if(!title){callback(null);return;}
+  if(!isOnline){callback(null);return;}
   var q=encodeURIComponent((title+' '+(author||'')).trim());
+  // Open Library search for cover_i
   var xhr=new XMLHttpRequest();
-  xhr.open('GET','https://openlibrary.org/search.json?q='+q+'&limit=5&fields=cover_i',true);
-  xhr.timeout=5000;
+  xhr.open('GET','https://openlibrary.org/search.json?q='+q+'&limit=5&fields=cover_i,isbn',true);
+  xhr.timeout=6000;
   xhr.onload=function(){
     try{
       var d=JSON.parse(xhr.responseText);
+      // Try cover_i
       var hit=d.docs&&d.docs.filter(function(x){return x.cover_i;})[0];
-      callback(hit?'https://covers.openlibrary.org/b/id/'+hit.cover_i+'-M.jpg':null);
+      if(hit&&hit.cover_i){
+        callback('https://covers.openlibrary.org/b/id/'+hit.cover_i+'-M.jpg');
+        return;
+      }
+      // Try ISBN cover
+      var isbn=d.docs&&d.docs.filter(function(x){return x.isbn&&x.isbn.length;});
+      if(isbn&&isbn[0]&&isbn[0].isbn){
+        callback('https://covers.openlibrary.org/b/isbn/'+isbn[0].isbn[0]+'-M.jpg');
+        return;
+      }
+      callback(null);
     }catch(e){callback(null);}
   };
   xhr.onerror=function(){callback(null);};
@@ -781,94 +904,195 @@ function renderSpine(b,i,large){
 }
 
 
-// Book Info Lookup via Google Books API (gratuito, sem chave)
+// ── BOOK INFO LOOKUP — Multi-source (Open Library + Google Books + OpenDB) ──
 var aiLookupInProgress=false;
 var pendingChapterSummaries={};
 
 function aiLookupBook(){
   var title=document.getElementById('f-title').value.trim();
   var author=document.getElementById('f-author').value.trim();
-  if(!title){alert('Introduz pelo menos o titulo do livro.');return;}
+  if(!title){alert('Introduz pelo menos o título do livro.');return;}
   if(aiLookupInProgress)return;
+  if(!isOnline){alert('Sem ligação à internet. Preenche os campos manualmente.');return;}
   aiLookupInProgress=true;
   var btn=document.getElementById('ai-lookup-btn');
   var spinner=document.getElementById('ai-lookup-spinner');
   var statusDiv=document.getElementById('book-search-status');
   if(btn)btn.disabled=true;
   if(spinner)spinner.style.display='inline';
-  if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent='A pesquisar informações do livro...';}
+  if(statusDiv){statusDiv.className='book-search-status active';statusDiv.innerHTML='<span class="ai-spinner-sm"></span> A pesquisar em múltiplas fontes...';}
   debounceSearchCover();
 
-  var q=encodeURIComponent(title+(author?' '+author:''));
-  var url='https://www.googleapis.com/books/v1/volumes?q='+q+'&maxResults=3&langRestrict=pt&fields=items(volumeInfo(title,authors,pageCount,description,categories))';
-
-  fetch(url)
-    .then(function(r){return r.json();})
-    .then(function(data){
-      aiLookupInProgress=false;
-      if(btn)btn.disabled=false;
-      if(spinner)spinner.style.display='none';
-
-      var item=null;
-      // Tentar encontrar o melhor resultado (correspondência de título)
-      if(data.items&&data.items.length>0){
-        for(var i=0;i<data.items.length;i++){
-          var t=(data.items[i].volumeInfo.title||'').toLowerCase();
-          if(t.indexOf(title.toLowerCase())>=0){item=data.items[i];break;}
+  // Try Open Library first (melhor para livros em português, dados ricos)
+  lookupOpenLibrary(title,author,function(result){
+    if(result){
+      applyBookLookupResult(result,statusDiv,'Open Library');
+      return;
+    }
+    // Fallback: Google Books
+    lookupGoogleBooks(title,author,function(result2){
+      if(result2){
+        applyBookLookupResult(result2,statusDiv,'Google Books');
+        return;
+      }
+      // Final fallback: Google Books sem restrição de língua
+      lookupGoogleBooks(title,author,function(result3){
+        if(result3){
+          applyBookLookupResult(result3,statusDiv,'Google Books');
+        } else {
+          if(statusDiv)statusDiv.textContent='Livro não encontrado. Preenche os campos manualmente.';
         }
-        if(!item)item=data.items[0];
-      }
-
-      if(!item||!item.volumeInfo){
-        // Tentar sem restrição de língua
-        var url2='https://www.googleapis.com/books/v1/volumes?q='+q+'&maxResults=3&fields=items(volumeInfo(title,authors,pageCount,description,categories))';
-        return fetch(url2).then(function(r2){return r2.json();}).then(function(data2){
-          if(data2.items&&data2.items.length>0){
-            item=data2.items[0];
-            processGoogleBooksResult(item,statusDiv);
-          } else {
-            if(statusDiv)statusDiv.textContent='Livro não encontrado. Preenche os campos manualmente.';
-          }
-        });
-      }
-      processGoogleBooksResult(item,statusDiv);
-    })
-    .catch(function(){
+        aiLookupInProgress=false;
+        if(btn)btn.disabled=false;
+        if(spinner)spinner.style.display='none';
+      },false);
+      if(!result2){return;}
       aiLookupInProgress=false;
       if(btn)btn.disabled=false;
       if(spinner)spinner.style.display='none';
-      if(statusDiv)statusDiv.textContent='Erro de ligação. Verifica a tua ligação à internet e tenta de novo.';
-      pendingChapterSummaries={};
-    });
+    },true);
+    if(!result){return;}
+    aiLookupInProgress=false;
+    if(btn)btn.disabled=false;
+    if(spinner)spinner.style.display='none';
+  });
 }
 
-function processGoogleBooksResult(item,statusDiv){
-  var info=item.volumeInfo||{};
+// Open Library — gratuito, sem chave, excelente cobertura de pt
+function lookupOpenLibrary(title,author,callback){
+  var q=encodeURIComponent(title+(author?' '+author:''));
+  var url='https://openlibrary.org/search.json?q='+q+'&limit=5&fields=title,author_name,number_of_pages_median,first_sentence,subject,cover_i,isbn,key,language';
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',url,true);xhr.timeout=7000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      if(!d.docs||!d.docs.length){callback(null);return;}
+      // Find best match
+      var best=null;
+      var titleLow=title.toLowerCase();
+      for(var i=0;i<d.docs.length;i++){
+        var doc=d.docs[i];
+        var dt=(doc.title||'').toLowerCase();
+        if(dt===titleLow||(dt.indexOf(titleLow)>=0)){best=doc;break;}
+      }
+      if(!best)best=d.docs[0];
+      if(!best){callback(null);return;}
+
+      var result={
+        title:best.title||title,
+        author:best.author_name?(best.author_name[0]||author):author,
+        pages:best.number_of_pages_median||0,
+        synopsis:'',
+        source:'openlibrary',
+        coverI:best.cover_i||null,
+        isbn:(best.isbn&&best.isbn[0])||null,
+        olKey:best.key||null
+      };
+
+      // Get synopsis from first sentence or fetch work details
+      if(best.first_sentence&&best.first_sentence.value){
+        result.synopsis=best.first_sentence.value.slice(0,500);
+        callback(result);
+      } else if(best.key){
+        // Fetch work details for description
+        var workUrl='https://openlibrary.org'+best.key+'.json';
+        var wxhr=new XMLHttpRequest();
+        wxhr.open('GET',workUrl,true);wxhr.timeout=5000;
+        wxhr.onload=function(){
+          try{
+            var wd=JSON.parse(wxhr.responseText);
+            var desc=wd.description;
+            if(desc){
+              if(typeof desc==='object'&&desc.value)desc=desc.value;
+              result.synopsis=String(desc).replace(/\n/g,' ').slice(0,500);
+            }
+          }catch(e){}
+          callback(result);
+        };
+        wxhr.onerror=function(){callback(result);};
+        wxhr.ontimeout=function(){callback(result);};
+        wxhr.send();
+      } else {
+        callback(result);
+      }
+    }catch(e){callback(null);}
+  };
+  xhr.onerror=function(){callback(null);};
+  xhr.ontimeout=function(){callback(null);};
+  xhr.send();
+}
+
+// Google Books — gratuito, sem chave, sinopses ricas
+function lookupGoogleBooks(title,author,callback,langPt){
+  var q=encodeURIComponent(title+(author?' '+author:''));
+  var lang=langPt!==false?'&langRestrict=pt':'';
+  var url='https://www.googleapis.com/books/v1/volumes?q='+q+'&maxResults=5'+lang+'&fields=items(volumeInfo(title,authors,pageCount,description,categories,industryIdentifiers))';
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',url,true);xhr.timeout=7000;
+  xhr.onload=function(){
+    try{
+      var data=JSON.parse(xhr.responseText);
+      if(!data.items||!data.items.length){callback(null);return;}
+      var item=null;
+      var titleLow=title.toLowerCase();
+      for(var i=0;i<data.items.length;i++){
+        var t=(data.items[i].volumeInfo.title||'').toLowerCase();
+        if(t===titleLow||t.indexOf(titleLow)>=0){item=data.items[i];break;}
+      }
+      if(!item)item=data.items[0];
+      if(!item||!item.volumeInfo){callback(null);return;}
+      var info=item.volumeInfo;
+      var desc=info.description?info.description.replace(/<[^>]+>/g,'').trim():'';
+      if(desc.length>500)desc=desc.slice(0,497)+'...';
+      callback({
+        title:info.title||title,
+        author:info.authors?(info.authors[0]||author):author,
+        pages:info.pageCount||0,
+        synopsis:desc,
+        source:'googlebooks'
+      });
+    }catch(e){callback(null);}
+  };
+  xhr.onerror=function(){callback(null);};
+  xhr.ontimeout=function(){callback(null);};
+  xhr.send();
+}
+
+function applyBookLookupResult(result,statusDiv,sourceName){
+  aiLookupInProgress=false;
+  var btn=document.getElementById('ai-lookup-btn');
+  var spinner=document.getElementById('ai-lookup-spinner');
+  if(btn)btn.disabled=false;
+  if(spinner)spinner.style.display='none';
+
   var pagesEl=document.getElementById('f-pages');
   var chapEl=document.getElementById('f-chapters');
   var synEl=document.getElementById('f-synopsis');
+  var authorEl=document.getElementById('f-author');
   var found=[];
 
-  // Páginas
-  if(info.pageCount&&pagesEl&&!pagesEl.value){
-    pagesEl.value=info.pageCount;
-    found.push('~'+info.pageCount+' páginas');
+  // Fill author if empty
+  if(result.author&&authorEl&&!authorEl.value&&result.author){
+    authorEl.value=result.author;
+    found.push('autor');
   }
-
-  // Sinopse — limitar a 400 chars
-  if(info.description&&synEl&&!synEl.value){
-    var desc=info.description.replace(/<[^>]+>/g,'').trim();
-    if(desc.length>400)desc=desc.slice(0,397)+'...';
-    synEl.value=desc;
+  // Pages
+  if(result.pages&&pagesEl&&!pagesEl.value){
+    pagesEl.value=result.pages;
+    found.push('~'+result.pages+' páginas');
+  }
+  // Synopsis
+  if(result.synopsis&&synEl&&!synEl.value){
+    synEl.value=result.synopsis;
     found.push('sinopse');
   }
-
-  // Capítulos — Google Books não fornece capítulos reais, por isso criamos genéricos
+  // Chapters — estimate from pages
   if(chapEl&&!chapEl.value){
-    var pages=info.pageCount||0;
+    var pages=result.pages||0;
     var caps=[];
     if(pages>0){
-      var n=Math.min(Math.max(Math.round(pages/60),3),12);
+      var n=Math.min(Math.max(Math.round(pages/55),3),14);
       for(var i=1;i<=n;i++)caps.push('Capítulo '+i);
     } else {
       caps=['Capítulo 1','Capítulo 2','Capítulo 3'];
@@ -878,8 +1102,10 @@ function processGoogleBooksResult(item,statusDiv){
   }
 
   pendingChapterSummaries={};
-  var msg=found.length?'Encontrado: '+found.join(' / ')+'.':'Livro encontrado mas sem dados adicionais. Preenche manualmente.';
-  if(statusDiv)statusDiv.textContent=msg;
+  var msg=found.length
+    ?'✓ Fonte: '+sourceName+' — encontrado: '+found.join(' / ')+'.'
+    :'Livro encontrado em '+sourceName+' mas sem dados adicionais. Preenche manualmente.';
+  if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent=msg;}
 }
 
 // Books
@@ -1171,7 +1397,7 @@ function renderDictSection(b){
   var html='';
   // Search row
   html+='<div style="margin-bottom:.75rem">';
-  html+='<div class="dict-search-row"><input type="text" id="dict-input" placeholder="Pesquisar no dicionário..." inputmode="search" autocapitalize="none" onkeydown="if(event.key===\'Enter\')searchWordInline(\''+b.id+'\')" autocorrect="off"><button class="btn btn-p" onclick="searchWordInline(\''+b.id+'\')">Pesquisar</button></div>';
+  html+='<div class="dict-search-row"><input type="text" id="dict-input" placeholder="Pesquisar no dicionário (Infopédia · Wiktionary · Dic. Aberto)..." inputmode="search" autocapitalize="none" onkeydown="if(event.key===\'Enter\')searchWordInline(\''+b.id+'\')" autocorrect="off"><button class="btn btn-p" onclick="searchWordInline(\''+b.id+'\')">Pesquisar</button></div>';
   html+='<div class="dict-result-area" id="dict-result"></div>';
   html+='</div>';
   // History
@@ -1204,10 +1430,16 @@ function searchWordInline(bid){
   if(!q)return;
   var area=document.getElementById('dict-result');
   if(!area)return;
+
+  if(!isOnline){
+    area.innerHTML='<div class="dict-error">📵 Sem ligação à internet.<br><small>O dicionário requer internet. Guarda a palavra manualmente quando voltares a ligar.</small></div>';
+    return;
+  }
+
   area.innerHTML='<div class="dict-loading"><div class="dict-spinner"></div>A pesquisar "'+escHtml(q)+'" no Infopédia...</div>';
   lastDictResult=null;
 
-  // Use allorigins CORS proxy to fetch Infopédia
+  // Tenta Infopédia via proxy; se falhar, tenta dicionário PT alternativo
   var url='https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q);
   var proxyUrl='https://api.allorigins.win/get?url='+encodeURIComponent(url);
 
@@ -1218,14 +1450,112 @@ function searchWordInline(bid){
     try{
       var resp=JSON.parse(xhr.responseText);
       var html=resp.contents||'';
-      parseAndShowInfopedia(html,q,bid);
+      // Check if Infopédia returned useful content
+      if(html.length>500&&html.indexOf('infopedia')>=0){
+        parseAndShowInfopedia(html,q,bid);
+      } else {
+        // Fallback: Wiktionary PT
+        searchWiktionaryPT(q,bid,area);
+      }
     }catch(e){
-      showDictError(area,'Não foi possível carregar o resultado. Verifica a tua ligação.');
+      searchWiktionaryPT(q,bid,area);
     }
   };
-  xhr.onerror=function(){showDictError(area,'Sem ligação à internet ou o dicionário não está disponível.');};
+  xhr.onerror=function(){searchWiktionaryPT(q,bid,area);};
+  xhr.ontimeout=function(){searchWiktionaryPT(q,bid,area);};
+  xhr.send();
+}
+
+// Fallback: Wiktionary PT (API JSON pública, sem CORS)
+function searchWiktionaryPT(q,bid,area){
+  var url='https://pt.wiktionary.org/w/api.php?action=query&titles='+encodeURIComponent(q)+'&prop=revisions&rvprop=content&format=json&origin=*';
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',url,true);xhr.timeout=8000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var pages=d.query&&d.query.pages;
+      if(!pages){showDictError(area,'Palavra não encontrada.');return;}
+      var pid=Object.keys(pages)[0];
+      if(pid==='-1'||!pages[pid].revisions){
+        // Try Dicionário Aberto (API simples)
+        searchDicionarioAberto(q,bid,area);
+        return;
+      }
+      var wikitext=pages[pid].revisions[0]['*']||'';
+      parseWiktionaryContent(wikitext,q,bid,area);
+    }catch(e){searchDicionarioAberto(q,bid,area);}
+  };
+  xhr.onerror=function(){searchDicionarioAberto(q,bid,area);};
+  xhr.ontimeout=function(){searchDicionarioAberto(q,bid,area);};
+  xhr.send();
+}
+
+function parseWiktionaryContent(wikitext,query,bid,area){
+  var defs=[];
+  var wordClass='';
+  // Extract word class
+  var clsMatch=wikitext.match(/===\s*(Substantivo|Adjetivo|Verbo|Advérbio|Preposição|Pronome|Artigo|Numeral|Interjeição|Conjunção)\s*===/i);
+  if(clsMatch)wordClass=clsMatch[1];
+  // Extract definitions from numbered list items
+  var defRe=/^#\s*([^#\n:*][^\n]{10,300})/mg;
+  var m;
+  while((m=defRe.exec(wikitext))!==null&&defs.length<5){
+    var txt=m[1].replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g,'$1').replace(/\{\{[^}]+\}\}/g,'').replace(/'{2,}/g,'').trim();
+    if(txt.length>8)defs.push(txt);
+  }
+  if(!defs.length){showDictError(area,'Definição não encontrada para "'+escHtml(query)+'".<br><small><a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(query)+'" target="_blank" style="color:var(--accent-mid)">Ver no Infopédia ↗</a></small>');return;}
+  lastDictResult={word:query,wordClass:wordClass,defs:defs,query:query,source:'Wiktionary PT'};
+  showDictResultHTML(lastDictResult,bid,area);
+}
+
+// Second fallback: Dicionário Aberto
+function searchDicionarioAberto(q,bid,area){
+  var url='https://api.dicionario-aberto.net/word/'+encodeURIComponent(q);
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',url,true);xhr.timeout=6000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      if(!d||!d.length){showDictError(area,'Palavra "'+escHtml(q)+'" não encontrada.<br><small><a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q)+'" target="_blank" style="color:var(--accent-mid)">Pesquisar no Infopédia ↗</a></small>');return;}
+      var defs=[],wordClass='';
+      for(var i=0;i<d.length&&defs.length<5;i++){
+        var entry=d[i];
+        if(entry.sense){
+          var txt=(entry.sense+'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+          if(txt.length>5)defs.push(txt);
+        }
+        if(!wordClass&&entry.type)wordClass=entry.type;
+      }
+      if(!defs.length){showDictError(area,'Definição não encontrada para "'+escHtml(q)+'".');return;}
+      lastDictResult={word:q,wordClass:wordClass,defs:defs,query:q,source:'Dicionário Aberto'};
+      showDictResultHTML(lastDictResult,bid,area);
+    }catch(e){showDictError(area,'Erro ao carregar o dicionário. <a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q)+'" target="_blank" style="color:var(--accent-mid)">Ver no Infopédia ↗</a>');}
+  };
+  xhr.onerror=function(){showDictError(area,'Sem ligação ou dicionário indisponível. <a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q)+'" target="_blank" style="color:var(--accent-mid)">Ver no Infopédia ↗</a>');};
   xhr.ontimeout=function(){showDictError(area,'Tempo esgotado. Tenta novamente.');};
   xhr.send();
+}
+
+function showDictResultHTML(result,bid,area){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var html2='<div class="dict-result-card">';
+  html2+='<div class="dict-word-main">'+escHtml(result.word||result.query)+'</div>';
+  if(result.wordClass)html2+='<div class="dict-word-cls">'+escHtml(result.wordClass)+'</div>';
+  for(var i=0;i<result.defs.length;i++){
+    html2+='<div class="dict-def-item"><span class="dict-def-num">'+(i+1)+'.</span>'+escHtml(result.defs[i])+'</div>';
+  }
+  if(result.source)html2+='<div style="font-size:10px;color:var(--text3);margin-top:.4rem">Fonte: '+escHtml(result.source)+'</div>';
+  html2+='<div class="dict-save-row">';
+  if(b){
+    var chOpts='';
+    for(var ci=0;ci<b.chapters.length;ci++)chOpts+='<option>'+escHtml(b.chapters[ci])+'</option>';
+    html2+='<select id="dict-save-chapter" style="font-size:12px;padding:.3rem .5rem;width:auto;min-width:100px">'+chOpts+'</select>';
+    html2+='<input type="number" id="dict-save-page" placeholder="Pág." style="width:70px;font-size:13px;padding:.3rem .5rem" inputmode="numeric">';
+    html2+='<button class="btn btn-p btn-s" onclick="saveDictResult(\''+bid+'\')">+ Guardar</button>';
+  }
+  html2+='</div></div>';
+  if(area)area.innerHTML=html2;
 }
 
 function parseAndShowInfopedia(html,query,bid){
@@ -1285,30 +1615,13 @@ function parseAndShowInfopedia(html,query,bid){
   }
 
   if(defs.length===0){
-    // Word might not exist
-    area.innerHTML='<div class="dict-no-result">Palavra "'+escHtml(query)+'" não encontrada no Infopédia.<br><small style="color:var(--text3)">Verifica a ortografia ou tenta outra palavra.</small></div>';
+    // Word might not exist — try fallback
+    searchWiktionaryPT(query,bid,area);
     return;
   }
 
-  lastDictResult={word:wordFound||query,wordClass:wordClass,defs:defs,query:query};
-
-  var html2='<div class="dict-result-card">';
-  html2+='<div class="dict-word-main">'+escHtml(wordFound||query)+'</div>';
-  if(wordClass)html2+='<div class="dict-word-cls">'+escHtml(wordClass)+'</div>';
-  for(var i=0;i<defs.length;i++){
-    html2+='<div class="dict-def-item"><span class="dict-def-num">'+(i+1)+'.</span>'+escHtml(defs[i])+'</div>';
-  }
-  html2+='<div class="dict-save-row">';
-  if(b){
-    // Chapter selector
-    var chOpts='';
-    for(var ci=0;ci<b.chapters.length;ci++)chOpts+='<option>'+escHtml(b.chapters[ci])+'</option>';
-    html2+='<select id="dict-save-chapter" style="font-size:12px;padding:.3rem .5rem;width:auto;min-width:100px">'+chOpts+'</select>';
-    html2+='<input type="number" id="dict-save-page" placeholder="Pág." style="width:70px;font-size:13px;padding:.3rem .5rem" inputmode="numeric">';
-    html2+='<button class="btn btn-p btn-s" onclick="saveDictResult(\''+bid+'\')">+ Guardar</button>';
-  }
-  html2+='</div></div>';
-  area.innerHTML=html2;
+  lastDictResult={word:wordFound||query,wordClass:wordClass,defs:defs,query:query,source:'Infopédia'};
+  showDictResultHTML(lastDictResult,bid,area);
 }
 
 function saveDictResult(bid){
@@ -1401,6 +1714,8 @@ function saveManualSum(bid){
 
 // Init on load
 document.addEventListener('DOMContentLoaded',function(){
+  // Inicializar suporte offline
+  initOfflineSupport();
   // Restore theme
   try{
     var t=localStorage.getItem('leituras-theme')||'light';
