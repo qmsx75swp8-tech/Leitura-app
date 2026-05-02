@@ -147,6 +147,39 @@ select option{background:var(--surface)}
 .empty-ico{font-size:38px;margin-bottom:.65rem;opacity:.4}
 .empty p{font-size:13px;line-height:1.7}
 
+
+/* Book search / AI info lookup */
+.book-search-btn{width:100%;padding:.6rem;background:var(--accent-light);border:1px solid var(--accent-mid);
+  border-radius:var(--radius-sm);font-size:13px;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-weight:500;transition:all .15s;margin-bottom:.75rem;display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:40px}
+.book-search-btn:active{background:var(--accent);color:#fff}
+.book-search-status{padding:.6rem .8rem;background:var(--surface2);border-radius:var(--radius-sm);
+  font-size:12px;color:var(--text2);margin-bottom:.75rem;display:none;line-height:1.5}
+.book-search-status.active{display:block}
+.ai-spinner-sm{display:inline-block;width:12px;height:12px;border:2px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.3rem}
+
+/* Chapter summary note — distinct style */
+.note-item-chsummary{padding:.8rem .9rem;
+  border-left:4px solid var(--accent);
+  background:var(--surface);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom:.6rem;position:relative}
+.note-chsummary-badge{display:inline-flex;align-items:center;gap:.35rem;
+  font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.4rem}
+.note-chsummary-badge-sq{width:10px;height:10px;background:var(--accent);border-radius:2px;flex-shrink:0}
+[data-theme=dark] .note-item-chsummary{background:var(--surface2)}
+
+/* Chapter summaries panel in progress tab */
+.chsummary-panel{margin-top:1rem}
+.chsummary-item{padding:.7rem .85rem;border-left:4px solid var(--accent);background:var(--surface);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:.6rem}
+[data-theme=dark] .chsummary-item{background:var(--surface2)}
+.chsummary-name{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem}
+.chsummary-sq{width:9px;height:9px;background:var(--accent);border-radius:2px;flex-shrink:0}
+.chsummary-text{font-size:13px;line-height:1.6;color:var(--text)}
+
 /* ── DICIONÁRIO INLINE ──────────────────────────────────────── */
 .dict-search-row{display:flex;gap:.5rem;margin-bottom:.75rem}
 .dict-search-row input{flex:1;min-width:0}
@@ -372,13 +405,18 @@ select option{background:var(--surface)}
 <div class="modal">
   <div class="modal-hd">Adicionar livro <button class="xbtn" onclick="closeM('m-add')">✕</button></div>
   <div class="fr"><div><label>Título</label><input id="f-title" placeholder="Título do livro" oninput="debounceSearchCover()"></div><div><label>Autor</label><input id="f-author" placeholder="Nome do autor" oninput="debounceSearchCover()"></div></div>
+  <button class="book-search-btn" onclick="aiLookupBook()" id="ai-lookup-btn">
+    <span id="ai-lookup-spinner" style="display:none"><span class="ai-spinner-sm"></span></span>
+    ✦ Pesquisar informações com IA
+  </button>
+  <div id="book-search-status" class="book-search-status"></div>
   <div id="cover-search-row" class="cover-search-row" style="display:none">
     <img id="cover-preview-img" class="cover-preview-img" alt="Capa">
     <span id="cover-search-text" style="flex:1">A pesquisar capa...</span>
   </div>
   <div class="fr"><div><label>Nº de páginas</label><input id="f-pages" type="number" placeholder="ex: 320"></div><div><label>Estado</label><select id="f-status"><option value="reading">A ler</option><option value="done">Lido</option><option value="want">Quero ler</option></select></div></div>
   <div class="fr fr1"><label>Capítulos (separados por vírgula)</label><input id="f-chapters" placeholder="ex: Parte 1, Parte 2, Epílogo"></div>
-  <div class="fr fr1"><label>Notas iniciais / sinopse pessoal</label><textarea id="f-synopsis" placeholder="Breve descrição ou porquê de querer ler..."></textarea></div>
+  <div class="fr fr1"><label>Sinopse</label><textarea id="f-synopsis" placeholder="Breve descrição ou porquê de querer ler..."></textarea></div>
   <div class="bgrp"><button class="btn btn-g" onclick="closeM('m-add')">Cancelar</button><button class="btn btn-p" onclick="addBook()">Guardar livro</button></div>
 </div></div>
 
@@ -405,13 +443,13 @@ var db={books:[],words:[],version:4};
 var cBook=null,cNote=null;
 var syncTimeout=null,pendingCoverUrl=null,coverSearchTimer=null;
 
-// Storage key — stable across file updates, depends ONLY on user+pass
+// Storage key - stable across file updates, depends ONLY on user+pass
 // Never changes even when the HTML file is replaced
 function makeStorageKey(user,pass){
   var raw='leituras:'+user.toLowerCase().trim()+':'+pass;
   var h=0;
   for(var i=0;i<raw.length;i++){h=((h<<5)-h)+raw.charCodeAt(i);h|=0;}
-  // Prefix is fixed — not versioned — so data survives file updates
+  // Prefix is fixed - not versioned - so data survives file updates
   return 'leituras-data:'+Math.abs(h).toString(36)+':'+user.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
 }
 function makeCloudKey(user,pass){
@@ -510,7 +548,7 @@ function doLogin(){
   });
 }
 
-// ── ECRÃ RÁPIDO ──────────────────────────────────────────────
+// -- ECRÃ RÁPIDO ----------------------------------------------
 function showQuickScreen(){
   var reading=db.books.filter(function(b){return b.status==='reading';});
   var qs=document.getElementById('quick-screen');
@@ -520,9 +558,9 @@ function showQuickScreen(){
   if(!qs||!body)return;
 
   if(!reading.length){
-    body.innerHTML='<div class="quick-empty"><div class="empty-ico">📖</div><p>Não estás a ler nenhum livro.<br>Abre a app completa para adicionar um.</p></div>';
+    body.innerHTML='<div class="quick-empty"><div class="empty-ico"> </div><p>Não estás a ler nenhum livro.<br>Abre a app completa para adicionar um.</p></div>';
   } else {
-    var html='<div class="quick-section-title">A ler agora — marcar página</div>';
+    var html='<div class="quick-section-title">A ler agora - marcar página</div>';
     for(var i=0;i<reading.length;i++){
       var b=reading[i];
       var pct=b.pages?Math.round((b.currentPage/b.pages)*100):null;
@@ -543,12 +581,12 @@ function showQuickScreen(){
         html+='<div class="qw-controls"><div class="qw-pbar"><div class="qw-pfill" id="qwpf-'+b.id+'" style="width:'+pbarPct+'%"></div></div></div>';
       }
       html+='<div class="qw-input-row">';
-      html+='<button class="qw-minus" onclick="qwStep(\''+b.id+'\',-1)">−</button>';
+      html+='<button class="qw-minus" onclick="qwStep(\''+b.id+'\',-1)"> </button>';
       html+='<input class="qw-page-input" type="number" id="qwp-'+b.id+'" value="'+b.currentPage+'" min="0"'+(b.pages?' max="'+b.pages+'"':'')+(b.pages?' onchange="qwUpdateBar(\''+b.id+'\','+b.pages+')"':'')+' inputmode="numeric">';
       html+=(b.pages?'<span class="qw-of">/ '+b.pages+'</span>':'');
       html+='<button class="qw-save" id="qws-'+b.id+'" onclick="qwSave(\''+b.id+'\')">Guardar</button>';
       html+='</div>';
-      html+='<span class="qw-open-link" onclick="openBookFromQuick(\''+b.id+'\')">Ver livro completo →</span>';
+      html+='<span class="qw-open-link" onclick="openBookFromQuick(\''+b.id+'\')">Ver livro completo  </span>';
       html+='</div>';
     }
     body.innerHTML=html;
@@ -584,7 +622,7 @@ function qwSave(bid){
   save();
   // Feedback visual
   var btn=document.getElementById('qws-'+bid);
-  if(btn){btn.textContent='✓';btn.classList.add('qw-saved');setTimeout(function(){btn.textContent='Guardar';btn.classList.remove('qw-saved');},1500);}
+  if(btn){btn.textContent=' ';btn.classList.add('qw-saved');setTimeout(function(){btn.textContent='Guardar';btn.classList.remove('qw-saved');},1500);}
   // Se acabou o livro, recarregar ecrã
   if(b.pages&&b.currentPage>=b.pages){setTimeout(function(){showQuickScreen();},1600);}
 }
@@ -599,7 +637,7 @@ function openFullApp(){
   document.getElementById('app').style.display='flex';
   renderAll();
 }
-// ─────────────────────────────────────────────────────────────
+// -------------------------------------------------------------
 
 function confirmLogout(){
   if(!confirm('Terminar sessao? Os dados ficam guardados.'))return;
@@ -713,7 +751,15 @@ function showView(v){
   var ms=document.querySelector('.main-scroll');if(ms)ms.scrollTop=0;
 }
 function openM(id){var el=document.getElementById(id);if(el)el.classList.add('open');}
-function closeM(id){var el=document.getElementById(id);if(el)el.classList.remove('open');}
+function closeM(id){
+  var el=document.getElementById(id);if(el)el.classList.remove('open');
+  if(id==='m-add'){
+    var sd=document.getElementById('book-search-status');if(sd){sd.className='book-search-status';sd.textContent='';}
+    var sp=document.getElementById('ai-lookup-spinner');if(sp)sp.style.display='none';
+    var btn2=document.getElementById('ai-lookup-btn');if(btn2)btn2.disabled=false;
+    aiLookupInProgress=false;
+  }
+}
 
 // Helpers
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
@@ -734,6 +780,97 @@ function renderSpine(b,i,large){
   return '<div class="'+cls+'" style="'+sty+'background:'+color+'">'+initials(b.title)+'</div>';
 }
 
+
+// AI Book Info Lookup
+var aiLookupInProgress=false;
+var pendingChapterSummaries={}; // {chapterName: summaryText}
+
+function aiLookupBook(){
+  var title=document.getElementById('f-title').value.trim();
+  var author=document.getElementById('f-author').value.trim();
+  if(!title){alert('Introduz pelo menos o titulo do livro.');return;}
+  if(aiLookupInProgress)return;
+  aiLookupInProgress=true;
+
+  var btn=document.getElementById('ai-lookup-btn');
+  var spinner=document.getElementById('ai-lookup-spinner');
+  var statusDiv=document.getElementById('book-search-status');
+  if(btn)btn.disabled=true;
+  if(spinner)spinner.style.display='inline';
+  if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent='A pesquisar informacoes do livro...';}
+
+  // Also trigger cover search
+  debounceSearchCover();
+
+  var prompt='Fornece informacoes sobre o livro "'+title+'"'+(author?' de '+author:'')+'. ';
+  prompt+='Responde APENAS com um objeto JSON valido (sem markdown, sem explicacoes) com esta estrutura exata:
+';
+  prompt+='{"paginas":NUMBER_OR_NULL,"sinopse":"STRING_MAX_300_CHARS","capitulos":["cap1","cap2",...],"resumos_capitulos":{"cap1":"resumo breve em 1-2 frases","cap2":"resumo breve"}}
+';
+  prompt+='Para paginas: numero aproximado de paginas da edicao mais comum. Se nao souberes, null.
+';
+  prompt+='Para capitulos: lista dos capitulos/partes principais (maximo 20). Se nao souberes, ["Capitulo 1","Capitulo 2","Capitulo 3"].
+';
+  prompt+='Para resumos_capitulos: um resumo MUITO breve (1-2 frases) do que acontece em cada capitulo, SEM spoilers maiores.
+';
+  prompt+='Para sinopse: descricao do livro em portugues europeu, max 300 caracteres.
+';
+  prompt+='Responde APENAS com o JSON, sem mais nada.';
+
+  var xhr=new XMLHttpRequest();
+  xhr.open('POST','https://api.anthropic.com/v1/messages',true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.timeout=25000;
+  xhr.onload=function(){
+    aiLookupInProgress=false;
+    if(btn)btn.disabled=false;
+    if(spinner)spinner.style.display='none';
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var raw=d.content&&d.content[0]&&d.content[0].text;
+      if(!raw)throw new Error('no text');
+      // Strip any markdown fences
+      raw=raw.replace(/```json/g,'').replace(/```/g,'').trim();
+      var info=JSON.parse(raw);
+      // Fill in the form
+      var pagesEl=document.getElementById('f-pages');
+      var chapEl=document.getElementById('f-chapters');
+      var synEl=document.getElementById('f-synopsis');
+      if(info.paginas&&pagesEl&&!pagesEl.value)pagesEl.value=info.paginas;
+      if(info.capitulos&&chapEl&&!chapEl.value)chapEl.value=info.capitulos.join(', ');
+      if(info.sinopse&&synEl&&!synEl.value)synEl.value=info.sinopse;
+      // Store chapter summaries to attach to book later
+      pendingChapterSummaries=info.resumos_capitulos||{};
+      var nCh=info.capitulos?info.capitulos.length:0;
+      var msg='Encontrado: '+nCh+' capitulos'+(info.paginas?' / ~'+info.paginas+' paginas':'')+'.';
+      if(nCh>0)msg+=' Resumos de capitulo guardados.';
+      if(statusDiv){statusDiv.textContent=msg;}
+    }catch(e){
+      if(statusDiv){statusDiv.textContent='Nao foi possivel obter informacoes. Preenche manualmente.';}
+      pendingChapterSummaries={};
+    }
+  };
+  xhr.onerror=function(){
+    aiLookupInProgress=false;
+    if(btn)btn.disabled=false;
+    if(spinner)spinner.style.display='none';
+    if(statusDiv)statusDiv.textContent='Erro de ligacao. Tenta de novo.';
+    pendingChapterSummaries={};
+  };
+  xhr.ontimeout=function(){
+    aiLookupInProgress=false;
+    if(btn)btn.disabled=false;
+    if(spinner)spinner.style.display='none';
+    if(statusDiv)statusDiv.textContent='Tempo esgotado. Tenta de novo.';
+    pendingChapterSummaries={};
+  };
+  xhr.send(JSON.stringify({
+    model:'claude-sonnet-4-20250514',
+    max_tokens:2000,
+    messages:[{role:'user',content:prompt}]
+  }));
+}
+
 // Books
 function addBook(){
   var title=document.getElementById('f-title').value.trim();
@@ -745,15 +882,38 @@ function addBook(){
     status:document.getElementById('f-status').value,currentPage:0,notes:[],summary:'',summaryByAI:false,
     synopsis:document.getElementById('f-synopsis').value.trim(),
     chapters:chapters.length?chapters:['Geral'],addedAt:Date.now(),colorIdx:db.books.length,
-    coverUrl:pendingCoverUrl||null};
+    coverUrl:pendingCoverUrl||null,
+    chapterSummaries:{}};
+  // Attach AI chapter summaries
+  if(pendingChapterSummaries){
+    var finalChaps=book.chapters;
+    for(var ci=0;ci<finalChaps.length;ci++){
+      var cn=finalChaps[ci].trim();
+      // Try exact match first, then fuzzy (starts with same words)
+      if(pendingChapterSummaries[cn]){
+        book.chapterSummaries[cn]=pendingChapterSummaries[cn];
+      } else {
+        // Try to find a close match
+        var keys=Object.keys(pendingChapterSummaries);
+        for(var ki=0;ki<keys.length;ki++){
+          var k=keys[ki];
+          if(k.toLowerCase().indexOf(cn.toLowerCase())>=0||cn.toLowerCase().indexOf(k.toLowerCase())>=0){
+            book.chapterSummaries[cn]=pendingChapterSummaries[k];break;
+          }
+        }
+      }
+    }
+    pendingChapterSummaries={};
+  }
   db.books.push(book);
   save();
   ['f-title','f-author','f-pages','f-chapters','f-synopsis'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
   document.getElementById('f-status').value='reading';
-  pendingCoverUrl=null;
+  pendingCoverUrl=null;pendingChapterSummaries={};
   var row=document.getElementById('cover-search-row');if(row)row.style.display='none';
+  var sd=document.getElementById('book-search-status');if(sd){sd.className='book-search-status';sd.textContent='';}
   // Try to get cover
   if(!book.coverUrl&&title){
     fetchBookCover(title,book.author,function(url){
@@ -794,7 +954,7 @@ function renderList(cid,books){
 }
 
 function openBook(id){
-  cBook=id;
+  cBook=id;chSummariesVisible=false;
   var b=db.books.filter(function(x){return x.id===id;})[0];
   if(!b)return;
   renderDetail(b);showView('detail');
@@ -802,6 +962,7 @@ function openBook(id){
 function goBack(){showView('biblioteca');}
 
 function renderDetail(b){
+  if(!b.chapterSummaries)b.chapterSummaries={};
   var pct=b.pages?Math.round((b.currentPage/b.pages)*100):0;
   var ci=b.colorIdx!=null?b.colorIdx:0;
   var wc=db.words.filter(function(w){return w.bookId===b.id;}).length;
@@ -838,6 +999,16 @@ function renderDetail(b){
   prog+='<tr><td style="color:var(--text2);padding:3px 0">Palavras</td><td>'+wc+'</td></tr>';
   prog+='</table>'+(b.synopsis?'<div style="margin-top:.7rem;padding:.7rem;background:var(--surface2);border-radius:var(--radius-sm);font-size:13px;line-height:1.6;color:var(--text2)">'+b.synopsis+'</div>':'')+'</div>';
 
+  // Add chapter summaries panel to progress tab if available
+  var chSumKeys=b.chapterSummaries?Object.keys(b.chapterSummaries):[];
+  if(chSumKeys.length>0){
+    prog+='<div class="chsummary-panel"><div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem"><span class="chsummary-sq"></span>Resumos de Capitulo (IA)</div>';
+    for(var csi=0;csi<chSumKeys.length;csi++){
+      var csn=chSumKeys[csi];
+      prog+='<div class="chsummary-item"><div class="chsummary-name"><span class="chsummary-sq"></span>'+csn+'</div><div class="chsummary-text">'+b.chapterSummaries[csn]+'</div></div>';
+    }
+    prog+='</div>';
+  }
   detailHtml+='<div class="dsec active" id="t-prog">'+prog+'</div>';
   detailHtml+='<div class="dsec" id="t-notes">'+renderNotesSection(b)+'</div>';
   detailHtml+='<div class="dsec" id="t-words">'+renderDictSection(b)+'</div>';
@@ -866,10 +1037,20 @@ function switchTab(id,el){
 
 // Notes
 function renderNotesSection(b){
-  var html='<div class="sec-hd"><div style="font-size:13px;color:var(--text2)">'+b.notes.length+' nota'+(b.notes.length!==1?'s':'')+'</div><button class="btn btn-p btn-s" onclick="openAddNote(\''+b.id+'\')">+ Nova nota</button></div>';
+  var totalNotes=b.notes.filter(function(n){return n.type!=='chsummary';}).length;
+  var hasSummaries=b.chapterSummaries&&Object.keys(b.chapterSummaries).length>0;
+  var html='<div class="sec-hd"><div style="font-size:13px;color:var(--text2)">'+totalNotes+' nota'+(totalNotes!==1?'s':'')+'</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">'+(hasSummaries?'<button class="btn btn-g btn-s" onclick="toggleChSummariesInNotes(\''+b.id+'\')">Ver resumos IA</button>':'')+'<button class="btn btn-p btn-s" onclick="openAddNote(\''+b.id+'\')">+ Nova nota</button></div></div>';
   html+='<div class="chip-row">'+renderChips(b,'Todos')+'</div>';
   html+='<div id="notes-list">'+renderNotes(b,'Todos')+'</div>';
   return html;
+}
+var chSummariesVisible=false;
+function toggleChSummariesInNotes(bid){
+  chSummariesVisible=!chSummariesVisible;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];
+  var activeChip=document.querySelector('.chip.active');
+  var activeFilter=activeChip?activeChip.textContent:'Todos';
+  document.getElementById('notes-list').innerHTML=renderNotes(b,activeFilter);
 }
 function renderChips(b,active){
   var arr=['Todos'].concat(b.chapters);
@@ -888,15 +1069,26 @@ function filterNotes(bid,chapter,el){
   document.getElementById('notes-list').innerHTML=renderNotes(b,chapter);
 }
 function renderNotes(b,filter){
-  var notes=b.notes.slice().sort(function(a,z){return a.page-z.page;});
+  var notes=b.notes.filter(function(n){return n.type!=='chsummary';}).sort(function(a,z){return a.page-z.page;});
   if(filter&&filter!=='Todos')notes=notes.filter(function(n){return n.chapter===filter;});
-  if(!notes.length)return '<div class="empty" style="padding:1.5rem"><div class="empty-ico">&#128221;</div><p>Sem notas ainda.</p></div>';
+  // Prepend chapter summary if visible and filter matches a chapter with a summary
+  var summaryHtml='';
+  if(chSummariesVisible&&b.chapterSummaries){
+    var summaryKeys=filter&&filter!=='Todos'?[filter]:Object.keys(b.chapterSummaries);
+    for(var si=0;si<summaryKeys.length;si++){
+      var sk=summaryKeys[si];
+      if(b.chapterSummaries[sk]){
+        summaryHtml+='<div class="note-item-chsummary"><div class="note-chsummary-badge"><span class="note-chsummary-badge-sq"></span>Resumo de capitulo (IA)</div><div class="note-meta"><span>'+sk+'</span></div><div class="note-txt">'+b.chapterSummaries[sk]+'</div></div>';
+      }
+    }
+  }
+  if(!notes.length&&!summaryHtml)return '<div class="empty" style="padding:1.5rem"><div class="empty-ico">&#128221;</div><p>Sem notas ainda.</p></div>';
   var html='';
   for(var i=0;i<notes.length;i++){
     var n=notes[i];
     html+='<div class="note-item"><div class="note-meta">'+(n.page?'<span>Pag. '+n.page+'</span>':'')+'<span>'+n.chapter+'</span><span>'+new Date(n.at).toLocaleDateString('pt-PT')+'</span></div><div class="note-txt">'+n.text+'</div><div class="note-actions"><button class="btn btn-g btn-s" onclick="startEditNote(\''+b.id+'\',\''+n.id+'\')">Editar</button><button class="btn btn-d btn-s" onclick="delNote(\''+b.id+'\',\''+n.id+'\')">Apagar</button></div></div>';
   }
-  return html;
+  return summaryHtml+html;
 }
 function openAddNote(bid){
   cBook=bid;
@@ -960,7 +1152,7 @@ function delBook(id){
   save();renderAll();
 }
 
-// Dictionary — inline Infopédia via CORS proxy
+// Dictionary - inline Infopédia via CORS proxy
 var lastDictResult=null; // {word, wordClass, defs[]}
 
 function renderDictSection(b){
@@ -1046,7 +1238,7 @@ function parseAndShowInfopedia(html,query,bid){
   if(!hwMatch)hwMatch=html.match(/<span[^>]*class="[^"]*head[^"]*"[^>]*>([^<]+)</i);
   if(hwMatch)wordFound=hwMatch[1].trim();
 
-  // Extract definitions — look for numbered definitions or paragraph text
+  // Extract definitions - look for numbered definitions or paragraph text
   // Strategy: find text blocks that look like definitions
   var defPatterns=[
     // Infopédia numbered list items
@@ -1122,14 +1314,14 @@ function saveDictResult(bid){
   });
   save();
   var area=document.getElementById('dict-result');
-  if(area)area.innerHTML='<div style="font-size:13px;color:var(--success);padding:.5rem;background:var(--surface2);border-radius:var(--radius-sm)">✓ Palavra guardada no histórico!</div>';
+  if(area)area.innerHTML='<div style="font-size:13px;color:var(--success);padding:.5rem;background:var(--surface2);border-radius:var(--radius-sm)">  Palavra guardada no histórico!</div>';
   lastDictResult=null;
   renderDetail(b);
   setTimeout(function(){switchTab('t-words',document.querySelectorAll('.dtab')[2]);},50);
 }
 
 function showDictError(area,msg){
-  if(area)area.innerHTML='<div class="dict-error">'+escHtml(msg)+'<br><small>Podes também <a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/" target="_blank" style="color:var(--accent-mid)">abrir o Infopédia ↗</a></small></div>';
+  if(area)area.innerHTML='<div class="dict-error">'+escHtml(msg)+'<br><small>Podes também <a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/" target="_blank" style="color:var(--accent-mid)">abrir o Infopédia  </a></small></div>';
 }
 
 var pendingWordBook=null;
