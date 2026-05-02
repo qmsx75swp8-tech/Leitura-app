@@ -1,0 +1,136 @@
+const firebaseConfig = {
+  apiKey: "COLOCA",
+  authDomain: "COLOCA",
+  projectId: "COLOCA"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let user;
+let books = JSON.parse(localStorage.getItem("books")||"[]");
+
+/* NAV */
+function go(p){
+  if(p==="home") home();
+  if(p==="search") search();
+  if(p==="ai") ai();
+  if(p==="stats") stats();
+  if(p==="profile") profile();
+}
+
+/* HOME */
+function home(){
+  app.innerHTML=`
+  <div class="card">
+    <input id="title" placeholder="Novo livro">
+    <button onclick="add()">Adicionar</button>
+  </div>
+
+  ${books.map((b,i)=>`
+  <div class="card">
+    <b>${b.title}</b><br>
+    ${b.progress||0}%
+    <input type="range" value="${b.progress||0}" onchange="update(${i},this.value)">
+  </div>`).join("")}
+  `;
+}
+
+function add(){
+  books.push({title:title.value,progress:0});
+  save();
+  home();
+}
+
+function update(i,v){
+  books[i].progress=v;
+  save();
+}
+
+/* SEARCH */
+async function search(){
+  app.innerHTML=`
+  <div class="card">
+    <input id="q" placeholder="Pesquisar">
+    <button onclick="doSearch()">Pesquisar</button>
+  </div>
+  <div id="res"></div>
+  `;
+}
+
+async function doSearch(){
+  const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q.value}`);
+  const d = await r.json();
+
+  res.innerHTML=d.items.slice(0,5).map(b=>`
+    <div class="card">
+    ${b.volumeInfo.title}
+    <button onclick="quick('${b.volumeInfo.title}')">Adicionar</button>
+    </div>`).join("");
+}
+
+function quick(t){
+  books.push({title:t,progress:0});
+  save();
+}
+
+/* IA INTELIGENTE */
+function ai(){
+  app.innerHTML=`
+  <div class="card">
+    <button onclick="ask()">Recomendar Inteligente</button>
+    <div id="out"></div>
+  </div>`;
+}
+
+async function ask(){
+  const contexto = books.map(b=>b.title).join(", ");
+
+  const r = await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer TUA_API_KEY"
+    },
+    body:JSON.stringify({
+      model:"gpt-4o-mini",
+      messages:[{
+        role:"user",
+        content:`Baseado nestes livros: ${contexto}, recomenda novos`
+      }]
+    })
+  });
+
+  const d = await r.json();
+  out.innerText=d.choices[0].message.content;
+}
+
+/* STATS */
+function stats(){
+  app.innerHTML=`<div class="card">Total: ${books.length}</div>`;
+}
+
+/* PROFILE */
+function profile(){
+  app.innerHTML=`<div class="card"><button onclick="logout()">Logout</button></div>`;
+}
+
+/* SAVE */
+function save(){
+  localStorage.setItem("books",JSON.stringify(books));
+  if(user){
+    db.collection("users").doc(user.uid).set({books});
+  }
+}
+
+/* AUTH */
+auth.signInAnonymously().then(res=>{
+  user=res.user;
+  home();
+});
+
+/* SW */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}

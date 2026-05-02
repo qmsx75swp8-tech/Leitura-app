@@ -1,0 +1,6 @@
+{
+  "name": "Leituras Elite",
+  "short_name": "Leituras",
+  "display": "standalone",
+  "start_url": "."
+}

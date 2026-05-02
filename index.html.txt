@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Leituras Elite</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+
+</head>
+<body>
+
+<div class="app">
+
+<header class="header">
+  <h1>Leituras Elite</h1>
+</header>
+
+<main id="app"></main>
+
+<nav class="nav">
+  <button onclick="go('home')">📚</button>
+  <button onclick="go('search')">🔍</button>
+  <button onclick="go('ai')">✨</button>
+  <button onclick="go('stats')">📊</button>
+  <button onclick="go('profile')">👤</button>
+</nav>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
