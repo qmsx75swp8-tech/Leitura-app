@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Leituras</title>
 <meta name="application-name" content="Leituras">
 <meta name="description" content="O teu diario de leitura pessoal">
@@ -20,14 +20,14 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#F7F4EE;--surface:#FFFFFF;--surface2:#F0EDE6;--surface3:#E8E4DC;
   --text:#1A1714;--text2:#6B6560;--text3:#A09890;
   --accent:#8B5E3C;--accent-light:#F5EDE3;--accent-mid:#C4956A;--accent-dark:#6B4528;
   --border:#E2DDD6;--danger:#C0392B;--success:#2E7D52;
   --radius:12px;--radius-sm:8px;--radius-xs:6px;
-  --nav-h:52px;
+  --nav-h:52px;--safe-bottom:env(safe-area-inset-bottom,0px);
 }
 [data-theme=dark]{
   --bg:#111009;--surface:#1C1A16;--surface2:#242118;--surface3:#2E2B24;
@@ -35,47 +35,77 @@
   --accent:#C4956A;--accent-light:#2A2218;--accent-mid:#C4956A;--accent-dark:#E0B990;
   --border:#302D26;--danger:#E05252;--success:#4CAF7D;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s}
-.app{display:flex;flex-direction:column;min-height:100vh}
-.nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1rem;height:var(--nav-h);gap:0;position:sticky;top:0;z-index:100;transition:background .25s,border .25s}
-.nav-logo{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--accent);margin-right:auto;white-space:nowrap}
-.nav-tab{padding:.5rem .85rem;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;height:var(--nav-h);display:flex;align-items:center;transition:all .15s;white-space:nowrap}
+html{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;transition:background .25s,color .25s;-webkit-text-size-adjust:100%}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+.nav{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 .75rem;padding-top:env(safe-area-inset-top,0);
+  height:calc(var(--nav-h) + env(safe-area-inset-top,0));gap:0;flex-shrink:0;
+  transition:background .25s,border .25s;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.nav::-webkit-scrollbar{display:none}
+.nav-logo{font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--accent);margin-right:auto;white-space:nowrap;padding-right:.5rem;flex-shrink:0}
+.nav-tab{padding:.5rem .65rem;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;
+  border-bottom:2px solid transparent;height:var(--nav-h);display:flex;align-items:center;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;touch-action:manipulation}
 .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.nav-tab:hover:not(.active){color:var(--text)}
-.theme-btn{margin-left:.5rem;padding:.4rem .6rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;white-space:nowrap}
-.theme-btn:hover{background:var(--surface3);color:var(--text)}
-.user-btn{margin-left:.35rem;padding:.4rem .6rem;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;color:var(--accent);transition:all .15s;white-space:nowrap;font-weight:500}
-.user-btn:hover{background:var(--accent);color:#fff}
-.view{display:none;padding:1.5rem;max-width:860px;margin:0 auto;width:100%}
+.theme-btn{margin-left:.35rem;padding:.4rem .55rem;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);cursor:pointer;font-size:12px;color:var(--text2);
+  transition:all .15s;white-space:nowrap;flex-shrink:0;touch-action:manipulation}
+.user-btn{margin-left:.25rem;padding:.4rem .55rem;background:var(--accent-light);border:1px solid var(--accent-mid);
+  border-radius:var(--radius-sm);cursor:pointer;font-size:11px;color:var(--accent);
+  transition:all .15s;white-space:nowrap;font-weight:500;flex-shrink:0;touch-action:manipulation}
+.main-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding-bottom:calc(1rem + var(--safe-bottom))}
+.view{display:none;padding:1rem;max-width:860px;margin:0 auto;width:100%}
 .view.active{display:block}
-h2{font-family:'Lora',serif;font-size:21px;font-weight:600;margin-bottom:1.25rem;color:var(--text)}
-h3{font-size:15px;font-weight:500;margin-bottom:.5rem;color:var(--text)}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:background .25s,border .25s}
+@media(min-width:600px){.view{padding:1.5rem}}
+h2{font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:1.1rem;color:var(--text)}
+h3{font-size:14px;font-weight:500;margin-bottom:.5rem;color:var(--text)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;transition:background .25s,border .25s}
 label{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-bottom:.3rem;letter-spacing:.05em;text-transform:uppercase}
-input,select,textarea{width:100%;padding:.55rem .8rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface2);outline:none;transition:border .15s,background .25s,color .25s}
+input,select,textarea{width:100%;padding:.6rem .8rem;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:16px;color:var(--text);background:var(--surface2);
+  outline:none;transition:border .15s,background .25s,color .25s;-webkit-appearance:none;appearance:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent-mid)}
-textarea{resize:vertical;min-height:76px;line-height:1.6}
+textarea{resize:vertical;min-height:76px;line-height:1.6;font-size:15px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23A09890' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;padding-right:2rem}
 select option{background:var(--surface)}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
-.fr1{grid-template-columns:1fr;margin-bottom:.85rem}
-.btn{padding:.5rem 1rem;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
-.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent-dark)}
-.btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-g:hover{background:var(--surface2);color:var(--text)}
-.btn-d{background:transparent;color:var(--danger);border:1px solid var(--danger)}.btn-d:hover{opacity:.8}
-.btn-s{padding:.35rem .7rem;font-size:12px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+.fr1{grid-template-columns:1fr;margin-bottom:.75rem}
+@media(max-width:480px){.fr{grid-template-columns:1fr}}
+.btn{padding:.55rem 1rem;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;border:none;
+  transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.btn-p{background:var(--accent);color:#fff}.btn-p:active{background:var(--accent-dark)}
+.btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-g:active{background:var(--surface2)}
+.btn-d{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn-s{padding:.4rem .75rem;font-size:13px;min-height:36px}
+.btn-xs{padding:.3rem .6rem;font-size:12px;min-height:30px}
 .bgrp{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
-.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;
+  align-items:flex-end;justify-content:center;overflow-y:auto}
 .modal-wrap.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--radius);width:100%;max-width:520px;padding:1.5rem;margin:auto;transition:background .25s}
-.modal-hd{font-family:'Lora',serif;font-size:17px;font-weight:600;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
-.xbtn{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1;padding:.25rem}.xbtn:hover{color:var(--text)}
-.book-card{display:grid;grid-template-columns:auto 1fr auto;gap:.85rem;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1.1rem;cursor:pointer;transition:all .15s;margin-bottom:.6rem}
-.book-card:hover{border-color:var(--accent-mid)}
-.bspine{width:46px;height:62px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:16px;font-weight:600;color:#fff;flex-shrink:0}
+.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:600px;
+  padding:1.25rem 1.25rem calc(1.25rem + var(--safe-bottom));margin:0;
+  transition:background .25s;max-height:90vh;overflow-y:auto}
+@media(min-width:600px){
+  .modal-wrap{align-items:center;padding:1.5rem}
+  .modal{border-radius:var(--radius);margin:auto;padding:1.5rem}
+}
+.modal-hd{font-family:'Lora',serif;font-size:17px;font-weight:600;margin-bottom:1.1rem;
+  display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+.xbtn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);
+  line-height:1;padding:.35rem;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
+.book-card{display:grid;grid-template-columns:auto 1fr auto;gap:.75rem;align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:.85rem .9rem;cursor:pointer;transition:all .15s;margin-bottom:.55rem;touch-action:manipulation}
+.book-card:active{background:var(--surface2)}
+.bspine{width:44px;height:60px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-family:'Lora',serif;font-size:15px;font-weight:600;color:#fff;flex-shrink:0;overflow:hidden}
 .binfo{min-width:0}
 .btitle{font-family:'Lora',serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-.bauthor{font-size:12px;color:var(--text2);margin-top:1px}
-.bmeta{display:flex;gap:.4rem;margin-top:.4rem;flex-wrap:wrap}
+.bauthor{font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bmeta{display:flex;gap:.35rem;margin-top:.4rem;flex-wrap:wrap}
 .bdg{font-size:11px;padding:2px 7px;border-radius:20px;font-weight:500}
 .bdg-r{background:#FFF3E0;color:#BF360C}[data-theme=dark] .bdg-r{background:#2A1A0A;color:#FFAB76}
 .bdg-d{background:#E8F5E9;color:#1B5E20}[data-theme=dark] .bdg-d{background:#0A1F0C;color:#81C784}
@@ -83,122 +113,157 @@ select option{background:var(--surface)}
 .bdg-p{background:var(--surface2);color:var(--text2)}
 .pbar{height:3px;background:var(--border);border-radius:2px;margin-top:.4rem}
 .pfill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
-.stats-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.25rem}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.85rem;text-align:center;transition:background .25s}
-.stat-n{font-family:'Lora',serif;font-size:26px;font-weight:600;color:var(--accent);display:block}
+.stats-g{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.1rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem .5rem;text-align:center;transition:background .25s}
+.stat-n{font-family:'Lora',serif;font-size:24px;font-weight:600;color:var(--accent);display:block}
 .stat-l{font-size:11px;color:var(--text2);margin-top:2px}
-.sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
-.detail-hd{display:flex;align-items:flex-start;gap:1.1rem;margin-bottom:1.25rem}
-.dspine{width:68px;height:90px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;flex-shrink:0}
-.dtabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.25rem;gap:0;overflow-x:auto}
-.dtab{padding:.55rem .9rem;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;gap:.5rem}
+.detail-hd{display:flex;align-items:flex-start;gap:.9rem;margin-bottom:1.1rem}
+.dspine{width:64px;height:86px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-family:'Lora',serif;font-size:24px;font-weight:600;color:#fff;flex-shrink:0;overflow:hidden}
+.dtabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.1rem;overflow-x:auto;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.dtabs::-webkit-scrollbar{display:none}
+.dtab{padding:.5rem .75rem;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;touch-action:manipulation;flex-shrink:0}
 .dtab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .dsec{display:none}.dsec.active{display:block}
-.pg-tracker{display:flex;align-items:center;gap:.85rem;padding:.9rem 1rem;background:var(--accent-light);border-radius:var(--radius-sm);margin-bottom:1rem;flex-wrap:wrap;transition:background .25s}
-.note-item{padding:.8rem 1rem;border-left:3px solid var(--accent-mid);background:var(--accent-light);border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:.65rem;transition:background .25s}
-.note-meta{font-size:11px;color:var(--text3);margin-bottom:.3rem;display:flex;gap:.75rem;flex-wrap:wrap}
+.pg-tracker{display:flex;align-items:center;gap:.75rem;padding:.85rem .9rem;background:var(--accent-light);
+  border-radius:var(--radius-sm);margin-bottom:.9rem;flex-wrap:wrap}
+.note-item{padding:.8rem .9rem;border-left:3px solid var(--accent-mid);background:var(--accent-light);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:.6rem}
+.note-meta{font-size:11px;color:var(--text3);margin-bottom:.3rem;display:flex;gap:.65rem;flex-wrap:wrap}
 .note-txt{font-size:14px;line-height:1.6;color:var(--text)}
 .note-actions{margin-top:.4rem;display:flex;gap:.4rem}
-.chip-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
-.chip{padding:.28rem .65rem;border-radius:20px;font-size:12px;border:1px solid var(--border);cursor:pointer;transition:all .12s;background:var(--surface);color:var(--text2)}
+.chip-row{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.7rem;overflow-x:auto;padding-bottom:.25rem;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{padding:.3rem .7rem;border-radius:20px;font-size:12px;border:1px solid var(--border);
+  cursor:pointer;transition:all .12s;background:var(--surface);color:var(--text2);white-space:nowrap;
+  touch-action:manipulation;min-height:30px;display:flex;align-items:center}
 .chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.chip:hover:not(.active){background:var(--surface2)}
-.sumbox{background:var(--surface2);border-radius:var(--radius-sm);padding:1.1rem;font-size:14px;line-height:1.7;color:var(--text);border-left:3px solid var(--accent-mid);white-space:pre-wrap;min-height:80px;transition:background .25s}
+.sumbox{background:var(--surface2);border-radius:var(--radius-sm);padding:1rem;font-size:14px;
+  line-height:1.7;color:var(--text);border-left:3px solid var(--accent-mid);white-space:pre-wrap;min-height:80px}
 .empty{text-align:center;padding:2.5rem 1rem;color:var(--text3)}
-.empty-ico{font-size:40px;margin-bottom:.75rem;opacity:.4}
+.empty-ico{font-size:38px;margin-bottom:.65rem;opacity:.4}
 .empty p{font-size:13px;line-height:1.7}
-.dict-search-row{display:flex;gap:.6rem;margin-bottom:1.1rem}
-.dict-search-row input{flex:1}
-.word-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.9rem 1rem;margin-bottom:.6rem;transition:background .25s}
-.word-title{font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--accent);margin-bottom:.3rem}
-.word-class{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem}
-.word-def{font-size:13px;line-height:1.65;color:var(--text)}
-.word-book{font-size:11px;color:var(--text3);margin-top:.4rem}
-.word-meta{display:flex;justify-content:space-between;align-items:flex-start}
-.word-date{font-size:11px;color:var(--text3)}
-.infopedia-note{font-size:12px;color:var(--text3);margin-top:.5rem;line-height:1.5}
-.infopedia-note a{color:var(--accent-mid);text-decoration:none}
-.infopedia-note a:hover{text-decoration:underline}
 
-/* Login screen */
-.login-wrap{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;padding:1.5rem;transition:background .25s}
-.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:400px;padding:2rem;text-align:center}
-.login-logo{font-family:'Lora',serif;font-size:28px;font-weight:600;color:var(--accent);margin-bottom:.25rem}
-.login-sub{font-size:13px;color:var(--text3);margin-bottom:1.75rem;line-height:1.5}
+/* ── DICIONÁRIO INLINE ──────────────────────────────────────── */
+.dict-search-row{display:flex;gap:.5rem;margin-bottom:.75rem}
+.dict-search-row input{flex:1;min-width:0}
+.dict-result-area{min-height:60px;margin-bottom:.5rem}
+.dict-loading{display:flex;align-items:center;gap:.5rem;font-size:13px;color:var(--text2);padding:.75rem;
+  background:var(--surface2);border-radius:var(--radius-sm)}
+.dict-spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.dict-result-card{background:var(--accent-light);border:1px solid var(--accent-mid);
+  border-radius:var(--radius-sm);padding:.9rem 1rem;margin-bottom:.5rem}
+.dict-word-main{font-family:'Lora',serif;font-size:18px;font-weight:600;color:var(--accent);margin-bottom:.2rem}
+.dict-word-cls{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.dict-def-item{font-size:13px;line-height:1.65;color:var(--text);padding:.3rem 0;border-bottom:1px solid var(--border)}
+.dict-def-item:last-child{border-bottom:none}
+.dict-def-num{font-size:11px;color:var(--accent);font-weight:600;margin-right:.4rem}
+.dict-save-row{display:flex;gap:.5rem;margin-top:.65rem;flex-wrap:wrap}
+.dict-no-result{font-size:13px;color:var(--text2);padding:.75rem;background:var(--surface2);
+  border-radius:var(--radius-sm);text-align:center}
+.dict-error{font-size:13px;color:var(--danger);padding:.75rem;background:#FDF0EF;border-radius:var(--radius-sm)}
+[data-theme=dark] .dict-error{background:#2A1010}
+.word-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.85rem .9rem;margin-bottom:.55rem}
+.word-title{font-family:'Lora',serif;font-size:15px;font-weight:600;color:var(--accent);margin-bottom:.15rem}
+.word-class{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem}
+.word-def{font-size:13px;line-height:1.6;color:var(--text)}
+.word-meta{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;gap:.5rem}
+.word-date{font-size:11px;color:var(--text3);flex-shrink:0}
+.word-book{font-size:11px;color:var(--text3);margin-top:.3rem}
+.dict-tab-row{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:.85rem}
+.dict-tab{padding:.45rem .75rem;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.dict-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Login */
+.login-wrap{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;
+  justify-content:center;padding:1.5rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0));
+  transition:background .25s;overflow-y:auto}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  width:100%;max-width:400px;padding:1.75rem;text-align:center}
+.login-logo{font-family:'Lora',serif;font-size:26px;font-weight:600;color:var(--accent);margin-bottom:.25rem}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:1.5rem;line-height:1.5}
 .login-box label{text-align:left}
-.login-box input{margin-bottom:.85rem}
-.login-info{font-size:11px;color:var(--text3);margin-top:.85rem;line-height:1.6;background:var(--surface2);border-radius:var(--radius-sm);padding:.65rem .85rem;text-align:left}
-.session-badge{background:var(--accent-light);border:1px solid var(--border);border-radius:var(--radius-xs);padding:.25rem .55rem;font-size:11px;color:var(--text2);display:inline-flex;align-items:center;gap:.3rem}
-
-/* Sync / Export section */
-.sync-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
-.sync-box h3{margin-bottom:.65rem}
-.sync-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem}
-.sync-key{font-family:monospace;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:.3rem .6rem;color:var(--text2);word-break:break-all;flex:1}
-
-@media(max-width:520px){
-  .fr{grid-template-columns:1fr}
-  .stats-g{grid-template-columns:repeat(2,1fr)}
-  .nav-tab{padding:.5rem .55rem;font-size:11px}
-  .nav-logo{font-size:14px}
-  .user-btn{font-size:11px;padding:.35rem .45rem}
-}
-
-/* PWA & v4 additions */
-.btn-ai{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;border:none}
-.btn-ai:hover{opacity:.9}
-.ai-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;background:linear-gradient(135deg,#7C3AED22,#A855F722);border:1px solid #7C3AED44;border-radius:20px;padding:.2rem .6rem;color:#7C3AED;margin-bottom:.5rem}
-[data-theme=dark] .ai-badge{color:#A855F7}
-.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid #A855F744;border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
-@keyframes spin{to{transform:rotate(360deg)}}
+.login-box input{margin-bottom:.75rem;font-size:16px}
+.login-info{font-size:11px;color:var(--text3);margin-top:.75rem;line-height:1.6;
+  background:var(--surface2);border-radius:var(--radius-sm);padding:.6rem .8rem;text-align:left}
+.sync-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.85rem}
+.sync-box h3{margin-bottom:.55rem}
 .sync-indicator{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;padding:.2rem .5rem;border-radius:20px;margin-left:.4rem}
 .sync-ok{background:#E8F5E9;color:#1B5E20}[data-theme=dark] .sync-ok{background:#0A1F0C;color:#81C784}
 .sync-err{background:#FFF3E0;color:#BF360C}[data-theme=dark] .sync-err{background:#2A1A0A;color:#FFAB76}
 .sync-pending{background:var(--surface2);color:var(--text3)}
-.install-banner{background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;font-size:13px;color:var(--accent)}
+.install-banner{background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);
+  padding:.7rem .85rem;margin-bottom:.85rem;display:flex;align-items:center;justify-content:space-between;
+  gap:.75rem;font-size:13px;color:var(--accent)}
 .install-banner-text{flex:1;line-height:1.4}
 .install-banner strong{display:block;font-weight:600;margin-bottom:.1rem}
-/* ── ECRÃ RÁPIDO (widget) ───────────────────────────────────── */
-.quick-overlay{position:fixed;inset:0;background:var(--bg);z-index:250;display:flex;flex-direction:column;transition:background .25s}
-.quick-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
-.quick-logo{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--accent)}
+
+/* ── ECRÃ RÁPIDO ────────────────────────────────────────────── */
+.quick-overlay{position:fixed;inset:0;background:var(--bg);z-index:250;display:flex;flex-direction:column}
+.quick-header{display:flex;align-items:center;justify-content:space-between;
+  padding:.85rem 1rem calc(.85rem) 1rem;
+  padding-top:calc(.85rem + env(safe-area-inset-top,0));
+  border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.quick-logo{font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--accent)}
 .quick-sub{font-size:11px;color:var(--text3);margin-top:1px}
-.quick-btn-open{padding:.4rem .85rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
-.quick-btn-open:hover{background:var(--surface3);color:var(--text)}
-.quick-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem 1rem 2rem}
-.quick-section-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
-.qw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:.75rem;transition:border .15s,background .25s}
-.qw-card:hover{border-color:var(--accent-mid)}
-.qw-top{display:flex;align-items:center;gap:.85rem;margin-bottom:.85rem}
-.qw-spine{width:42px;height:58px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:15px;font-weight:600;color:#fff;flex-shrink:0;overflow:hidden}
-.qw-spine img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
+.quick-btn-open{padding:.45rem .85rem;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .15s;min-height:36px;touch-action:manipulation}
+.quick-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.85rem .85rem calc(.85rem + env(safe-area-inset-bottom,0))}
+.quick-section-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.7rem}
+.qw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;margin-bottom:.7rem}
+.qw-top{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem}
+.qw-spine{width:42px;height:56px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  font-family:'Lora',serif;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;overflow:hidden}
+.qw-spine img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .qw-info{flex:1;min-width:0}
 .qw-title{font-family:'Lora',serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-.qw-author{font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.qw-pct{font-size:11px;color:var(--accent);font-weight:500;margin-top:3px}
-.qw-controls{display:flex;align-items:center;gap:.5rem}
-.qw-pbar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.qw-author{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qw-pct{font-size:11px;color:var(--accent);font-weight:500;margin-top:2px}
+.qw-pbar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:.7rem}
 .qw-pfill{height:100%;background:linear-gradient(90deg,var(--accent-mid),var(--accent));border-radius:3px;transition:width .4s}
-.qw-input-row{display:flex;align-items:center;gap:.5rem;margin-top:.6rem}
-.qw-minus,.qw-plus{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:18px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-family:'DM Sans',sans-serif;line-height:1}
-.qw-minus:hover,.qw-plus:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-.qw-page-input{flex:1;text-align:center;font-size:22px;font-weight:600;font-family:'Lora',serif;padding:.3rem .5rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);outline:none;transition:border .15s}
-.qw-page-input:focus{border-color:var(--accent-mid)}
+.qw-input-row{display:flex;align-items:center;gap:.5rem}
+.qw-minus,.qw-plus{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);
+  background:var(--surface2);color:var(--text);font-size:20px;font-weight:300;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;
+  touch-action:manipulation}
+.qw-minus:active,.qw-plus:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.qw-page-input{flex:1;text-align:center;font-size:24px;font-weight:600;font-family:'Lora',serif;
+  padding:.3rem .4rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface2);color:var(--text);outline:none;min-width:0}
 .qw-of{font-size:13px;color:var(--text3);white-space:nowrap}
-.qw-save{padding:.45rem .9rem;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;flex-shrink:0}
-.qw-save:hover{background:var(--accent-dark)}
+.qw-save{padding:.5rem .85rem;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;flex-shrink:0;min-height:44px;touch-action:manipulation}
+.qw-save:active{background:var(--accent-dark)}
 .qw-saved{background:var(--success)!important}
-.qw-open-link{display:block;text-align:right;font-size:11px;color:var(--text3);margin-top:.5rem;cursor:pointer;text-decoration:none}
-.qw-open-link:hover{color:var(--accent)}
+.qw-open-link{display:block;text-align:right;font-size:12px;color:var(--accent-mid);margin-top:.5rem;cursor:pointer}
 .quick-empty{text-align:center;padding:3rem 1rem;color:var(--text3)}
 .quick-empty .empty-ico{font-size:44px;margin-bottom:.75rem;opacity:.35}
 .quick-empty p{font-size:13px;line-height:1.7}
 
-/* Book covers */
-.bspine{overflow:hidden}
+/* PWA / AI */
+.btn-ai{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;border:none}
+.btn-ai:active{opacity:.85}
+.ai-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;
+  background:linear-gradient(135deg,#7C3AED22,#A855F722);border:1px solid #7C3AED44;
+  border-radius:20px;padding:.2rem .6rem;color:#7C3AED;margin-bottom:.5rem}
+[data-theme=dark] .ai-badge{color:#A855F7}
+.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid #A855F744;
+  border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
 .bspine img,.dspine img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
-.cover-search-row{display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;background:var(--accent-light);border-radius:var(--radius-sm);margin-bottom:.75rem;font-size:12px;color:var(--text2);transition:background .25s}
-.cover-preview-img{width:36px;height:48px;border-radius:4px;object-fit:cover;display:none;border:1px solid var(--border);flex-shrink:0}
+.cover-search-row{display:flex;align-items:center;gap:.65rem;padding:.5rem .7rem;
+  background:var(--accent-light);border-radius:var(--radius-sm);margin-bottom:.65rem;
+  font-size:12px;color:var(--text2)}
+.cover-preview-img{width:32px;height:44px;border-radius:4px;object-fit:cover;display:none;
+  border:1px solid var(--border);flex-shrink:0}
 .cover-preview-img.loaded{display:block}
 
 </style>
@@ -245,8 +310,10 @@ select option{background:var(--surface)}
   <div class="nav-tab" onclick="showView('lidos')">Lidos</div>
   <div class="nav-tab" onclick="showView('quero-ler')">Quero ler</div>
   <button class="user-btn" onclick="showView('conta')" id="user-display-btn" title="A minha conta">👤 —</button>
-  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙 Noturno</button>
+  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
 </nav>
+
+<div class="main-scroll">
 
 <div class="view active" id="view-biblioteca">
   <div id="install-banner-container"></div>
@@ -297,7 +364,8 @@ select option{background:var(--surface)}
   </div>
 </div>
 
-</div>
+</div><!-- main-scroll -->
+</div><!-- app -->
 
 <!-- MODALS -->
 <div class="modal-wrap" id="m-add">
@@ -337,12 +405,14 @@ var db={books:[],words:[],version:4};
 var cBook=null,cNote=null;
 var syncTimeout=null,pendingCoverUrl=null,coverSearchTimer=null;
 
-// Storage key functions
+// Storage key — stable across file updates, depends ONLY on user+pass
+// Never changes even when the HTML file is replaced
 function makeStorageKey(user,pass){
   var raw='leituras:'+user.toLowerCase().trim()+':'+pass;
   var h=0;
   for(var i=0;i<raw.length;i++){h=((h<<5)-h)+raw.charCodeAt(i);h|=0;}
-  return 'leituras-v4:'+Math.abs(h).toString(36)+':'+user.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
+  // Prefix is fixed — not versioned — so data survives file updates
+  return 'leituras-data:'+Math.abs(h).toString(36)+':'+user.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
 }
 function makeCloudKey(user,pass){
   var raw='cloud:'+user.toLowerCase().trim()+':'+pass;
@@ -405,8 +475,18 @@ function doLogin(){
   if(!pass||pass.length<3){alert('O codigo deve ter pelo menos 3 caracteres');return;}
   if(statusEl)statusEl.textContent='A carregar os teus dados...';
   currentUser=user;currentRawPass=pass;currentStorageKey=makeStorageKey(user,pass);
-  // Load local first (instant), then try cloud
+  // Migrate data from old versioned keys (leituras-v4:...) if new key is empty
   var localData=cloudLoadLocal(user,pass);
+  if(!localData){
+    // Try old v4 key format
+    try{
+      var rawOld='leituras:'+user.toLowerCase().trim()+':'+pass;
+      var hOld=0;for(var i=0;i<rawOld.length;i++){hOld=((hOld<<5)-hOld)+rawOld.charCodeAt(i);hOld|=0;}
+      var oldKey='leituras-v4:'+Math.abs(hOld).toString(36)+':'+user.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
+      var oldData=localStorage.getItem(oldKey);
+      if(oldData){localData=JSON.parse(oldData);localStorage.setItem(currentStorageKey,oldData);}
+    }catch(e){}
+  }
   if(localData){db=localData;if(!db.words)db.words=[];if(!db.version)db.version=4;}
   else{db={books:[],words:[],version:4};}
   // Show app immediately with local data
@@ -630,6 +710,7 @@ function showView(v){
   var ti={biblioteca:0,'a-ler':1,lidos:2,'quero-ler':3};
   if(ti[v]!==undefined&&tabs[ti[v]])tabs[ti[v]].classList.add('active');
   if(v!=='detail')renderAll();
+  var ms=document.querySelector('.main-scroll');if(ms)ms.scrollTop=0;
 }
 function openM(id){var el=document.getElementById(id);if(el)el.classList.add('open');}
 function closeM(id){var el=document.getElementById(id);if(el)el.classList.remove('open');}
@@ -879,49 +960,182 @@ function delBook(id){
   save();renderAll();
 }
 
-// Dictionary
+// Dictionary — inline Infopédia via CORS proxy
+var lastDictResult=null; // {word, wordClass, defs[]}
+
 function renderDictSection(b){
   var words=db.words.filter(function(w){return w.bookId===b.id;}).sort(function(a,z){return z.at-a.at;});
-  var html='<div style="margin-bottom:1rem"><div class="dict-search-row"><input type="text" id="dict-input" placeholder="Pesquisar palavra no Infopedia..."><button class="btn btn-p" onclick="searchWord(\''+b.id+'\')">Pesquisar</button></div><div id="dict-result"></div><div class="infopedia-note"><a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/" target="_blank">Abrir Infopedia</a></div></div>';
-  html+='<div style="border-top:1px solid var(--border);padding-top:.9rem"><div class="sec-hd" style="margin-bottom:.75rem"><div style="font-size:13px;color:var(--text2)">'+words.length+' palavra'+(words.length!==1?'s':'')+' registada'+(words.length!==1?'s':'')+'</div><button class="btn btn-p btn-s" onclick="openAddWord(\''+b.id+'\')">+ Registar</button></div>';
+  var html='';
+  // Search row
+  html+='<div style="margin-bottom:.75rem">';
+  html+='<div class="dict-search-row"><input type="text" id="dict-input" placeholder="Pesquisar no dicionário..." inputmode="search" autocapitalize="none" onkeydown="if(event.key===\'Enter\')searchWordInline(\''+b.id+'\')" autocorrect="off"><button class="btn btn-p" onclick="searchWordInline(\''+b.id+'\')">Pesquisar</button></div>';
+  html+='<div class="dict-result-area" id="dict-result"></div>';
+  html+='</div>';
+  // History
+  html+='<div style="border-top:1px solid var(--border);padding-top:.8rem">';
+  html+='<div class="sec-hd" style="margin-bottom:.65rem"><div style="font-size:13px;color:var(--text2)">'+words.length+' palavra'+(words.length!==1?'s':'')+' guardada'+(words.length!==1?'s':'')+'</div></div>';
   if(words.length){
     for(var i=0;i<words.length;i++){
       var w=words[i];
-      html+='<div class="word-card"><div class="word-meta"><div><div class="word-title">'+w.word+'</div>'+(w.wordClass?'<div class="word-class">'+w.wordClass+'</div>':'')+'</div><div class="word-date">'+new Date(w.at).toLocaleDateString('pt-PT')+'</div></div><div class="word-def">'+w.def+'</div>'+(w.page||w.chapter?'<div class="word-book">'+(w.page?'Pag. '+w.page+' - ':'')+' '+(w.chapter||'')+'</div>':'')+'<div class="note-actions" style="margin-top:.4rem"><button class="btn btn-d btn-s" onclick="delWord(\''+w.id+'\')">Apagar</button></div></div>';
+      html+='<div class="word-card">';
+      html+='<div class="word-meta"><div><div class="word-title">'+escHtml(w.word)+'</div>'+(w.wordClass?'<div class="word-class">'+escHtml(w.wordClass)+'</div>':'')+'</div><span class="word-date">'+new Date(w.at).toLocaleDateString('pt-PT')+'</span></div>';
+      html+='<div class="word-def">'+escHtml(w.def)+'</div>';
+      if(w.page||w.chapter)html+='<div class="word-book">'+(w.page?'Pág. '+w.page+' · ':'')+escHtml(w.chapter||'')+'</div>';
+      html+='<div class="note-actions" style="margin-top:.35rem"><button class="btn btn-d btn-xs" onclick="delWord(\''+w.id+'\')">Apagar</button></div>';
+      html+='</div>';
     }
   }else{
-    html+='<div class="empty" style="padding:1.5rem"><div class="empty-ico">&#128214;</div><p>Sem palavras registadas ainda.</p></div>';
+    html+='<div class="empty" style="padding:1.25rem"><div class="empty-ico">&#128214;</div><p>Pesquisa uma palavra acima e guarda-a.</p></div>';
   }
   html+='</div>';
   return html;
 }
-var pendingWordBook=null;
-function searchWord(bid){
-  var q=document.getElementById('dict-input').value.trim();if(!q)return;
-  window.open('https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q),'_blank');
-  pendingWordBook=bid;
-  document.getElementById('dict-result').innerHTML='<div style="font-size:13px;color:var(--text2);background:var(--accent-light);border-radius:var(--radius-sm);padding:.6rem .8rem;margin-top:.4rem">Pesquisa aberta. Usa "+ Registar" para guardar a definicao.</div>';
+
+function escHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function openAddWord(bid){
-  pendingWordBook=bid;
+
+function searchWordInline(bid){
+  var inp=document.getElementById('dict-input');
+  var q=inp?inp.value.trim():'';
+  if(!q)return;
+  var area=document.getElementById('dict-result');
+  if(!area)return;
+  area.innerHTML='<div class="dict-loading"><div class="dict-spinner"></div>A pesquisar "'+escHtml(q)+'" no Infopédia...</div>';
+  lastDictResult=null;
+
+  // Use allorigins CORS proxy to fetch Infopédia
+  var url='https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q);
+  var proxyUrl='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',proxyUrl,true);
+  xhr.timeout=10000;
+  xhr.onload=function(){
+    try{
+      var resp=JSON.parse(xhr.responseText);
+      var html=resp.contents||'';
+      parseAndShowInfopedia(html,q,bid);
+    }catch(e){
+      showDictError(area,'Não foi possível carregar o resultado. Verifica a tua ligação.');
+    }
+  };
+  xhr.onerror=function(){showDictError(area,'Sem ligação à internet ou o dicionário não está disponível.');};
+  xhr.ontimeout=function(){showDictError(area,'Tempo esgotado. Tenta novamente.');};
+  xhr.send();
+}
+
+function parseAndShowInfopedia(html,query,bid){
+  var area=document.getElementById('dict-result');
+  if(!area)return;
   var b=db.books.filter(function(x){return x.id===bid;})[0];
-  var w='';
-  var di=document.getElementById('dict-input');if(di)w=di.value.trim();
-  var chOpts='';
-  for(var i=0;i<b.chapters.length;i++)chOpts+='<option>'+b.chapters[i]+'</option>';
-  var html='<div class="modal-wrap open" id="m-word" onclick="if(event.target===this)closeWordM()"><div class="modal"><div class="modal-hd">Registar palavra <button class="xbtn" onclick="closeWordM()">x</button></div><div class="fr"><div><label>Palavra</label><input id="w-word" value="'+w+'" placeholder="ex: efemero"></div><div><label>Classe gramatical</label><input id="w-class" placeholder="ex: adjetivo..."></div></div><div class="fr fr1"><label>Definicao</label><textarea id="w-def" placeholder="Cola a definicao do Infopedia..."></textarea></div><div class="fr"><div><label>Pagina</label><input id="w-page" type="number" placeholder="opcional"></div><div><label>Capitulo</label><select id="w-chapter">'+chOpts+'</select></div></div><div class="bgrp"><button class="btn btn-g" onclick="closeWordM()">Cancelar</button><button class="btn btn-p" onclick="saveWord()">Guardar</button></div></div></div>';
-  document.body.insertAdjacentHTML('beforeend',html);
+
+  // Parse: extract definitions from Infopédia HTML
+  var defs=[];
+  var wordFound=query;
+  var wordClass='';
+
+  // Try to find word class (classe gramatical)
+  var clsMatch=html.match(/class="[^"]*cl-[^"]*"[^>]*>([^<]{1,40})<\/span>/i);
+  if(!clsMatch)clsMatch=html.match(/(?:substantivo|adjetivo|verbo|advérbio|adverbio|preposição|preposicao|conjunção|conjuncao|interjeição|interjeiçao|artigo|pronome|numeral)[^<]{0,20}/i);
+  if(clsMatch)wordClass=clsMatch[1]||clsMatch[0]||'';
+  wordClass=wordClass.replace(/<[^>]+>/g,'').trim().slice(0,40);
+
+  // Try to find the headword
+  var hwMatch=html.match(/<h1[^>]*class="[^"]*lemma[^"]*"[^>]*>([^<]+)</i);
+  if(!hwMatch)hwMatch=html.match(/<span[^>]*class="[^"]*head[^"]*"[^>]*>([^<]+)</i);
+  if(hwMatch)wordFound=hwMatch[1].trim();
+
+  // Extract definitions — look for numbered definitions or paragraph text
+  // Strategy: find text blocks that look like definitions
+  var defPatterns=[
+    // Infopédia numbered list items
+    /<li[^>]*>([\s\S]{20,500}?)<\/li>/gi,
+    /<p[^>]*class="[^"]*defin[^"]*"[^>]*>([\s\S]{10,400}?)<\/p>/gi,
+    /<div[^>]*class="[^"]*mean[^"]*"[^>]*>([\s\S]{10,400}?)<\/div>/gi,
+  ];
+
+  for(var pi=0;pi<defPatterns.length&&defs.length<5;pi++){
+    var re=defPatterns[pi];re.lastIndex=0;
+    var m;
+    while((m=re.exec(html))!==null&&defs.length<5){
+      var txt=m[1].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      if(txt.length>15&&txt.length<400&&!/cookie|javascript|script|©|login/i.test(txt)){
+        // Avoid duplicates
+        var dup=false;
+        for(var di=0;di<defs.length;di++){if(defs[di].indexOf(txt.slice(0,30))>=0){dup=true;break;}}
+        if(!dup)defs.push(txt);
+      }
+    }
+  }
+
+  // Fallback: scrape any text between tags that looks like a definition
+  if(defs.length===0){
+    var stripped=html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'');
+    var allText=stripped.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+    // Look for the query word in context
+    var idx=allText.toLowerCase().indexOf(query.toLowerCase());
+    if(idx>=0){
+      var snippet=allText.slice(Math.max(0,idx-20),Math.min(allText.length,idx+300)).trim();
+      if(snippet.length>20)defs.push(snippet);
+    }
+  }
+
+  if(defs.length===0){
+    // Word might not exist
+    area.innerHTML='<div class="dict-no-result">Palavra "'+escHtml(query)+'" não encontrada no Infopédia.<br><small style="color:var(--text3)">Verifica a ortografia ou tenta outra palavra.</small></div>';
+    return;
+  }
+
+  lastDictResult={word:wordFound||query,wordClass:wordClass,defs:defs,query:query};
+
+  var html2='<div class="dict-result-card">';
+  html2+='<div class="dict-word-main">'+escHtml(wordFound||query)+'</div>';
+  if(wordClass)html2+='<div class="dict-word-cls">'+escHtml(wordClass)+'</div>';
+  for(var i=0;i<defs.length;i++){
+    html2+='<div class="dict-def-item"><span class="dict-def-num">'+(i+1)+'.</span>'+escHtml(defs[i])+'</div>';
+  }
+  html2+='<div class="dict-save-row">';
+  if(b){
+    // Chapter selector
+    var chOpts='';
+    for(var ci=0;ci<b.chapters.length;ci++)chOpts+='<option>'+escHtml(b.chapters[ci])+'</option>';
+    html2+='<select id="dict-save-chapter" style="font-size:12px;padding:.3rem .5rem;width:auto;min-width:100px">'+chOpts+'</select>';
+    html2+='<input type="number" id="dict-save-page" placeholder="Pág." style="width:70px;font-size:13px;padding:.3rem .5rem" inputmode="numeric">';
+    html2+='<button class="btn btn-p btn-s" onclick="saveDictResult(\''+bid+'\')">+ Guardar</button>';
+  }
+  html2+='</div></div>';
+  area.innerHTML=html2;
 }
-function closeWordM(){var m=document.getElementById('m-word');if(m)m.remove();}
-function saveWord(){
-  var b=db.books.filter(function(x){return x.id===pendingWordBook;})[0];if(!b)return;
-  var word=document.getElementById('w-word').value.trim();
-  var def=document.getElementById('w-def').value.trim();
-  if(!word||!def){alert('Palavra e definicao sao obrigatorias');return;}
-  db.words.push({id:uid(),bookId:b.id,word:word,wordClass:document.getElementById('w-class').value.trim(),def:def,page:parseInt(document.getElementById('w-page').value)||0,chapter:document.getElementById('w-chapter').value,at:Date.now()});
-  save();closeWordM();renderDetail(b);
+
+function saveDictResult(bid){
+  if(!lastDictResult)return;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var def=lastDictResult.defs.join(' | ').slice(0,500);
+  var chapter='';var chEl=document.getElementById('dict-save-chapter');if(chEl)chapter=chEl.value;
+  var page=0;var pgEl=document.getElementById('dict-save-page');if(pgEl)page=parseInt(pgEl.value)||0;
+  db.words.push({
+    id:uid(),bookId:b.id,
+    word:lastDictResult.word||lastDictResult.query,
+    wordClass:lastDictResult.wordClass||'',
+    def:def,page:page,chapter:chapter,at:Date.now()
+  });
+  save();
+  var area=document.getElementById('dict-result');
+  if(area)area.innerHTML='<div style="font-size:13px;color:var(--success);padding:.5rem;background:var(--surface2);border-radius:var(--radius-sm)">✓ Palavra guardada no histórico!</div>';
+  lastDictResult=null;
+  renderDetail(b);
   setTimeout(function(){switchTab('t-words',document.querySelectorAll('.dtab')[2]);},50);
 }
+
+function showDictError(area,msg){
+  if(area)area.innerHTML='<div class="dict-error">'+escHtml(msg)+'<br><small>Podes também <a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/" target="_blank" style="color:var(--accent-mid)">abrir o Infopédia ↗</a></small></div>';
+}
+
+var pendingWordBook=null;
+function openAddWord(bid){pendingWordBook=bid;}// kept for compat, no longer needed
+function closeWordM(){var m=document.getElementById('m-word');if(m)m.remove();}
+
 function delWord(id){
   if(!confirm('Apagar esta palavra?'))return;
   var w=db.words.filter(function(x){return x.id===id;})[0];
@@ -1024,6 +1238,15 @@ document.addEventListener('DOMContentLoaded',function(){
     if(su&&sp){
       currentUser=su;currentRawPass=sp;currentStorageKey=makeStorageKey(su,sp);
       var localData=cloudLoadLocal(su,sp);
+      if(!localData){
+        try{
+          var rawOld2='leituras:'+su.toLowerCase().trim()+':'+sp;
+          var hOld2=0;for(var ii=0;ii<rawOld2.length;ii++){hOld2=((hOld2<<5)-hOld2)+rawOld2.charCodeAt(ii);hOld2|=0;}
+          var oldKey2='leituras-v4:'+Math.abs(hOld2).toString(36)+':'+su.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
+          var oldData2=localStorage.getItem(oldKey2);
+          if(oldData2){localData=JSON.parse(oldData2);localStorage.setItem(currentStorageKey,oldData2);}
+        }catch(e2){}
+      }
       if(localData){db=localData;if(!db.words)db.words=[];if(!db.version)db.version=4;}
       else{db={books:[],words:[],version:4};}
       document.getElementById('login-screen').style.display='none';
