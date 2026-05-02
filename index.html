@@ -783,7 +783,7 @@ function renderSpine(b,i,large){
 
 // AI Book Info Lookup
 var aiLookupInProgress=false;
-var pendingChapterSummaries={}; // {chapterName: summaryText}
+var pendingChapterSummaries={};
 
 function aiLookupBook(){
   var title=document.getElementById('f-title').value.trim();
@@ -791,32 +791,21 @@ function aiLookupBook(){
   if(!title){alert('Introduz pelo menos o titulo do livro.');return;}
   if(aiLookupInProgress)return;
   aiLookupInProgress=true;
-
   var btn=document.getElementById('ai-lookup-btn');
   var spinner=document.getElementById('ai-lookup-spinner');
   var statusDiv=document.getElementById('book-search-status');
   if(btn)btn.disabled=true;
   if(spinner)spinner.style.display='inline';
   if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent='A pesquisar informacoes do livro...';}
-
-  // Also trigger cover search
   debounceSearchCover();
-
-  var prompt='Fornece informacoes sobre o livro "'+title+'"'+(author?' de '+author:'')+'. ';
-  prompt+='Responde APENAS com um objeto JSON valido (sem markdown, sem explicacoes) com esta estrutura exata:
-';
-  prompt+='{"paginas":NUMBER_OR_NULL,"sinopse":"STRING_MAX_300_CHARS","capitulos":["cap1","cap2",...],"resumos_capitulos":{"cap1":"resumo breve em 1-2 frases","cap2":"resumo breve"}}
-';
-  prompt+='Para paginas: numero aproximado de paginas da edicao mais comum. Se nao souberes, null.
-';
-  prompt+='Para capitulos: lista dos capitulos/partes principais (maximo 20). Se nao souberes, ["Capitulo 1","Capitulo 2","Capitulo 3"].
-';
-  prompt+='Para resumos_capitulos: um resumo MUITO breve (1-2 frases) do que acontece em cada capitulo, SEM spoilers maiores.
-';
-  prompt+='Para sinopse: descricao do livro em portugues europeu, max 300 caracteres.
-';
-  prompt+='Responde APENAS com o JSON, sem mais nada.';
-
+  var p='Fornece informacoes sobre o livro "'+title+'"'+(author?' de '+author:'')+'.';
+  p+=' Responde APENAS com JSON valido (sem markdown) com esta estrutura:';
+  p+=' {"paginas":NUMERO_OU_NULL,"sinopse":"MAX 300 CHARS","capitulos":["cap1","cap2"],"resumos_capitulos":{"cap1":"resumo 1-2 frases","cap2":"resumo"}}';
+  p+=' paginas: numero aproximado, ou null se nao souberes.';
+  p+=' capitulos: lista dos capitulos/partes (max 20). Se desconhecido: ["Capitulo 1","Capitulo 2","Capitulo 3"].';
+  p+=' resumos_capitulos: resumo MUITO breve de cada capitulo (1-2 frases), SEM spoilers.';
+  p+=' sinopse: descricao em portugues europeu, max 300 caracteres.';
+  p+=' Responde APENAS com o JSON.';
   var xhr=new XMLHttpRequest();
   xhr.open('POST','https://api.anthropic.com/v1/messages',true);
   xhr.setRequestHeader('Content-Type','application/json');
@@ -829,46 +818,35 @@ function aiLookupBook(){
       var d=JSON.parse(xhr.responseText);
       var raw=d.content&&d.content[0]&&d.content[0].text;
       if(!raw)throw new Error('no text');
-      // Strip any markdown fences
       raw=raw.replace(/```json/g,'').replace(/```/g,'').trim();
       var info=JSON.parse(raw);
-      // Fill in the form
       var pagesEl=document.getElementById('f-pages');
       var chapEl=document.getElementById('f-chapters');
       var synEl=document.getElementById('f-synopsis');
       if(info.paginas&&pagesEl&&!pagesEl.value)pagesEl.value=info.paginas;
       if(info.capitulos&&chapEl&&!chapEl.value)chapEl.value=info.capitulos.join(', ');
       if(info.sinopse&&synEl&&!synEl.value)synEl.value=info.sinopse;
-      // Store chapter summaries to attach to book later
       pendingChapterSummaries=info.resumos_capitulos||{};
       var nCh=info.capitulos?info.capitulos.length:0;
       var msg='Encontrado: '+nCh+' capitulos'+(info.paginas?' / ~'+info.paginas+' paginas':'')+'.';
-      if(nCh>0)msg+=' Resumos de capitulo guardados.';
-      if(statusDiv){statusDiv.textContent=msg;}
+      if(Object.keys(pendingChapterSummaries).length>0)msg+=' Resumos de capitulo prontos.';
+      if(statusDiv)statusDiv.textContent=msg;
     }catch(e){
-      if(statusDiv){statusDiv.textContent='Nao foi possivel obter informacoes. Preenche manualmente.';}
+      if(statusDiv)statusDiv.textContent='Nao foi possivel obter informacoes. Preenche manualmente.';
       pendingChapterSummaries={};
     }
   };
   xhr.onerror=function(){
-    aiLookupInProgress=false;
-    if(btn)btn.disabled=false;
-    if(spinner)spinner.style.display='none';
+    aiLookupInProgress=false;if(btn)btn.disabled=false;if(spinner)spinner.style.display='none';
     if(statusDiv)statusDiv.textContent='Erro de ligacao. Tenta de novo.';
     pendingChapterSummaries={};
   };
   xhr.ontimeout=function(){
-    aiLookupInProgress=false;
-    if(btn)btn.disabled=false;
-    if(spinner)spinner.style.display='none';
+    aiLookupInProgress=false;if(btn)btn.disabled=false;if(spinner)spinner.style.display='none';
     if(statusDiv)statusDiv.textContent='Tempo esgotado. Tenta de novo.';
     pendingChapterSummaries={};
   };
-  xhr.send(JSON.stringify({
-    model:'claude-sonnet-4-20250514',
-    max_tokens:2000,
-    messages:[{role:'user',content:prompt}]
-  }));
+  xhr.send(JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:p}]}));
 }
 
 // Books
