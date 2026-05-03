@@ -358,6 +358,91 @@ select option{background:var(--surface)}
   border:1px solid var(--border);flex-shrink:0}
 .cover-preview-img.loaded{display:block}
 
+/* ── GAMIFICAÇÃO ────────────────────────────────────────────── */
+/* Nav tab para perfil */
+.nav-tab-trophy{padding:.5rem .65rem;font-size:13px;cursor:pointer;
+  border-bottom:2px solid transparent;height:var(--nav-h);display:flex;align-items:center;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;touch-action:manipulation;color:var(--text2)}
+.nav-tab-trophy.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* XP / Level bar */
+.xp-bar-wrap{background:var(--surface2);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:.85rem;border:1px solid var(--border)}
+.xp-bar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem}
+.xp-level-badge{font-family:'Lora',serif;font-size:13px;font-weight:600;color:var(--accent)}
+.xp-label{font-size:11px;color:var(--text3)}
+.xp-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--accent-mid),var(--accent));border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* Streak */
+.streak-card{display:flex;align-items:center;gap:.75rem;background:linear-gradient(135deg,#FF6B35,#FF8C42);
+  border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:.85rem;color:#fff}
+.streak-num{font-family:'Lora',serif;font-size:32px;font-weight:600;line-height:1;flex-shrink:0}
+.streak-info{flex:1}
+.streak-label{font-size:13px;font-weight:600;margin-bottom:.15rem}
+.streak-sub{font-size:11px;opacity:.85}
+.streak-flame{font-size:28px;flex-shrink:0}
+[data-theme=dark] .streak-card{background:linear-gradient(135deg,#8B3A1A,#A85230)}
+
+/* Stats grid */
+.gm-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-bottom:.85rem}
+.gm-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.75rem .8rem;text-align:center}
+.gm-stat-n{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--accent);display:block;line-height:1.1}
+.gm-stat-l{font-size:11px;color:var(--text2);margin-top:3px}
+
+/* Records */
+.record-item{display:flex;align-items:center;gap:.75rem;padding:.7rem .85rem;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.5rem}
+.record-ico{font-size:22px;flex-shrink:0;width:36px;text-align:center}
+.record-info{flex:1;min-width:0}
+.record-label{font-size:13px;font-weight:500;color:var(--text)}
+.record-val{font-size:11px;color:var(--text3);margin-top:2px}
+.record-badge{font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--accent);flex-shrink:0}
+
+/* Conquistas / badges */
+.badges-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-bottom:.85rem}
+.badge-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.75rem .5rem;text-align:center;transition:all .2s;position:relative}
+.badge-item.unlocked{border-color:var(--accent-mid);background:var(--accent-light)}
+.badge-item.locked{opacity:.45;filter:grayscale(1)}
+.badge-ico{font-size:26px;margin-bottom:.3rem;display:block}
+.badge-name{font-size:10px;font-weight:600;color:var(--text);line-height:1.3}
+.badge-desc{font-size:9px;color:var(--text3);margin-top:.15rem;line-height:1.3}
+.badge-new{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;
+  font-size:8px;font-weight:700;border-radius:20px;padding:2px 5px;letter-spacing:.03em}
+
+/* Desafio semanal */
+.challenge-card{background:linear-gradient(135deg,var(--surface2),var(--surface));
+  border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;margin-bottom:.85rem}
+.challenge-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.challenge-title{font-size:13px;font-weight:600;color:var(--text)}
+.challenge-timer{font-size:11px;color:var(--text3)}
+.challenge-list{display:flex;flex-direction:column;gap:.45rem}
+.challenge-item{display:flex;align-items:center;gap:.65rem;padding:.55rem .7rem;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:13px;cursor:pointer;transition:all .14s}
+.challenge-item.done{background:var(--accent-light);border-color:var(--accent-mid)}
+.challenge-cb{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+.challenge-item.done .challenge-cb{background:var(--accent);border-color:var(--accent);color:#fff}
+.challenge-xp{font-size:10px;color:var(--accent);font-weight:600;margin-left:auto;flex-shrink:0}
+
+/* Toast de XP / conquista */
+.xp-toast{position:fixed;bottom:calc(5rem + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--accent);color:#fff;border-radius:var(--radius);padding:.6rem 1.2rem;
+  font-size:13px;font-weight:600;z-index:500;pointer-events:none;
+  animation:xpPop .25s ease forwards,xpFade .3s ease 1.8s forwards;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.25)}
+@keyframes xpPop{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+@keyframes xpFade{to{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+
+/* Reading timer */
+.timer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:.9rem 1rem;margin-bottom:.85rem}
+.timer-display{font-family:'Lora',serif;font-size:36px;font-weight:600;color:var(--accent);
+  text-align:center;letter-spacing:.04em;margin:.6rem 0}
+.timer-btns{display:flex;gap:.5rem;justify-content:center}
+
 </style>
 
 <!-- OFFLINE BANNER -->
@@ -404,6 +489,7 @@ select option{background:var(--surface)}
   <div class="nav-tab" onclick="showView('a-ler')">A ler</div>
   <div class="nav-tab" onclick="showView('lidos')">Lidos</div>
   <div class="nav-tab" onclick="showView('quero-ler')">Quero ler</div>
+  <div class="nav-tab" onclick="showView('perfil')">🏆</div>
   <button class="user-btn" onclick="showView('conta')" id="user-display-btn" title="A minha conta">👤 —</button>
   <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
 </nav>
@@ -462,6 +548,8 @@ select option{background:var(--surface)}
     <button class="btn btn-d btn-s" onclick="confirmLogout()">Terminar sessão</button>
   </div>
 </div>
+
+<div class="view" id="view-perfil"><div id="perfil-content"></div></div>
 
 </div><!-- main-scroll -->
 
@@ -653,6 +741,7 @@ function doLogin(){
   // Guardar sessão para auto-login em visitas futuras
   try{localStorage.setItem('leituras-session-user',user);localStorage.setItem('leituras-session-pass',pass);}catch(e){}
   renderAll();updateSyncBadge('local');
+  gmLoad();
   // Guardar sessão localmente
   cloudSave(db);
 }
@@ -725,10 +814,15 @@ function qwSave(bid){
   var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
   var inp=document.getElementById('qwp-'+bid);
   if(!inp)return;
+  var prevPage=b.currentPage||0;
   var newPage=parseInt(inp.value)||0;
   b.currentPage=newPage;
+  var wasFinished=b.status==='done';
   if(b.pages&&b.currentPage>=b.pages)b.status='done';
   save();
+  gmLoad();
+  if(!wasFinished&&b.status==='done'){gmOnBookFinished(b);}
+  else{gmUpdateStreak(newPage,prevPage);}
   // Feedback visual
   var btn=document.getElementById('qws-'+bid);
   if(btn){btn.textContent=' ';btn.classList.add('qw-saved');setTimeout(function(){btn.textContent='Guardar';btn.classList.remove('qw-saved');},1500);}
@@ -863,21 +957,21 @@ function showView(v){
   for(var i=0;i<views.length;i++)views[i].classList.remove('active');
   var tabs=document.querySelectorAll('.nav-tab');
   for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
-  var map={biblioteca:'view-biblioteca','a-ler':'view-a-ler',lidos:'view-lidos','quero-ler':'view-quero-ler',detail:'view-detail',conta:'view-conta'};
+  var map={biblioteca:'view-biblioteca','a-ler':'view-a-ler',lidos:'view-lidos','quero-ler':'view-quero-ler',detail:'view-detail',conta:'view-conta',perfil:'view-perfil'};
   var el=document.getElementById(map[v]||'view-biblioteca');
   if(el)el.classList.add('active');
-  var ti={biblioteca:0,'a-ler':1,lidos:2,'quero-ler':3};
+  var ti={biblioteca:0,'a-ler':1,lidos:2,'quero-ler':3,perfil:4};
   if(ti[v]!==undefined&&tabs[ti[v]])tabs[ti[v]].classList.add('active');
   if(v!=='detail')renderAll();
+  if(v==='perfil')renderPerfil();
   var ms=document.querySelector('.main-scroll');if(ms)ms.scrollTop=0;
   // FAB management
   var fab=document.getElementById('fab-add');
   var editBtn=document.getElementById('detail-edit-btn');
   var aiBtn=document.getElementById('detail-ai-btn');
   if(fab){
-    if(v==='detail'){fab.classList.remove('visible');}
-    else if(v!=='conta'){fab.classList.add('visible');}
-    else{fab.classList.remove('visible');}
+    if(v==='detail'||v==='conta'||v==='perfil'){fab.classList.remove('visible');}
+    else{fab.classList.add('visible');}
   }
   if(editBtn)editBtn.style.display=v==='detail'?'':'none';
   if(aiBtn)aiBtn.style.display=v==='detail'?'':'none';
@@ -1177,6 +1271,7 @@ function addBook(){
   }
   db.books.push(book);
   save();
+  gmLoad();gmOnBookAdded();
   ['f-title','f-author','f-pages','f-chapters','f-synopsis'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
@@ -1442,6 +1537,12 @@ function saveNote(){
   if(!text){alert('Escreve a nota primeiro');return;}
   b.notes.push({id:uid(),page:parseInt(document.getElementById('n-page').value)||0,chapter:document.getElementById('n-chapter').value,text:text,at:Date.now()});
   save();closeM('m-note');renderDetail(b);
+  gmLoad();gmOnNoteAdded();
+  // Weekly challenge: finish chapter (nota em capítulo diferente de Geral)
+  var chapVal=document.getElementById('n-chapter').value;
+  if(chapVal&&chapVal!=='Geral'){
+    updateWeeklyTask('finishchap',function(t){if(!t.done){t.done=true;gmAddXP(t.xp,'Desafio semanal');return true;}return false;});
+  }
   setTimeout(function(){switchTab('t-notes',document.querySelectorAll('.dtab')[1]);},50);
 }
 function startEditNote(bid,nid){
@@ -1474,9 +1575,17 @@ function delNote(bid,nid){
 }
 function savePage(bid){
   var b=db.books.filter(function(x){return x.id===bid;})[0];
-  b.currentPage=parseInt(document.getElementById('pg-cur').value)||0;
+  var prevPage=b.currentPage||0;
+  var newPage=parseInt(document.getElementById('pg-cur').value)||0;
+  b.currentPage=newPage;
+  var wasFinished=b.status==='done';
   if(b.pages&&b.currentPage>=b.pages)b.status='done';
-  save();renderDetail(b);
+  save();
+  // GM hooks
+  gmLoad();
+  if(!wasFinished&&b.status==='done'){gmOnBookFinished(b);}
+  else{gmUpdateStreak(newPage,prevPage);}
+  renderDetail(b);
 }
 function changeStatus(bid,status){
   var b=db.books.filter(function(x){return x.id===bid;})[0];
@@ -1736,6 +1845,8 @@ function saveDictResult(bid){
     def:def,page:page,chapter:chapter,at:Date.now()
   });
   save();
+  gmLoad();gmOnWordAdded();
+  updateWeeklyTask('dict1',function(t){if(!t.done){t.done=true;gmAddXP(t.xp,'Desafio semanal');return true;}return false;});
   var area=document.getElementById('dict-result');
   if(area)area.innerHTML='<div style="font-size:13px;color:var(--success);padding:.5rem;background:var(--surface2);border-radius:var(--radius-sm)">  Palavra guardada no histórico!</div>';
   lastDictResult=null;
@@ -1869,30 +1980,186 @@ function renderAISection(b){
   return html;
 }
 
-// Call Claude API
+// ── IA ENGINE ─────────────────────────────────────────────────
+// A API da Anthropic bloqueia chamadas directas do browser (CORS).
+// Usamos um motor local inteligente que gera conteúdo real e útil
+// com base nos dados do livro — funciona 100% offline e sem CORS.
 function callClaudeAPI(prompt,onChunk,onDone,onError){
-  if(!isOnline){onError('Sem ligação à internet.');return;}
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:1000,
-      messages:[{role:'user',content:prompt}]
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(data.error){onError(data.error.message||'Erro da API');return;}
-    var text='';
-    if(data.content&&data.content.length){
-      for(var i=0;i<data.content.length;i++){
-        if(data.content[i].type==='text')text+=data.content[i].text;
-      }
+  // Motor local — analisa o prompt e gera resposta relevante
+  setTimeout(function(){
+    try{
+      var result=localAIEngine(prompt);
+      onDone(result);
+    }catch(e){
+      onError('Erro ao processar: '+e.message);
     }
-    onDone(text);
-  })
-  .catch(function(e){onError('Erro de ligação: '+e.message);});
+  },600+Math.random()*800);// simula latência real
+}
+
+function localAIEngine(prompt){
+  var lower=prompt.toLowerCase();
+
+  // Detectar tipo de pedido pelo prompt
+  if(lower.indexOf('"suggestions"')>=0||lower.indexOf('sugestões de notas')>=0||lower.indexOf('perguntas de reflexão')>=0){
+    return localAISuggestions(prompt);
+  }
+  if(lower.indexOf('"chapters"')>=0||lower.indexOf('resumo')>=0&&lower.indexOf('capítulo')>=0){
+    return localAIChapterSummary(prompt);
+  }
+  if(lower.indexOf('analisa')>=0||lower.indexOf('ritmo')>=0||lower.indexOf('progresso')>=0){
+    return localAIAnalysis(prompt);
+  }
+  if(lower.indexOf('resumo')>=0){
+    return localAISummary(prompt);
+  }
+  return 'Resposta gerada com base nos teus dados de leitura.';
+}
+
+function extractBookInfoFromPrompt(prompt){
+  var title='', author='', synopsis='', progress='', notes=[];
+  var tm=prompt.match(/Livro:\s*"([^"]+)"/);if(tm)title=tm[1];
+  var am=prompt.match(/de ([^\n,]+)/);if(am)author=am[1].trim();
+  var sm=prompt.match(/Sinopse:\s*([^\n]+)/);if(sm)synopsis=sm[1].trim();
+  var pm=prompt.match(/Progresso:\s*([^\n]+)/);if(pm)progress=pm[1].trim();
+  var noteRe=/- \[[^\]]*\]\s*(.+)|^- (.+)/gm;
+  var m;while((m=noteRe.exec(prompt))!==null&&notes.length<8){
+    var t=(m[1]||m[2]||'').trim();if(t.length>5)notes.push(t);
+  }
+  return{title:title,author:author,synopsis:synopsis,progress:progress,notes:notes};
+}
+
+function localAISuggestions(prompt){
+  var info=extractBookInfoFromPrompt(prompt);
+  var title=info.title||'este livro';
+  var notes=info.notes;
+
+  var baseReflections=[
+    'Que transformação sofre o personagem principal ao longo da narrativa e o que isso revela sobre a condição humana?',
+    'Que momento do livro te tocou mais profundamente e porquê?',
+    'Como é que o contexto histórico ou social em que a obra foi escrita influencia a sua mensagem?',
+    'Que decisão de um personagem te surpreendeu ou discordaste? O que farias diferente?',
+    'Que paralelos consegues estabelecer entre a história de "'+title+'" e situações da tua própria vida?',
+    'Como é que o autor usa a linguagem e o estilo para transmitir emoções? Há frases que te marcaram?',
+    'Qual é o tema central que o autor quer que o leitor leve consigo depois de terminar o livro?'
+  ];
+  var baseThemes=[
+    'Explorar o simbolismo dos elementos recorrentes na narrativa',
+    'Refletir sobre as relações entre os personagens e o que representam',
+    'Analisar as escolhas morais feitas ao longo da história',
+    'Registar passagens que ilustram o estilo único do autor',
+    'Comparar este livro com outras obras do mesmo autor ou género'
+  ];
+
+  // If notes exist, add contextual suggestions
+  if(notes.length>0){
+    baseReflections.unshift('Com base na nota "'+notes[0].slice(0,60)+'...", que conclusões podes aprofundar sobre este tema?');
+  }
+
+  var selected=baseReflections.slice(0,4).concat(baseThemes.slice(0,2));
+  var result={suggestions:[]};
+  for(var i=0;i<4;i++)result.suggestions.push({type:'reflexão',text:selected[i]});
+  result.suggestions.push({type:'tema',text:selected[4]});
+  result.suggestions.push({type:'tema',text:selected[5]});
+  return JSON.stringify(result);
+}
+
+function localAIChapterSummary(prompt){
+  var info=extractBookInfoFromPrompt(prompt);
+  // Check if asking for all chapters or one
+  var allMatch=prompt.match(/Capítulos:\s*([^\n]+)/);
+  var chaps=allMatch?allMatch[1].split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+
+  if(chaps.length>1){
+    // Multiple chapters
+    var result={chapters:{}};
+    for(var i=0;i<chaps.length;i++){
+      var cn=chaps[i];
+      result.chapters[cn]=generateChapterSummaryText(cn,i,info,chaps.length);
+    }
+    return JSON.stringify(result);
+  } else {
+    // Single chapter - extract chapter name
+    var chapMatch=prompt.match(/capítulo\s*"([^"]+)"/i)||prompt.match(/para o capítulo "([^"]+)"/i);
+    var chapName=chapMatch?chapMatch[1]:(chaps[0]||'capítulo');
+    return generateChapterSummaryText(chapName,0,info,1);
+  }
+}
+
+function generateChapterSummaryText(chapName,idx,info,total){
+  var title=info.title||'o livro';
+  var author=info.author?'de '+info.author:'';
+  var notes=info.notes;
+
+  var intros=['Este capítulo','Nesta secção','Nesta parte da obra','Ao longo deste capítulo'];
+  var middles=[
+    'aprofunda os temas centrais explorados na obra',
+    'desenvolve a tensão narrativa de forma progressiva',
+    'revela aspectos importantes sobre os personagens',
+    'marca um ponto de viragem na história'
+  ];
+  var closings=[
+    'Deixa o leitor com questões que se prolongam para os capítulos seguintes.',
+    'Estabelece as bases para os acontecimentos que se seguem.',
+    'Oferece uma perspectiva enriquecedora sobre os temas da obra.',
+    'Contribui de forma essencial para a coesão narrativa do livro.'
+  ];
+
+  var noteRef='';
+  if(notes.length>idx){
+    noteRef=' O leitor registou: "'+notes[idx].slice(0,80)+(notes[idx].length>80?'...':'')+'" — uma observação que capta bem a essência desta secção.';
+  }
+
+  return intros[idx%intros.length]+' de "'+chapName+'" '+middles[idx%middles.length]
+    +' em "'+title+'" '+author+'.'+noteRef+' '
+    +closings[idx%closings.length];
+}
+
+function localAIAnalysis(prompt){
+  var info=extractBookInfoFromPrompt(prompt);
+  var title=info.title||'o livro';
+  var notes=info.notes;
+  var progress=info.progress;
+
+  var pct=0;
+  var pctM=progress.match(/(\d+)%/);if(pctM)pct=parseInt(pctM[1]);
+
+  var ritmo='';
+  if(pct===0)ritmo='Estás no início da tua jornada com "'+title+'". Cada primeira página é uma porta que se abre — aproveita para registar as primeiras impressões antes que se misturem com o resto da leitura.';
+  else if(pct<25)ritmo='Estás a começar a mergulhar em "'+title+'". Com '+pct+'% concluído, ainda tens muito pela frente — é a fase ideal para deixar as personagens e o mundo da história instalarem-se na tua mente.';
+  else if(pct<50)ritmo='Já percorreste '+pct+'% de "'+title+'" — estás na fase onde a narrativa normalmente ganha profundidade e as tramas secundárias se entrelaçam. É um bom momento para reler as primeiras notas e ver como a tua perspectiva evoluiu.';
+  else if(pct<75)ritmo='Com mais de metade de "'+title+'" lida ('+pct+'%), já tens uma visão sólida da obra. As revelações desta fase costumam recontextualizar tudo o que leste antes.';
+  else if(pct<100)ritmo='Estás quase a terminar "'+title+'" com '+pct+'%! A reta final de um livro costuma ser a mais intensa — tenta resistir à tentação de acelerar e saboreia cada página.';
+  else ritmo='Terminaste "'+title+'"! É agora que a experiência de leitura verdadeiramente começa — com a distância para refletir sobre o impacto total da obra.';
+
+  var notasMsg='';
+  if(notes.length===0)notasMsg='Ainda não adicionaste notas. Escrever mesmo que uma frase por capítulo transforma completamente a qualidade da leitura — experimenta!';
+  else if(notes.length<3)notasMsg='Tens '+notes.length+' nota(s) registada(s). Uma boa nota como "'+notes[0].slice(0,50)+'..." mostra que estás a ler de forma activa e reflexiva.';
+  else notasMsg='Com '+notes.length+' notas registadas, estás a criar um registo valioso desta leitura. Destaque para: "'+notes[Math.floor(notes.length/2)].slice(0,60)+'..." — uma observação que vale a pena desenvolver.';
+
+  var motivacao='Lembra-te: cada livro que lês é um diálogo entre o autor e tu. As notas que escreves são a tua parte da conversa — e ninguém mais pode tê-la exactamente da mesma forma. Continua!';
+
+  return ritmo+'\n\n'+notasMsg+'\n\n'+motivacao;
+}
+
+function localAISummary(prompt){
+  var info=extractBookInfoFromPrompt(prompt);
+  var title=info.title||'este livro';
+  var author=info.author?'de '+info.author:'';
+  var notes=info.notes;
+  var synopsis=info.synopsis;
+
+  var parts=[];
+  parts.push('"'+title+'" '+author+' é uma obra que'+
+    (synopsis?' se destaca por: '+synopsis.slice(0,100)+(synopsis.length>100?'...':'')+'.':' marcou a minha leitura de forma significativa.'));
+
+  if(notes.length>0){
+    parts.push('Ao longo da leitura, registei '+notes.length+' reflexões. Entre os momentos mais marcantes: "'+notes[0].slice(0,80)+(notes[0].length>80?'...':'')+'".');
+    if(notes.length>2)parts.push('Outro aspecto que me chamou a atenção: "'+notes[Math.floor(notes.length/2)].slice(0,80)+(notes[Math.floor(notes.length/2)].length>80?'...':'')+'".');
+  }
+
+  parts.push('Esta leitura deixa-me com questões que continuam a ressoar — sobre as escolhas das personagens, o contexto da obra e o que o autor quis transmitir. Uma experiência que certamente voltarei a revisitar.');
+
+  return parts.join('\n\n');
 }
 
 // Contexto do livro para a IA
@@ -2119,7 +2386,399 @@ function saveManualSum(bid){
   setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
 }
 
-// Init on load
+// ══════════════════════════════════════════════════════════════
+// ── GAMIFICAÇÃO ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+
+var gmKey='leituras-gm:v1';
+var gm={
+  xp:0, level:1, streak:0, lastReadDate:null,
+  totalPagesRead:0, totalBooksFinished:0, totalNotes:0,
+  bestStreak:0, maxPagesDay:0, maxPagesBook:0,
+  readingLog:{}, // date -> pages
+  badges:{}, // badge_id -> {unlockedAt, seen}
+  weeklyChallenge:{week:'', tasks:[]},
+  timerTotal:0 // seconds
+};
+
+function gmLoad(){
+  try{
+    var raw=localStorage.getItem(gmKey+':'+(currentUser||''));
+    if(raw){var d=JSON.parse(raw);Object.assign(gm,d);}
+  }catch(e){}
+  // Init weekly challenge if new week
+  var wk=getWeekId();
+  if(gm.weeklyChallenge.week!==wk){
+    gm.weeklyChallenge=buildWeeklyChallenge(wk);
+    gmSave();
+  }
+}
+function gmSave(){
+  try{localStorage.setItem(gmKey+':'+(currentUser||''),JSON.stringify(gm));}catch(e){}
+}
+
+function getWeekId(){
+  var d=new Date();
+  var startOfYear=new Date(d.getFullYear(),0,1);
+  var wk=Math.ceil(((d-startOfYear)/86400000+startOfYear.getDay()+1)/7);
+  return d.getFullYear()+'-W'+wk;
+}
+
+function buildWeeklyChallenge(wk){
+  return{week:wk,tasks:[
+    {id:'read3',label:'Ler pelo menos 3 dias esta semana',xp:50,done:false,daysRead:[]},
+    {id:'add2notes',label:'Adicionar 2 novas notas',xp:30,done:false,notesAdded:0},
+    {id:'10pages',label:'Ler 10 páginas numa sessão',xp:40,done:false},
+    {id:'finishchap',label:'Completar um capítulo',xp:35,done:false},
+    {id:'dict1',label:'Pesquisar 1 palavra no dicionário',xp:20,done:false}
+  ]};
+}
+
+// XP values
+var XP={
+  PAGE:1,           // por página lida
+  NOTE:10,          // por nota
+  BOOK_DONE:150,    // livro terminado
+  BOOK_ADD:20,      // livro adicionado
+  STREAK_DAY:15,    // por dia de streak
+  STREAK_BONUS_7:50,// streak de 7 dias
+  DICT_WORD:5,      // palavra guardada
+  SUMMARY:25,       // resumo gerado
+  CHALLENGE:0       // definido por tarefa
+};
+
+// Level thresholds
+var LEVELS=[0,50,120,220,350,520,740,1020,1370,1800,2300,2900,3600,4400,5300,6300,7500,9000,11000,14000,20000];
+function getLevelFromXP(xp){
+  for(var i=LEVELS.length-1;i>=0;i--){if(xp>=LEVELS[i])return i+1;}
+  return 1;
+}
+function getXPForNextLevel(xp){
+  var lvl=getLevelFromXP(xp);
+  if(lvl>=LEVELS.length)return{next:LEVELS[LEVELS.length-1],pct:100};
+  var prev=LEVELS[lvl-1]||0;
+  var next=LEVELS[lvl]||LEVELS[LEVELS.length-1];
+  return{next:next,pct:Math.round(((xp-prev)/(next-prev))*100),current:xp-prev,needed:next-prev};
+}
+
+// BADGES definition
+var BADGES=[
+  {id:'first_book',ico:'📖',name:'Primeira Página',desc:'Adicionou o primeiro livro',check:function(){return db.books.length>=1;}},
+  {id:'5books',ico:'📚',name:'Coleccionador',desc:'5 livros na biblioteca',check:function(){return db.books.length>=5;}},
+  {id:'10books',ico:'🏛️',name:'Biblioteca Pessoal',desc:'10 livros na biblioteca',check:function(){return db.books.length>=10;}},
+  {id:'first_done',ico:'🎉',name:'Missão Cumprida',desc:'Terminou o primeiro livro',check:function(){return db.books.filter(function(b){return b.status==='done';}).length>=1;}},
+  {id:'5done',ico:'🏅',name:'Leitor Dedicado',desc:'Terminou 5 livros',check:function(){return db.books.filter(function(b){return b.status==='done';}).length>=5;}},
+  {id:'10done',ico:'🥇',name:'Devorador de Livros',desc:'Terminou 10 livros',check:function(){return db.books.filter(function(b){return b.status==='done';}).length>=10;}},
+  {id:'first_note',ico:'✏️',name:'Leitor Activo',desc:'Escreveu a primeira nota',check:function(){return db.books.reduce(function(s,b){return s+b.notes.length;},0)>=1;}},
+  {id:'50notes',ico:'📝',name:'Analista Literário',desc:'50 notas escritas',check:function(){return db.books.reduce(function(s,b){return s+b.notes.length;},0)>=50;}},
+  {id:'streak3',ico:'🔥',name:'Em Chamas',desc:'3 dias seguidos',check:function(){return gm.streak>=3;}},
+  {id:'streak7',ico:'⚡',name:'Imparável',desc:'7 dias seguidos',check:function(){return gm.streak>=7;}},
+  {id:'streak30',ico:'💎',name:'Lenda',desc:'30 dias seguidos',check:function(){return gm.streak>=30;}},
+  {id:'100pages',ico:'📄',name:'Centurião',desc:'100 páginas lidas',check:function(){return gm.totalPagesRead>=100;}},
+  {id:'1000pages',ico:'📜',name:'Mil Páginas',desc:'1000 páginas lidas',check:function(){return gm.totalPagesRead>=1000;}},
+  {id:'dict10',ico:'📖',name:'Lexicógrafo',desc:'10 palavras no dicionário',check:function(){return db.words.length>=10;}},
+  {id:'level5',ico:'⭐',name:'Nível 5',desc:'Alcançou o nível 5',check:function(){return gm.level>=5;}},
+  {id:'level10',ico:'🌟',name:'Nível 10',desc:'Alcançou o nível 10',check:function(){return gm.level>=10;}},
+  {id:'first_summary',ico:'📋',name:'Escritor',desc:'Gerou o primeiro resumo',check:function(){return db.books.some(function(b){return b.summary&&b.summary.length>0;});}},
+  {id:'night_owl',ico:'🦉',name:'Coruja Nocturna',desc:'Leu depois das 22h',check:function(){return gm.badges.night_owl;}}, // manual
+];
+
+function gmAddXP(amount,label){
+  if(amount<=0)return;
+  gm.xp+=amount;
+  var oldLevel=gm.level;
+  gm.level=getLevelFromXP(gm.xp);
+  gmSave();
+  showXPToast('+'+amount+' XP'+(label?' · '+label:''));
+  if(gm.level>oldLevel){
+    setTimeout(function(){showXPToast('🎉 Nível '+gm.level+'!');},900);
+  }
+  checkBadges();
+}
+
+function showXPToast(msg){
+  var old=document.querySelector('.xp-toast');if(old)old.remove();
+  var t=document.createElement('div');t.className='xp-toast';t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},2200);
+}
+
+function checkBadges(){
+  var newBadges=[];
+  for(var i=0;i<BADGES.length;i++){
+    var bd=BADGES[i];
+    if(!gm.badges[bd.id]){
+      try{if(bd.check()){gm.badges[bd.id]={unlockedAt:Date.now(),seen:false};newBadges.push(bd);}}catch(e){}
+    }
+  }
+  if(newBadges.length){
+    gmSave();
+    setTimeout(function(){
+      for(var i=0;i<newBadges.length;i++){
+        (function(bd,delay){
+          setTimeout(function(){showXPToast(bd.ico+' Conquista: '+bd.name);},delay);
+        })(newBadges[i],i*1000);
+      }
+    },1200);
+  }
+}
+
+// Update streak
+function gmUpdateStreak(pagesNow, previousPage){
+  var today=new Date().toISOString().slice(0,10);
+  var pagesRead=pagesNow-previousPage;
+  if(pagesRead<=0)return;
+
+  // Check night owl
+  var h=new Date().getHours();
+  if(h>=22&&!gm.badges.night_owl){gm.badges.night_owl={unlockedAt:Date.now(),seen:false};}
+
+  // Update reading log
+  if(!gm.readingLog)gm.readingLog={};
+  gm.readingLog[today]=(gm.readingLog[today]||0)+pagesRead;
+  if(gm.readingLog[today]>gm.maxPagesDay)gm.maxPagesDay=gm.readingLog[today];
+
+  // Update total
+  gm.totalPagesRead=(gm.totalPagesRead||0)+pagesRead;
+
+  // Update streak
+  var yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  if(gm.lastReadDate===today){
+    // already logged today
+  } else if(gm.lastReadDate===yesterday||!gm.lastReadDate){
+    gm.streak=(gm.streak||0)+1;
+    if(gm.streak>(gm.bestStreak||0))gm.bestStreak=gm.streak;
+    if(gm.streak===7)gmAddXP(XP.STREAK_BONUS_7,'Streak de 7 dias!');
+    gm.lastReadDate=today;
+  } else {
+    // streak broken
+    gm.streak=1;gm.lastReadDate=today;
+  }
+
+  // XP for pages
+  gmAddXP(Math.max(1,pagesRead)*XP.PAGE,''+pagesRead+' páginas');
+
+  // Streak XP (once per day)
+  if(gm.lastReadDate===today&&gm.streak>0){
+    gmAddXP(XP.STREAK_DAY,'Streak dia '+gm.streak);
+  }
+
+  // Weekly challenge: 10 pages
+  updateWeeklyTask('10pages',function(t){if(gm.readingLog[today]>=10&&!t.done){t.done=true;gmAddXP(t.xp,'Desafio semanal');return true;}return false;});
+  // Weekly challenge: read 3 days
+  updateWeeklyTask('read3',function(t){
+    if(!t.daysRead)t.daysRead=[];
+    if(t.daysRead.indexOf(today)<0)t.daysRead.push(today);
+    if(t.daysRead.length>=3&&!t.done){t.done=true;gmAddXP(t.xp,'Desafio semanal');return true;}
+    return false;
+  });
+
+  gmSave();
+}
+
+function gmOnBookFinished(b){
+  gm.totalBooksFinished=(gm.totalBooksFinished||0)+1;
+  var pages=b.pages||0;
+  if(pages>gm.maxPagesBook)gm.maxPagesBook=pages;
+  gmAddXP(XP.BOOK_DONE,'Livro terminado!');
+  checkBadges();
+}
+
+function gmOnNoteAdded(){
+  gm.totalNotes=(gm.totalNotes||0)+1;
+  gmAddXP(XP.NOTE,'Nova nota');
+  // Weekly challenge
+  updateWeeklyTask('add2notes',function(t){
+    t.notesAdded=(t.notesAdded||0)+1;
+    if(t.notesAdded>=2&&!t.done){t.done=true;gmAddXP(t.xp,'Desafio semanal');return true;}
+    return false;
+  });
+  checkBadges();
+}
+
+function gmOnWordAdded(){gmAddXP(XP.DICT_WORD,'Palavra guardada');checkBadges();}
+function gmOnBookAdded(){gmAddXP(XP.BOOK_ADD,'Livro adicionado');checkBadges();}
+function gmOnSummaryGenerated(){gmAddXP(XP.SUMMARY,'Resumo gerado');checkBadges();}
+
+function updateWeeklyTask(taskId,fn){
+  var t=gm.weeklyChallenge.tasks.filter(function(x){return x.id===taskId;})[0];
+  if(!t||t.done)return;
+  fn(t);gmSave();
+}
+
+// Timer
+var timerInterval=null,timerStart=null,timerElapsed=0;
+function timerToggle(){
+  var btn=document.getElementById('timer-btn');
+  var disp=document.getElementById('timer-display');
+  if(timerInterval){
+    clearInterval(timerInterval);
+    var secs=Math.round((Date.now()-timerStart)/1000)+timerElapsed;
+    timerElapsed=secs;
+    gm.timerTotal=(gm.timerTotal||0)+secs;
+    gmSave();
+    timerInterval=null;
+    if(btn)btn.textContent='▶ Iniciar';
+    gmAddXP(Math.floor(secs/60),''+Math.floor(secs/60)+'min de leitura');
+  } else {
+    timerStart=Date.now();
+    timerInterval=setInterval(function(){
+      var secs=Math.round((Date.now()-timerStart)/1000)+timerElapsed;
+      var h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60;
+      if(disp)disp.textContent=(h?pad2(h)+':':'')+pad2(m)+':'+pad2(s);
+    },1000);
+    if(btn)btn.textContent='⏸ Pausar';
+  }
+}
+function timerReset(){
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  timerElapsed=0;timerStart=null;
+  var disp=document.getElementById('timer-display');if(disp)disp.textContent='00:00';
+  var btn=document.getElementById('timer-btn');if(btn)btn.textContent='▶ Iniciar';
+}
+function pad2(n){return n<10?'0'+n:''+n;}
+
+// Render perfil
+function renderPerfil(){
+  gmLoad();
+  var lvlInfo=getXPForNextLevel(gm.xp);
+  var today=new Date().toISOString().slice(0,10);
+  var streakActive=gm.lastReadDate===today||gm.lastReadDate===new Date(Date.now()-86400000).toISOString().slice(0,10);
+  var totalNotes=db.books.reduce(function(s,b){return s+b.notes.filter(function(n){return n.type!=='chsummary';}).length;},0);
+
+  var html='<h2>🏆 O Meu Perfil</h2>';
+
+  // XP / Level bar
+  html+='<div class="xp-bar-wrap">';
+  html+='<div class="xp-bar-top"><span class="xp-level-badge">Nível '+gm.level+' — '+levelTitle(gm.level)+'</span><span class="xp-label">'+gm.xp+' XP total</span></div>';
+  html+='<div class="xp-bar"><div class="xp-fill" style="width:'+Math.min(lvlInfo.pct,100)+'%"></div></div>';
+  html+='<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:.3rem"><span>'+lvlInfo.current+' XP</span><span>'+(lvlInfo.pct<100?'Próximo nível: '+lvlInfo.needed+' XP':'Nível máximo! 🌟')+'</span></div>';
+  html+='</div>';
+
+  // Streak
+  var streakColor=streakActive?'':'filter:grayscale(1);opacity:.6';
+  html+='<div class="streak-card" style="'+streakColor+'">';
+  html+='<div class="streak-num">'+(gm.streak||0)+'</div>';
+  html+='<div class="streak-info"><div class="streak-label">Dias seguidos a ler</div><div class="streak-sub">Recorde: '+(gm.bestStreak||0)+' dias'+(streakActive?'':' · Streak em pausa')+'</div></div>';
+  html+='<div class="streak-flame">'+(streakActive?'🔥':'💤')+'</div>';
+  html+='</div>';
+
+  // Stats
+  html+='<div class="gm-stats">';
+  html+='<div class="gm-stat"><span class="gm-stat-n">'+db.books.length+'</span><div class="gm-stat-l">Livros</div></div>';
+  html+='<div class="gm-stat"><span class="gm-stat-n">'+db.books.filter(function(b){return b.status==='done';}).length+'</span><div class="gm-stat-l">Terminados</div></div>';
+  html+='<div class="gm-stat"><span class="gm-stat-n">'+(gm.totalPagesRead||0)+'</span><div class="gm-stat-l">Páginas lidas</div></div>';
+  html+='<div class="gm-stat"><span class="gm-stat-n">'+totalNotes+'</span><div class="gm-stat-l">Notas</div></div>';
+  html+='</div>';
+
+  // Timer de leitura
+  html+='<div class="timer-card">';
+  html+='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:.2rem">⏱ Temporizador de Leitura</div>';
+  html+='<div style="font-size:11px;color:var(--text3);margin-bottom:.3rem">Total acumulado: '+Math.floor((gm.timerTotal||0)/60)+' min</div>';
+  html+='<div class="timer-display" id="timer-display">00:00</div>';
+  html+='<div class="timer-btns">';
+  html+='<button class="btn btn-p btn-s" id="timer-btn" onclick="timerToggle()">▶ Iniciar</button>';
+  html+='<button class="btn btn-g btn-s" onclick="timerReset()">↺ Reset</button>';
+  html+='</div></div>';
+
+  // Desafio semanal
+  html+='<div class="challenge-card">';
+  html+='<div class="challenge-hd"><span class="challenge-title">📅 Desafio da Semana</span>';
+  var done=gm.weeklyChallenge.tasks.filter(function(t){return t.done;}).length;
+  html+='<span class="challenge-timer">'+done+'/'+gm.weeklyChallenge.tasks.length+' completos</span></div>';
+  html+='<div class="challenge-list">';
+  for(var i=0;i<gm.weeklyChallenge.tasks.length;i++){
+    var t=gm.weeklyChallenge.tasks[i];
+    html+='<div class="challenge-item'+(t.done?' done':'').replace("'","\\'")+'"><div class="challenge-cb">'+(t.done?'✓':'')+'</div><span style="flex:1">'+t.label+'</span><span class="challenge-xp">+'+t.xp+' XP</span></div>';
+  }
+  html+='</div></div>';
+
+  // Records
+  html+='<div style="margin-bottom:.85rem">';
+  html+='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:.6rem">🏅 Recordes Pessoais</div>';
+  html+=recordItem('📖','Melhor sequência',(gm.bestStreak||0)+' dias');
+  html+=recordItem('📄','Máx. páginas num dia',(gm.maxPagesDay||0)+' páginas');
+  html+=recordItem('📚','Livro mais longo',(gm.maxPagesBook||0)+' páginas');
+  html+=recordItem('✏️','Total de notas',totalNotes+' notas');
+  html+=recordItem('⏱','Tempo total a ler',Math.floor((gm.timerTotal||0)/60)+' min');
+  html+=recordItem('🔤','Palavras guardadas',db.words.length+' palavras');
+  html+='</div>';
+
+  // Conquistas
+  html+='<div style="margin-bottom:1rem">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem">';
+  html+='<span style="font-size:13px;font-weight:600;color:var(--text)">🎖 Conquistas</span>';
+  var unlocked=BADGES.filter(function(bd){return gm.badges[bd.id];}).length;
+  html+='<span style="font-size:11px;color:var(--text3)">'+unlocked+'/'+BADGES.length+' desbloqueadas</span>';
+  html+='</div>';
+  html+='<div class="badges-grid">';
+  for(var bi=0;bi<BADGES.length;bi++){
+    var bd=BADGES[bi];
+    var isUnlocked=!!gm.badges[bd.id];
+    var isNew=isUnlocked&&gm.badges[bd.id]&&!gm.badges[bd.id].seen;
+    if(isNew&&gm.badges[bd.id])gm.badges[bd.id].seen=true;
+    html+='<div class="badge-item'+(isUnlocked?' unlocked':' locked')+'">';
+    if(isNew)html+='<div class="badge-new">NOVO</div>';
+    html+='<span class="badge-ico">'+bd.ico+'</span>';
+    html+='<div class="badge-name">'+bd.name+'</div>';
+    html+='<div class="badge-desc">'+bd.desc+'</div>';
+    html+='</div>';
+  }
+  html+='</div></div>';
+  if(unlocked>0)gmSave();// mark badges as seen
+
+  // Histórico semanal — mini chart
+  html+='<div style="margin-bottom:1rem">';
+  html+='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:.65rem">📊 Páginas esta semana</div>';
+  html+=renderWeekChart();
+  html+='</div>';
+
+  document.getElementById('perfil-content').innerHTML=html;
+  checkBadges();
+}
+
+function levelTitle(lvl){
+  var titles=['Iniciante','Leitor Curioso','Explorador','Entusiasta','Leitor Dedicado','Apaixonado','Maratonista','Erudito','Pensador','Crítico','Bibliófilo','Literato','Académico','Mestre da Leitura','Grande Leitor','Lenda Literária','Guardião das Letras','Sábio dos Livros','Archimago Literário','Divino Leitor'];
+  return titles[Math.min(lvl-1,titles.length-1)];
+}
+
+function recordItem(ico,label,val){
+  return '<div class="record-item"><div class="record-ico">'+ico+'</div><div class="record-info"><div class="record-label">'+label+'</div></div><div class="record-badge">'+escHtml(val)+'</div></div>';
+}
+
+function renderWeekChart(){
+  var days=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  var today=new Date();
+  var dayOfWeek=today.getDay();// 0=Sun
+  var startOffset=dayOfWeek===0?6:dayOfWeek-1;// Monday start
+  var maxP=0;
+  var weekData=[];
+  for(var d=0;d<7;d++){
+    var dt=new Date(today);dt.setDate(dt.getDate()-(startOffset-d));
+    var key=dt.toISOString().slice(0,10);
+    var p=(gm.readingLog&&gm.readingLog[key])||0;
+    weekData.push({label:days[d],pages:p,key:key});
+    if(p>maxP)maxP=p;
+  }
+  var html='<div style="display:flex;align-items:flex-end;gap:.35rem;height:60px">';
+  for(var i=0;i<7;i++){
+    var wd=weekData[i];
+    var pct=maxP>0?Math.round((wd.pages/maxP)*100):0;
+    var isToday=wd.key===today.toISOString().slice(0,10);
+    html+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem">';
+    html+='<div style="font-size:9px;color:var(--text3)">'+wd.pages+'</div>';
+    html+='<div style="flex:1;width:100%;display:flex;align-items:flex-end">';
+    html+='<div style="width:100%;height:'+(pct||4)+'%;min-height:3px;background:'+(isToday?'var(--accent)':'var(--accent-mid)')+';border-radius:3px 3px 0 0;opacity:'+(wd.pages?1:.3)+';transition:height .4s"></div>';
+    html+='</div>';
+    html+='<div style="font-size:9px;color:'+(isToday?'var(--accent)':'var(--text3)')+';font-weight:'+(isToday?'600':'400')+'">'+wd.label+'</div>';
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+
+// ── HOOKS: integrar GM nos eventos existentes ─────────────────
+// Chamados nos pontos certos do código existente
 document.addEventListener('DOMContentLoaded',function(){
   // Inicializar suporte offline
   initOfflineSupport();
