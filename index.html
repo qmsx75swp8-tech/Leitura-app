@@ -594,56 +594,30 @@ function makeCloudKey(user,pass){
   return 'leituras_user_'+Math.abs(h).toString(36);
 }
 
-// Cloud storage (safe - never throws, offline-aware)
+// Armazenamento local — guarda sempre no localStorage, nunca perde dados ao atualizar
 function cloudSave(data){
   if(!currentStorageKey)return;
-  // Always save locally first — works offline
-  try{localStorage.setItem(currentStorageKey,JSON.stringify(data));}catch(e){}
-  if(!isOnline){
-    pendingSyncNeeded=true;
-    updateSyncBadge('offline');
-    return;
-  }
-  updateSyncBadge('local');
   try{
-    if(typeof window.storage!=='undefined'&&window.storage&&window.storage.set){
-      window.storage.set(makeCloudKey(currentUser,currentRawPass),JSON.stringify(data))
-        .then(function(){updateSyncBadge('ok');pendingSyncNeeded=false;})
-        .catch(function(){pendingSyncNeeded=true;updateSyncBadge('err');});
-    }
-  }catch(e){pendingSyncNeeded=true;}
+    localStorage.setItem(currentStorageKey,JSON.stringify(data));
+    updateSyncBadge('ok');
+    pendingSyncNeeded=false;
+  }catch(e){updateSyncBadge('err');}
 }
 function cloudLoadLocal(user,pass){
   var sk=makeStorageKey(user,pass);
   try{var s=localStorage.getItem(sk);return s?JSON.parse(s):null;}catch(e){return null;}
 }
 function cloudLoadRemote(user,pass,callback){
-  var ck=makeCloudKey(user,pass);
-  var sk=makeStorageKey(user,pass);
-  try{
-    if(typeof window.storage!=='undefined'&&window.storage&&window.storage.get){
-      var p=window.storage.get(ck);
-      var timer=setTimeout(function(){callback(null);},2500);
-      p.then(function(r){
-        clearTimeout(timer);
-        if(r&&r.value){
-          var d=JSON.parse(r.value);
-          try{localStorage.setItem(sk,JSON.stringify(d));}catch(e){}
-          callback(d);
-        } else {callback(null);}
-      }).catch(function(){clearTimeout(timer);callback(null);});
-    } else {callback(null);}
-  }catch(e){callback(null);}
+  // Dados 100% locais — localStorage é a fonte de verdade
+  callback(null);
 }
 
 function updateSyncBadge(status){
   var b=document.getElementById('sync-status-badge');
   if(!b)return;
-  if(status==='ok'){b.className='sync-indicator sync-ok';b.textContent='☁ Sincronizado';}
-  else if(status==='err'){b.className='sync-indicator sync-err';b.textContent='Erro de sync';}
-  else if(status==='offline'){b.className='sync-indicator sync-err';b.innerHTML='<span class="sync-pending-dot"></span>Offline — guardado localmente';}
-  else if(status==='local'){b.className='sync-indicator sync-pending';b.textContent=isOnline?'Guardado localmente':'📵 Offline — guardado localmente';}
-  else{b.className='sync-indicator sync-pending';b.innerHTML='<span class="sync-pending-dot"></span>A sincronizar...';}
+  if(status==='ok'){b.className='sync-indicator sync-ok';b.textContent='✓ Guardado';}
+  else if(status==='err'){b.className='sync-indicator sync-err';b.textContent='Erro ao guardar';}
+  else{b.className='sync-indicator sync-pending';b.innerHTML='<span class="sync-pending-dot"></span>A guardar...';}
 }
 
 // Login
@@ -679,15 +653,8 @@ function doLogin(){
   // Guardar sessão para auto-login em visitas futuras
   try{localStorage.setItem('leituras-session-user',user);localStorage.setItem('leituras-session-pass',pass);}catch(e){}
   renderAll();updateSyncBadge('local');
-  // Then try cloud in background
-  cloudLoadRemote(user,pass,function(remoteData){
-    if(remoteData&&remoteData.books){
-      db=remoteData;if(!db.words)db.words=[];
-      renderAll();updateSyncBadge('ok');
-    }else{
-      cloudSave(db);
-    }
-  });
+  // Guardar sessão localmente
+  cloudSave(db);
 }
 
 // -- ECRÃ RÁPIDO ----------------------------------------------
@@ -782,10 +749,10 @@ function openFullApp(){
 // -------------------------------------------------------------
 
 function confirmLogout(){
-  if(!confirm('Terminar sessao? Os dados ficam guardados.'))return;
+  if(!confirm('Terminar sessao? Os dados ficam guardados neste browser.'))return;
   currentUser=null;currentRawPass='';currentStorageKey=null;
   db={books:[],words:[],version:4};
-  try{localStorage.removeItem('leituras-last-user');}catch(e){}
+  try{localStorage.removeItem('leituras-last-user');localStorage.removeItem('leituras-session-user');localStorage.removeItem('leituras-session-pass');}catch(e){}
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-user').value='';
@@ -799,10 +766,8 @@ function save(){
   syncTimeout=setTimeout(function(){cloudSave(db);},1500);
 }
 function forceSyncToCloud(){
-  if(!isOnline){alert('Sem ligação à internet. Os teus dados estão guardados localmente e serão sincronizados quando voltares a ligar.');return;}
-  updateSyncBadge('pending');
   cloudSave(db);
-  setTimeout(function(){alert('Dados sincronizados na cloud!');},500);
+  alert('Dados guardados com sucesso!');
 }
 function exportData(){
   var blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
@@ -2194,15 +2159,7 @@ document.addEventListener('DOMContentLoaded',function(){
         renderAll();
       }
       updateSyncBadge('local');
-      cloudLoadRemote(su,sp,function(remoteData){
-        if(remoteData&&remoteData.books){
-          db=remoteData;if(!db.words)db.words=[];
-          renderAll();
-          var qs=document.getElementById('quick-screen');
-          if(qs&&qs.style.display!=='none')showQuickScreen();
-          updateSyncBadge('ok');
-        }
-      });
+      updateSyncBadge('ok');
       return; // não precisa de mais nada
     }
   }catch(e){}
