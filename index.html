@@ -485,7 +485,7 @@ select option{background:var(--surface)}
     <span id="cover-search-text" style="flex:1">A pesquisar capa...</span>
   </div>
   <div class="fr"><div><label>Nº de páginas</label><input id="f-pages" type="number" placeholder="ex: 320"></div><div><label>Estado</label><select id="f-status"><option value="reading">A ler</option><option value="done">Lido</option><option value="want">Quero ler</option></select></div></div>
-  <div class="fr fr1"><label>Capítulos (separados por vírgula)</label><input id="f-chapters" placeholder="ex: Parte 1, Parte 2, Epílogo"></div>
+  <div class="fr fr1"><label>Capítulos (separados por vírgula) <span style="font-weight:400;color:var(--accent-mid);text-transform:none;letter-spacing:0">— introduz os nomes reais, não serão gerados automaticamente</span></label><input id="f-chapters" placeholder="ex: Parte I, Parte II, Epílogo  ou  Cap. 1, Cap. 2, Cap. 3"></div>
   <div class="fr fr1"><label>Sinopse</label><textarea id="f-synopsis" placeholder="Breve descrição ou porquê de querer ler..."></textarea></div>
   <div class="bgrp"><button class="btn btn-g" onclick="closeM('m-add')">Cancelar</button><button class="btn btn-p" onclick="addBook()">Guardar livro</button></div>
 </div></div>
@@ -1178,41 +1178,50 @@ function applyBookLookupResult(result,statusDiv,sourceName){
   var synEl=document.getElementById('f-synopsis');
   var authorEl=document.getElementById('f-author');
   var found=[];
+  var warnings=[];
 
   // Fill author if empty
-  if(result.author&&authorEl&&!authorEl.value&&result.author){
+  if(result.author&&authorEl&&!authorEl.value){
     authorEl.value=result.author;
-    found.push('autor');
+    found.push('autor: '+result.author);
   }
-  // Pages
-  if(result.pages&&pagesEl&&!pagesEl.value){
+  // Pages — only fill if we have a reliable value
+  if(result.pages&&result.pages>10&&pagesEl&&!pagesEl.value){
     pagesEl.value=result.pages;
-    found.push('~'+result.pages+' páginas');
+    found.push(result.pages+' páginas');
+  } else if(!result.pages||result.pages<=10){
+    warnings.push('páginas não encontradas — preenche manualmente');
   }
   // Synopsis
   if(result.synopsis&&synEl&&!synEl.value){
     synEl.value=result.synopsis;
     found.push('sinopse');
   }
-  // Chapters — estimate from pages
+  // Chapters — NUNCA estimar automaticamente (dá informação errada)
+  // Só preencher se o chapEl estiver vazio E avisar que é para editar
   if(chapEl&&!chapEl.value){
-    var pages=result.pages||0;
-    var caps=[];
-    if(pages>0){
-      var n=Math.min(Math.max(Math.round(pages/55),3),14);
-      for(var i=1;i<=n;i++)caps.push('Capítulo '+i);
-    } else {
-      caps=['Capítulo 1','Capítulo 2','Capítulo 3'];
-    }
-    chapEl.value=caps.join(', ');
-    found.push(caps.length+' capítulos');
+    // Deixar em branco — utilizador sabe os capítulos reais
+    warnings.push('capítulos não preenchidos — introduz os capítulos reais (ex: "Cap. 1, Cap. 2, Cap. 3")');
   }
 
   pendingChapterSummaries={};
-  var msg=found.length
-    ?'✓ Fonte: '+sourceName+' — encontrado: '+found.join(' / ')+'.'
-    :'Livro encontrado em '+sourceName+' mas sem dados adicionais. Preenche manualmente.';
-  if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent=msg;}
+
+  var msgParts=[];
+  if(found.length)msgParts.push('✓ '+sourceName+': '+found.join(', '));
+  if(warnings.length)msgParts.push('⚠ '+warnings.join('; '));
+
+  var msg=msgParts.length?msgParts.join(' — '):'Livro encontrado em '+sourceName+' mas sem dados adicionais.';
+  if(statusDiv){
+    statusDiv.className='book-search-status active';
+    statusDiv.innerHTML=msg;
+    // Highlight the chapters field visually
+    if(chapEl){
+      chapEl.style.borderColor='var(--accent-mid)';
+      chapEl.placeholder='Preenche os capítulos reais (ex: Cap. 1, Cap. 2, Epílogo)';
+      chapEl.focus();
+      setTimeout(function(){chapEl.style.borderColor='';},3000);
+    }
+  }
 }
 
 // Books
@@ -1605,197 +1614,199 @@ function searchWordInline(bid){
   if(!area)return;
 
   if(!isOnline){
-    area.innerHTML='<div class="dict-error">📵 Sem ligação à internet.<br><small>O dicionário requer internet. Guarda a palavra manualmente quando voltares a ligar.</small></div>';
+    area.innerHTML='<div class="dict-error">Sem ligação à internet.<br><small>O dicionário requer internet.</small></div>';
     return;
   }
 
-  area.innerHTML='<div class="dict-loading"><div class="dict-spinner"></div>A pesquisar "'+escHtml(q)+'" no Infopédia...</div>';
+  area.innerHTML='<div class="dict-loading"><div class="dict-spinner"></div>A pesquisar "'+escHtml(q)+'"...</div>';
   lastDictResult=null;
 
-  // Tenta Infopédia via proxy; se falhar, tenta dicionário PT alternativo
-  var url='https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q);
-  var proxyUrl='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+  // Estratégia: 1) Dicionário Aberto (API JSON fiável, sem CORS) -> 2) Wiktionary PT -> 3) Free Dictionary (EN fallback)
+  searchDicionarioAberto(q,bid,area);
+}
 
+// Fallback: Wiktionary PT — API JSON pública, sem CORS
+function searchWiktionaryPT(q,bid,area){
+  // Try exact word first, then lowercase
+  var queries=[q,q.toLowerCase(),q.charAt(0).toUpperCase()+q.slice(1).toLowerCase()];
+  // Remove duplicates
+  var seen={};var uniq=[];
+  for(var qi=0;qi<queries.length;qi++){if(!seen[queries[qi]]){seen[queries[qi]]=1;uniq.push(queries[qi]);}}
+
+  function tryNext(idx){
+    if(idx>=uniq.length){
+      showFinalDictFallback(q,bid,area);return;
+    }
+    var url='https://pt.wiktionary.org/w/api.php?action=query&titles='+encodeURIComponent(uniq[idx])+'&prop=revisions&rvprop=content&format=json&origin=*&rvslots=*';
+    var xhr=new XMLHttpRequest();
+    xhr.open('GET',url,true);xhr.timeout=8000;
+    xhr.onload=function(){
+      try{
+        var d=JSON.parse(xhr.responseText);
+        var pages=d.query&&d.query.pages;
+        if(!pages){tryNext(idx+1);return;}
+        var pid=Object.keys(pages)[0];
+        if(pid==='-1'||!pages[pid]){tryNext(idx+1);return;}
+        var rev=pages[pid].revisions&&pages[pid].revisions[0];
+        var wikitext=rev?(rev['*']||rev.slots&&rev.slots.main&&rev.slots.main['*']||''):'';
+        if(!wikitext){tryNext(idx+1);return;}
+        parseWiktionaryContent(wikitext,uniq[idx],bid,area);
+      }catch(e){tryNext(idx+1);}
+    };
+    xhr.onerror=function(){tryNext(idx+1);};
+    xhr.ontimeout=function(){tryNext(idx+1);};
+    xhr.send();
+  }
+  tryNext(0);
+}
+
+function parseWiktionaryContent(wikitext,wordFound,bid,area){
+  var defs=[];
+  var wordClass='';
+  // Extract word class
+  var clsMatch=wikitext.match(/===\s*(Substantivo|Adjetivo|Verbo|Adv[eé]rbio|Preposi[cç][aã]o|Pronome|Artigo|Numeral|Interjei[cç][aã]o|Conjun[cç][aã]o|Locução)\s*===/i);
+  if(clsMatch)wordClass=clsMatch[1];
+  // Look for Portuguese section
+  var ptSection=wikitext;
+  var ptIdx=wikitext.indexOf('==Português==');
+  if(ptIdx<0)ptIdx=wikitext.indexOf('== Português ==');
+  if(ptIdx>=0){
+    // Find next ==Language== section
+    var nextLang=wikitext.indexOf('\n==',ptIdx+10);
+    if(nextLang>0)ptSection=wikitext.slice(ptIdx,nextLang);
+    else ptSection=wikitext.slice(ptIdx);
+  }
+  // Extract definitions from numbered list items # (not ## which are sub-examples)
+  var defRe=/^#\s*([^#\n:*][^\n]{5,300})/mg;
+  var m;
+  while((m=defRe.exec(ptSection))!==null&&defs.length<5){
+    var txt=m[1]
+      .replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g,'$1') // [[word|display]] -> display
+      .replace(/\{\{[^}]+\}\}/g,'')  // remove templates
+      .replace(/'{2,}/g,'')  // remove wiki bold/italic
+      .replace(/<!--[^>]*-->/g,'')
+      .replace(/\s+/g,' ')
+      .trim();
+    if(txt.length>5&&txt.length<350&&!/^#|^;|categoria:|categoria:/i.test(txt)){
+      var dup=false;
+      for(var di=0;di<defs.length;di++){if(defs[di].slice(0,30)===txt.slice(0,30)){dup=true;break;}}
+      if(!dup)defs.push(txt);
+    }
+  }
+  if(!defs.length){showFinalDictFallback(wordFound,bid,area);return;}
+  lastDictResult={word:wordFound,wordClass:wordClass,defs:defs,query:wordFound,source:'Wiktionary PT'};
+  showDictResultHTML(lastDictResult,bid,area);
+}
+
+function showFinalDictFallback(q,bid,area){
+  var infLink='https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q);
+  area.innerHTML='<div class="dict-error" style="text-align:center">'
+    +'<div style="font-size:15px;margin-bottom:.4rem">Palavra não encontrada nos dicionários online</div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:.75rem">A palavra "'+escHtml(q)+'" pode ser muito específica, um nome próprio, ou ter grafia diferente.</div>'
+    +'<a href="'+infLink+'" target="_blank" class="btn btn-p btn-s" style="text-decoration:none;display:inline-flex">Abrir "'+escHtml(q)+'" no Infopédia ↗</a>'
+    +'</div>';
+}
+  if(!defs.length){showDictError(area,'Definição não encontrada para "'+escHtml(query)+'".<br><small><a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(query)+'" target="_blank" style="color:var(--accent-mid)">Ver no Infopédia ↗</a></small>');return;}
+  lastDictResult={word:query,wordClass:wordClass,defs:defs,query:query,source:'Wiktionary PT'};
+  showDictResultHTML(lastDictResult,bid,area);
+}
+
+// Dicionário Aberto — API JSON pública, fiável, sem CORS issues
+function searchDicionarioAberto(q,bid,area){
+  var url='https://api.dicionario-aberto.net/word/'+encodeURIComponent(q);
   var xhr=new XMLHttpRequest();
-  xhr.open('GET',proxyUrl,true);
-  xhr.timeout=10000;
+  xhr.open('GET',url,true);xhr.timeout=7000;
   xhr.onload=function(){
     try{
-      var resp=JSON.parse(xhr.responseText);
-      var html=resp.contents||'';
-      // Check if Infopédia returned useful content
-      if(html.length>500&&html.indexOf('infopedia')>=0){
-        parseAndShowInfopedia(html,q,bid);
-      } else {
-        // Fallback: Wiktionary PT
-        searchWiktionaryPT(q,bid,area);
+      var d=JSON.parse(xhr.responseText);
+      if(!d||!d.length){
+        // Tenta forma singular/infinitivo: remove -s, -es, -mente
+        var alt=q;
+        if(q.endsWith('mente'))alt=q.slice(0,-5);
+        else if(q.endsWith('es')&&q.length>4)alt=q.slice(0,-2);
+        else if(q.endsWith('s')&&q.length>3)alt=q.slice(0,-1);
+        if(alt!==q){
+          var xhr2=new XMLHttpRequest();
+          xhr2.open('GET','https://api.dicionario-aberto.net/word/'+encodeURIComponent(alt),true);xhr2.timeout=6000;
+          xhr2.onload=function(){
+            try{
+              var d2=JSON.parse(xhr2.responseText);
+              if(d2&&d2.length){parseDicionarioAbertoResult(d2,alt,q,bid,area);}
+              else{searchWiktionaryPT(q,bid,area);}
+            }catch(e){searchWiktionaryPT(q,bid,area);}
+          };
+          xhr2.onerror=function(){searchWiktionaryPT(q,bid,area);};
+          xhr2.ontimeout=function(){searchWiktionaryPT(q,bid,area);};
+          xhr2.send();
+        } else {
+          searchWiktionaryPT(q,bid,area);
+        }
+        return;
       }
-    }catch(e){
-      searchWiktionaryPT(q,bid,area);
-    }
+      parseDicionarioAbertoResult(d,q,q,bid,area);
+    }catch(e){searchWiktionaryPT(q,bid,area);}
   };
   xhr.onerror=function(){searchWiktionaryPT(q,bid,area);};
   xhr.ontimeout=function(){searchWiktionaryPT(q,bid,area);};
   xhr.send();
 }
 
-// Fallback: Wiktionary PT (API JSON pública, sem CORS)
-function searchWiktionaryPT(q,bid,area){
-  var url='https://pt.wiktionary.org/w/api.php?action=query&titles='+encodeURIComponent(q)+'&prop=revisions&rvprop=content&format=json&origin=*';
-  var xhr=new XMLHttpRequest();
-  xhr.open('GET',url,true);xhr.timeout=8000;
-  xhr.onload=function(){
-    try{
-      var d=JSON.parse(xhr.responseText);
-      var pages=d.query&&d.query.pages;
-      if(!pages){showDictError(area,'Palavra não encontrada.');return;}
-      var pid=Object.keys(pages)[0];
-      if(pid==='-1'||!pages[pid].revisions){
-        // Try Dicionário Aberto (API simples)
-        searchDicionarioAberto(q,bid,area);
-        return;
+function parseDicionarioAbertoResult(d,wordFound,originalQuery,bid,area){
+  var defs=[],wordClass='',allEntries=[];
+  for(var i=0;i<d.length&&allEntries.length<8;i++){
+    var entry=d[i];
+    // Try XML sense field
+    if(entry.sense){
+      // sense can be raw XML — strip tags
+      var txt=String(entry.sense).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      // Remove XML artifacts
+      txt=txt.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+      if(txt.length>5&&txt.length<400){
+        allEntries.push({txt:txt,type:entry.type||''});
       }
-      var wikitext=pages[pid].revisions[0]['*']||'';
-      parseWiktionaryContent(wikitext,q,bid,area);
-    }catch(e){searchDicionarioAberto(q,bid,area);}
-  };
-  xhr.onerror=function(){searchDicionarioAberto(q,bid,area);};
-  xhr.ontimeout=function(){searchDicionarioAberto(q,bid,area);};
-  xhr.send();
-}
-
-function parseWiktionaryContent(wikitext,query,bid,area){
-  var defs=[];
-  var wordClass='';
-  // Extract word class
-  var clsMatch=wikitext.match(/===\s*(Substantivo|Adjetivo|Verbo|Advérbio|Preposição|Pronome|Artigo|Numeral|Interjeição|Conjunção)\s*===/i);
-  if(clsMatch)wordClass=clsMatch[1];
-  // Extract definitions from numbered list items
-  var defRe=/^#\s*([^#\n:*][^\n]{10,300})/mg;
-  var m;
-  while((m=defRe.exec(wikitext))!==null&&defs.length<5){
-    var txt=m[1].replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g,'$1').replace(/\{\{[^}]+\}\}/g,'').replace(/'{2,}/g,'').trim();
-    if(txt.length>8)defs.push(txt);
+    }
   }
-  if(!defs.length){showDictError(area,'Definição não encontrada para "'+escHtml(query)+'".<br><small><a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(query)+'" target="_blank" style="color:var(--accent-mid)">Ver no Infopédia ↗</a></small>');return;}
-  lastDictResult={word:query,wordClass:wordClass,defs:defs,query:query,source:'Wiktionary PT'};
+  // Group by word class, pick best defs
+  var seenClasses={};
+  for(var j=0;j<allEntries.length&&defs.length<5;j++){
+    var e=allEntries[j];
+    if(!wordClass&&e.type)wordClass=e.type;
+    // Avoid very similar defs
+    var dup=false;
+    for(var k=0;k<defs.length;k++){if(defs[k].slice(0,40)===e.txt.slice(0,40)){dup=true;break;}}
+    if(!dup&&e.txt.length>5)defs.push(e.txt);
+  }
+  if(!defs.length){searchWiktionaryPT(originalQuery,bid,area);return;}
+  lastDictResult={word:wordFound,wordClass:wordClass,defs:defs,query:originalQuery,source:'Dicionário Aberto'};
   showDictResultHTML(lastDictResult,bid,area);
-}
-
-// Second fallback: Dicionário Aberto
-function searchDicionarioAberto(q,bid,area){
-  var url='https://api.dicionario-aberto.net/word/'+encodeURIComponent(q);
-  var xhr=new XMLHttpRequest();
-  xhr.open('GET',url,true);xhr.timeout=6000;
-  xhr.onload=function(){
-    try{
-      var d=JSON.parse(xhr.responseText);
-      if(!d||!d.length){showDictError(area,'Palavra "'+escHtml(q)+'" não encontrada.<br><small><a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q)+'" target="_blank" style="color:var(--accent-mid)">Pesquisar no Infopédia ↗</a></small>');return;}
-      var defs=[],wordClass='';
-      for(var i=0;i<d.length&&defs.length<5;i++){
-        var entry=d[i];
-        if(entry.sense){
-          var txt=(entry.sense+'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-          if(txt.length>5)defs.push(txt);
-        }
-        if(!wordClass&&entry.type)wordClass=entry.type;
-      }
-      if(!defs.length){showDictError(area,'Definição não encontrada para "'+escHtml(q)+'".');return;}
-      lastDictResult={word:q,wordClass:wordClass,defs:defs,query:q,source:'Dicionário Aberto'};
-      showDictResultHTML(lastDictResult,bid,area);
-    }catch(e){showDictError(area,'Erro ao carregar o dicionário. <a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q)+'" target="_blank" style="color:var(--accent-mid)">Ver no Infopédia ↗</a>');}
-  };
-  xhr.onerror=function(){showDictError(area,'Sem ligação ou dicionário indisponível. <a href="https://www.infopedia.pt/dicionarios/lingua-portuguesa/'+encodeURIComponent(q)+'" target="_blank" style="color:var(--accent-mid)">Ver no Infopédia ↗</a>');};
-  xhr.ontimeout=function(){showDictError(area,'Tempo esgotado. Tenta novamente.');};
-  xhr.send();
 }
 
 function showDictResultHTML(result,bid,area){
   var b=db.books.filter(function(x){return x.id===bid;})[0];
-  var html2='<div class="dict-result-card">';
-  html2+='<div class="dict-word-main">'+escHtml(result.word||result.query)+'</div>';
-  if(result.wordClass)html2+='<div class="dict-word-cls">'+escHtml(result.wordClass)+'</div>';
+  var html='<div class="dict-result-card">';
+  html+='<div class="dict-word-main">'+escHtml(result.word||result.query)+'</div>';
+  if(result.wordClass)html+='<div class="dict-word-cls">'+escHtml(result.wordClass)+'</div>';
   for(var i=0;i<result.defs.length;i++){
-    html2+='<div class="dict-def-item"><span class="dict-def-num">'+(i+1)+'.</span>'+escHtml(result.defs[i])+'</div>';
+    // Clean any residual HTML/XML from defs
+    var defText=String(result.defs[i])
+      .replace(/<[^>]+>/g,' ')
+      .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+      .replace(/\s+/g,' ').trim();
+    html+='<div class="dict-def-item"><span class="dict-def-num">'+(i+1)+'.</span>'+escHtml(defText)+'</div>';
   }
-  if(result.source)html2+='<div style="font-size:10px;color:var(--text3);margin-top:.4rem">Fonte: '+escHtml(result.source)+'</div>';
-  html2+='<div class="dict-save-row">';
+  if(result.source)html+='<div style="font-size:10px;color:var(--text3);margin-top:.4rem">Fonte: '+escHtml(result.source)+'</div>';
+  html+='<div class="dict-save-row">';
   if(b){
     var chOpts='';
     for(var ci=0;ci<b.chapters.length;ci++)chOpts+='<option>'+escHtml(b.chapters[ci])+'</option>';
-    html2+='<select id="dict-save-chapter" style="font-size:12px;padding:.3rem .5rem;width:auto;min-width:100px">'+chOpts+'</select>';
-    html2+='<input type="number" id="dict-save-page" placeholder="Pág." style="width:70px;font-size:13px;padding:.3rem .5rem" inputmode="numeric">';
-    html2+='<button class="btn btn-p btn-s" onclick="saveDictResult(\''+bid+'\')">+ Guardar</button>';
+    html+='<select id="dict-save-chapter" style="font-size:12px;padding:.3rem .5rem;width:auto;min-width:100px">'+chOpts+'</select>';
+    html+='<input type="number" id="dict-save-page" placeholder="Pág." style="width:70px;font-size:13px;padding:.3rem .5rem" inputmode="numeric">';
+    html+='<button class="btn btn-p btn-s" onclick="saveDictResult(''+bid+'')">+ Guardar</button>';
   }
-  html2+='</div></div>';
-  if(area)area.innerHTML=html2;
+  html+='</div></div>';
+  if(area)area.innerHTML=html;
 }
 
-function parseAndShowInfopedia(html,query,bid){
-  var area=document.getElementById('dict-result');
-  if(!area)return;
-  var b=db.books.filter(function(x){return x.id===bid;})[0];
-
-  // Parse: extract definitions from Infopédia HTML
-  var defs=[];
-  var wordFound=query;
-  var wordClass='';
-
-  // Try to find word class (classe gramatical)
-  var clsMatch=html.match(/class="[^"]*cl-[^"]*"[^>]*>([^<]{1,40})<\/span>/i);
-  if(!clsMatch)clsMatch=html.match(/(?:substantivo|adjetivo|verbo|advérbio|adverbio|preposição|preposicao|conjunção|conjuncao|interjeição|interjeiçao|artigo|pronome|numeral)[^<]{0,20}/i);
-  if(clsMatch)wordClass=clsMatch[1]||clsMatch[0]||'';
-  wordClass=wordClass.replace(/<[^>]+>/g,'').trim().slice(0,40);
-
-  // Try to find the headword
-  var hwMatch=html.match(/<h1[^>]*class="[^"]*lemma[^"]*"[^>]*>([^<]+)</i);
-  if(!hwMatch)hwMatch=html.match(/<span[^>]*class="[^"]*head[^"]*"[^>]*>([^<]+)</i);
-  if(hwMatch)wordFound=hwMatch[1].trim();
-
-  // Extract definitions - look for numbered definitions or paragraph text
-  // Strategy: find text blocks that look like definitions
-  var defPatterns=[
-    // Infopédia numbered list items
-    /<li[^>]*>([\s\S]{20,500}?)<\/li>/gi,
-    /<p[^>]*class="[^"]*defin[^"]*"[^>]*>([\s\S]{10,400}?)<\/p>/gi,
-    /<div[^>]*class="[^"]*mean[^"]*"[^>]*>([\s\S]{10,400}?)<\/div>/gi,
-  ];
-
-  for(var pi=0;pi<defPatterns.length&&defs.length<5;pi++){
-    var re=defPatterns[pi];re.lastIndex=0;
-    var m;
-    while((m=re.exec(html))!==null&&defs.length<5){
-      var txt=m[1].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-      if(txt.length>15&&txt.length<400&&!/cookie|javascript|script|©|login/i.test(txt)){
-        // Avoid duplicates
-        var dup=false;
-        for(var di=0;di<defs.length;di++){if(defs[di].indexOf(txt.slice(0,30))>=0){dup=true;break;}}
-        if(!dup)defs.push(txt);
-      }
-    }
-  }
-
-  // Fallback: scrape any text between tags that looks like a definition
-  if(defs.length===0){
-    var stripped=html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'');
-    var allText=stripped.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
-    // Look for the query word in context
-    var idx=allText.toLowerCase().indexOf(query.toLowerCase());
-    if(idx>=0){
-      var snippet=allText.slice(Math.max(0,idx-20),Math.min(allText.length,idx+300)).trim();
-      if(snippet.length>20)defs.push(snippet);
-    }
-  }
-
-  if(defs.length===0){
-    // Word might not exist — try fallback
-    searchWiktionaryPT(query,bid,area);
-    return;
-  }
-
-  lastDictResult={word:wordFound||query,wordClass:wordClass,defs:defs,query:query,source:'Infopédia'};
-  showDictResultHTML(lastDictResult,bid,area);
-}
 
 function saveDictResult(bid){
   if(!lastDictResult)return;
@@ -1943,19 +1954,30 @@ function renderAISection(b){
   return html;
 }
 
-// Call Claude API
+// Call Claude API — requer anthropic-version (obrigatorio)
 function callClaudeAPI(prompt,onChunk,onDone,onError){
   if(!isOnline){onError('Sem ligação à internet.');return;}
   fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
     body:JSON.stringify({
       model:'claude-sonnet-4-20250514',
-      max_tokens:1000,
+      max_tokens:1200,
       messages:[{role:'user',content:prompt}]
     })
   })
-  .then(function(r){return r.json();})
+  .then(function(r){
+    if(!r.ok){
+      return r.json().then(function(e){
+        throw new Error((e&&e.error&&e.error.message)||'Erro HTTP '+r.status);
+      }).catch(function(ex){throw new Error('Erro HTTP '+r.status);});
+    }
+    return r.json();
+  })
   .then(function(data){
     if(data.error){onError(data.error.message||'Erro da API');return;}
     var text='';
@@ -1964,9 +1986,10 @@ function callClaudeAPI(prompt,onChunk,onDone,onError){
         if(data.content[i].type==='text')text+=data.content[i].text;
       }
     }
+    if(!text){onError('A IA não devolveu resposta. Tenta novamente.');return;}
     onDone(text);
   })
-  .catch(function(e){onError('Erro de ligação: '+e.message);});
+  .catch(function(e){onError('Erro de ligação: '+(e.message||'desconhecido'));});
 }
 
 // Contexto do livro para a IA
