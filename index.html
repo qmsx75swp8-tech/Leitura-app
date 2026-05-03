@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Leituras Elite</title>
+<title>Leituras</title>
 <meta name="application-name" content="Leituras">
 <meta name="description" content="O teu diario de leitura pessoal">
 <meta name="theme-color" content="#8B5E3C" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f0f12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#1C1A16" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -22,13 +22,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0f0f12;--surface:#1a1a1f;--surface2:#22222a;--surface3:#2a2a35;
-  --text:#f0f0f5;--text2:#a0a0b0;--text3:#505062;
-  --accent:#8B5E3C;--accent-light:#2A1A0E;--accent-mid:#C4956A;--accent-dark:#6B4528;
-  --border:#2a2a38;--danger:#ef4444;--success:#22c55e;
-  --radius:14px;--radius-sm:10px;--radius-xs:7px;
-  --nav-h:60px;--safe-bottom:env(safe-area-inset-bottom,0px);
-  --nav-bottom-h:calc(64px + env(safe-area-inset-bottom,0px));
+  --bg:#F7F4EE;--surface:#FFFFFF;--surface2:#F0EDE6;--surface3:#E8E4DC;
+  --text:#1A1714;--text2:#6B6560;--text3:#A09890;
+  --accent:#8B5E3C;--accent-light:#F5EDE3;--accent-mid:#C4956A;--accent-dark:#6B4528;
+  --border:#E2DDD6;--danger:#C0392B;--success:#2E7D52;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+  --nav-h:52px;--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme=dark]{
+  --bg:#111009;--surface:#1C1A16;--surface2:#242118;--surface3:#2E2B24;
+  --text:#F0EDE6;--text2:#9E9890;--text3:#5C5850;
+  --accent:#C4956A;--accent-light:#2A2218;--accent-mid:#C4956A;--accent-dark:#E0B990;
+  --border:#302D26;--danger:#E05252;--success:#4CAF7D;
 }
 html{height:100%;overflow:hidden}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;transition:background .25s,color .25s;-webkit-text-size-adjust:100%}
@@ -50,7 +55,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   border-radius:var(--radius-sm);cursor:pointer;font-size:11px;color:var(--accent);
   transition:all .15s;white-space:nowrap;font-weight:500;flex-shrink:0;touch-action:manipulation}
 .main-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
-  padding-bottom:calc(var(--nav-bottom-h) + 1rem)}
+  padding-bottom:calc(1rem + var(--safe-bottom))}
 .view{display:none;padding:1rem;max-width:860px;margin:0 auto;width:100%}
 .view.active{display:block}
 @media(min-width:600px){.view{padding:1.5rem}}
@@ -208,6 +213,47 @@ select option{background:var(--surface)}
   border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
 .dict-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 
+/* ── FAB — Floating Add Button ──────────────────────────────── */
+.fab{position:fixed;bottom:calc(1.2rem + var(--safe-bottom));right:1.1rem;
+  width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;
+  border:none;font-size:24px;cursor:pointer;z-index:100;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(139,94,60,.4);transition:all .18s;
+  touch-action:manipulation}
+.fab.visible{display:flex}
+.fab:active{background:var(--accent-dark);transform:scale(.93)}
+[data-theme=dark] .fab{box-shadow:0 4px 16px rgba(196,149,106,.3)}
+
+/* ── AI PANEL ───────────────────────────────────────────────── */
+.ai-panel{background:linear-gradient(135deg,var(--accent-light),var(--surface2));
+  border:1px solid var(--accent-mid);border-radius:var(--radius);
+  padding:.9rem 1rem;margin-bottom:.9rem}
+.ai-panel-hd{display:flex;align-items:center;gap:.45rem;margin-bottom:.65rem;
+  font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+.ai-panel-ico{font-size:15px}
+.ai-suggestion-item{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:.7rem .85rem;margin-bottom:.5rem;
+  font-size:13px;line-height:1.6;color:var(--text);transition:all .14s}
+.ai-suggestion-meta{font-size:11px;color:var(--accent);margin-bottom:.25rem;font-weight:500}
+.ai-suggestion-txt{color:var(--text)}
+.ai-use-btn{font-size:12px;color:var(--accent);background:none;border:1px solid var(--accent-mid);
+  border-radius:var(--radius-xs);padding:.2rem .6rem;cursor:pointer;margin-top:.4rem;
+  font-family:'DM Sans',sans-serif;transition:all .12s}
+.ai-use-btn:active{background:var(--accent);color:#fff}
+.ai-loading{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;font-size:13px;color:var(--text2)}
+.ai-spinner-lg{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* ── CHAPTER SUMMARY UI ─────────────────────────────────────── */
+.chsum-gen-btn{width:100%;padding:.65rem;background:linear-gradient(135deg,var(--accent-light),var(--surface2));
+  border:1px dashed var(--accent-mid);border-radius:var(--radius-sm);
+  font-size:13px;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-weight:500;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:.4rem;
+  min-height:40px;margin-bottom:.65rem}
+.chsum-gen-btn:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chsum-result{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  padding:.8rem 1rem;font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;margin-top:.5rem}
+
 /* Login */
 .login-wrap{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;
   justify-content:center;padding:1.5rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0));
@@ -295,14 +341,14 @@ select option{background:var(--surface)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* PWA / AI */
-.btn-ai{background:linear-gradient(135deg,#8B5E3C,#C4956A);color:#fff;border:none}
+.btn-ai{background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;border:none}
 .btn-ai:active{opacity:.85}
 .ai-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;
-  background:linear-gradient(135deg,#8B5E3C22,#C4956A22);border:1px solid #8B5E3C44;
-  border-radius:20px;padding:.2rem .6rem;color:#8B5E3C;margin-bottom:.5rem}
-[data-theme=dark] .ai-badge{color:#C4956A}
-.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid #C4956A44;
-  border-top-color:#8B5E3C;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+  background:linear-gradient(135deg,#7C3AED22,#A855F722);border:1px solid #7C3AED44;
+  border-radius:20px;padding:.2rem .6rem;color:#7C3AED;margin-bottom:.5rem}
+[data-theme=dark] .ai-badge{color:#A855F7}
+.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid #A855F744;
+  border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 .bspine img,.dspine img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
 .cover-search-row{display:flex;align-items:center;gap:.65rem;padding:.5rem .7rem;
@@ -311,98 +357,6 @@ select option{background:var(--surface)}
 .cover-preview-img{width:32px;height:44px;border-radius:4px;object-fit:cover;display:none;
   border:1px solid var(--border);flex-shrink:0}
 .cover-preview-img.loaded{display:block}
-
-
-/* ── ELITE LAYOUT ────────────────────────────────────────────── */
-.elite-header{display:flex;align-items:center;justify-content:space-between;
-  padding:.7rem 1rem;padding-top:calc(.7rem + env(safe-area-inset-top,0));
-  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
-.elite-header-left{display:flex;flex-direction:column;gap:.1rem}
-.elite-logo{font-family:'Lora',serif;font-size:17px;font-weight:600;
-  background:linear-gradient(135deg,#C4956A,#8B5E3C);-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;background-clip:text}
-.elite-user-label{font-size:11px;color:var(--text3)}
-.elite-header-right{display:flex;align-items:center;gap:.5rem}
-
-/* BOTTOM NAV */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;
-  height:var(--nav-bottom-h);background:var(--surface);
-  border-top:1px solid var(--border);
-  display:flex;justify-content:space-around;align-items:flex-start;
-  padding-top:.4rem;padding-bottom:env(safe-area-inset-bottom,0);
-  z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:.15rem;
-  background:none;border:none;cursor:pointer;flex:1;padding:.3rem 0;
-  touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-height:48px}
-.bnav-ico{font-size:20px;line-height:1;transition:transform .15s}
-.bnav-lbl{font-size:10px;font-weight:500;color:var(--text3);transition:color .15s}
-.bnav-btn.active .bnav-lbl{color:var(--accent-mid)}
-.bnav-btn.active .bnav-ico{transform:scale(1.15)}
-.bnav-btn:active .bnav-ico{transform:scale(.9)}
-
-/* Remove top nav styles no longer needed */
-.nav{display:none}
-
-/* Card glow on hover */
-.book-card{border:1px solid var(--border);transition:border-color .2s,box-shadow .2s}
-.book-card:active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-dark)}
-
-/* Badge updates for dark */
-.bdg-r{background:#2d1a0a;color:#f97316}
-.bdg-d{background:#0a1f0e;color:#4ade80}
-.bdg-w{background:#2A1A0E;color:#a78bfa}
-.bdg-p{background:var(--surface2);color:var(--text2)}
-
-/* Stats glow */
-.stat{background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-sm);padding:.85rem .5rem;text-align:center}
-.stat-n{background:linear-gradient(135deg,#C4956A,#8B5E3C);-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;background-clip:text;
-  font-family:'Lora',serif;font-size:26px;font-weight:600;display:block}
-
-/* Login elite */
-.login-logo{background:linear-gradient(135deg,#C4956A,#8B5E3C);-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;background-clip:text;
-  font-family:'Lora',serif;font-size:28px;font-weight:600;margin-bottom:.25rem}
-
-/* AI / accent button */
-.btn-p{background:linear-gradient(135deg,#8B5E3C,#C4956A);border:none}
-.btn-p:active{opacity:.85}
-.book-search-btn{background:var(--accent-light);border:1px solid var(--accent-dark);color:var(--accent-mid)}
-
-/* Chips */
-.chip.active{background:linear-gradient(135deg,#8B5E3C,#C4956A);border-color:transparent}
-
-/* Progress fill */
-.pfill{background:linear-gradient(90deg,#8B5E3C,#C4956A)}
-.qw-pfill{background:linear-gradient(90deg,#8B5E3C,#C4956A)}
-
-/* Theme button → compact icon in header */
-.theme-btn{background:var(--surface2);border:1px solid var(--border);
-  border-radius:var(--radius-xs);padding:.3rem .55rem;font-size:13px;cursor:pointer;
-  color:var(--text2);font-family:'DM Sans',sans-serif}
-
-/* Note border */
-.note-item{border-left-color:var(--accent-mid)}
-.note-item-chsummary{border-left-color:var(--accent)}
-
-/* Sync mini badge */
-#sync-status-mini{font-size:10px;color:var(--text3)}
-
-
-[data-theme=light]{
-  --bg:#F7F4EE;--surface:#FFFFFF;--surface2:#F0EDE6;--surface3:#E8E4DC;
-  --text:#1A1714;--text2:#6B6560;--text3:#A09890;
-  --accent:#8B5E3C;--accent-light:#f3eeff;--accent-mid:#C4956A;--accent-dark:#6B4528;
-  --border:#E2DDD6;--danger:#C0392B;--success:#2E7D52;
-}
-[data-theme=light] .stat-n,[data-theme=light] .elite-logo,[data-theme=light] .login-logo{
-  background:linear-gradient(135deg,#8B5E3C,#C4956A);-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;background-clip:text;
-}
-[data-theme=light] .bdg-r{background:#FFF3E0;color:#BF360C}
-[data-theme=light] .bdg-d{background:#E8F5E9;color:#1B5E20}
-[data-theme=light] .bdg-w{background:#EDE7F6;color:#6B4528}
 
 </style>
 
@@ -444,36 +398,14 @@ select option{background:var(--surface)}
 
 <div class="app" id="app" style="display:none">
 
-<div class="elite-header">
-  <div class="elite-header-left">
-    <span class="elite-logo">📚 Leituras</span>
-    <span class="elite-user-label" id="user-display-btn"></span>
-  </div>
-  <div class="elite-header-right">
-    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀</button>
-  </div>
-</div>
-<nav class="bottom-nav" id="bottom-nav">
-  <button class="bnav-btn active" onclick="showView('biblioteca')" data-view="biblioteca">
-    <span class="bnav-ico">📚</span>
-    <span class="bnav-lbl">Biblioteca</span>
-  </button>
-  <button class="bnav-btn" onclick="showView('a-ler')" data-view="a-ler">
-    <span class="bnav-ico">📖</span>
-    <span class="bnav-lbl">A ler</span>
-  </button>
-  <button class="bnav-btn" onclick="showView('lidos')" data-view="lidos">
-    <span class="bnav-ico">✅</span>
-    <span class="bnav-lbl">Lidos</span>
-  </button>
-  <button class="bnav-btn" onclick="showView('quero-ler')" data-view="quero-ler">
-    <span class="bnav-ico">🔖</span>
-    <span class="bnav-lbl">Lista</span>
-  </button>
-  <button class="bnav-btn" onclick="showView('conta')" data-view="conta">
-    <span class="bnav-ico">👤</span>
-    <span class="bnav-lbl">Conta</span>
-  </button>
+<nav class="nav">
+  <span class="nav-logo">📚 Leituras</span>
+  <div class="nav-tab active" onclick="showView('biblioteca')">Biblioteca</div>
+  <div class="nav-tab" onclick="showView('a-ler')">A ler</div>
+  <div class="nav-tab" onclick="showView('lidos')">Lidos</div>
+  <div class="nav-tab" onclick="showView('quero-ler')">Quero ler</div>
+  <button class="user-btn" onclick="showView('conta')" id="user-display-btn" title="A minha conta">👤 —</button>
+  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
 </nav>
 
 <div class="main-scroll">
@@ -485,12 +417,16 @@ select option{background:var(--surface)}
   <div id="list-biblioteca"></div>
 </div>
 
-<div class="view" id="view-a-ler"><h2>A ler agora</h2><div id="list-a-ler"></div></div>
-<div class="view" id="view-lidos"><h2>Livros lidos</h2><div id="list-lidos"></div></div>
-<div class="view" id="view-quero-ler"><h2>Quero ler</h2><div id="list-quero-ler"></div></div>
+<div class="view" id="view-a-ler"><div class="sec-hd"><h2>A ler agora</h2><button class="btn btn-p" onclick="openMAdd('reading')">+ Adicionar</button></div><div id="list-a-ler"></div></div>
+<div class="view" id="view-lidos"><div class="sec-hd"><h2>Livros lidos</h2><button class="btn btn-p" onclick="openMAdd('done')">+ Adicionar</button></div><div id="list-lidos"></div></div>
+<div class="view" id="view-quero-ler"><div class="sec-hd"><h2>Quero ler</h2><button class="btn btn-p" onclick="openMAdd('want')">+ Adicionar</button></div><div id="list-quero-ler"></div></div>
 
 <div class="view" id="view-detail">
-  <button class="btn btn-g btn-s" onclick="goBack()" style="margin-bottom:1rem">← Voltar</button>
+  <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+    <button class="btn btn-g btn-s" onclick="goBack()">← Voltar</button>
+    <button class="btn btn-g btn-s" id="detail-edit-btn" onclick="openEditBook()" style="display:none">✏️ Editar livro</button>
+    <button class="btn btn-s" style="background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;border:none;margin-left:auto" id="detail-ai-btn" onclick="openAIPanel()" style="display:none">✦ Assistente IA</button>
+  </div>
   <div id="detail-content"></div>
 </div>
 
@@ -528,6 +464,10 @@ select option{background:var(--surface)}
 </div>
 
 </div><!-- main-scroll -->
+
+<!-- FAB -->
+<button class="fab" id="fab-add" onclick="fabAction()" title="Adicionar">+</button>
+
 </div><!-- app -->
 
 <!-- MODALS -->
@@ -564,6 +504,29 @@ select option{background:var(--surface)}
   <div class="fr"><div><label>Página</label><input id="en-page" type="number"></div><div><label>Capítulo</label><select id="en-chapter"></select></div></div>
   <div class="fr fr1"><label>Nota</label><textarea id="en-text"></textarea></div>
   <div class="bgrp"><button class="btn btn-g" onclick="closeM('m-edit-note')">Cancelar</button><button class="btn btn-p" onclick="updateNote()">Guardar alterações</button></div>
+</div></div>
+
+<!-- MODAL: EDITAR LIVRO -->
+<div class="modal-wrap" id="m-edit-book">
+<div class="modal">
+  <div class="modal-hd">Editar livro <button class="xbtn" onclick="closeM('m-edit-book')">✕</button></div>
+  <div class="fr"><div><label>Título</label><input id="eb-title" placeholder="Título do livro"></div><div><label>Autor</label><input id="eb-author" placeholder="Nome do autor"></div></div>
+  <div style="display:flex;align-items:center;gap:.65rem;padding:.5rem .7rem;background:var(--accent-light);border-radius:var(--radius-sm);margin-bottom:.75rem;font-size:12px;color:var(--text2)" id="eb-cover-row">
+    <img id="eb-cover-img" style="width:32px;height:44px;border-radius:4px;object-fit:cover;display:none;border:1px solid var(--border)" alt="Capa">
+    <span id="eb-cover-txt" style="flex:1">Capa atual</span>
+    <button class="btn btn-g btn-xs" onclick="refreshEditCover()">🔄 Atualizar capa</button>
+  </div>
+  <div class="fr"><div><label>Nº de páginas</label><input id="eb-pages" type="number" placeholder="ex: 320"></div><div><label>Estado</label><select id="eb-status"><option value="reading">A ler</option><option value="done">Lido</option><option value="want">Quero ler</option></select></div></div>
+  <div class="fr fr1"><label>Capítulos (separados por vírgula)</label><input id="eb-chapters" placeholder="ex: Parte 1, Parte 2, Epílogo"></div>
+  <div class="fr fr1"><label>Sinopse</label><textarea id="eb-synopsis" placeholder="Breve descrição..."></textarea></div>
+  <div class="bgrp"><button class="btn btn-g" onclick="closeM('m-edit-book')">Cancelar</button><button class="btn btn-p" onclick="saveEditBook()">Guardar alterações</button></div>
+</div></div>
+
+<!-- MODAL: IA — SUGESTÕES & RESUMO POR CAPÍTULO -->
+<div class="modal-wrap" id="m-ai">
+<div class="modal">
+  <div class="modal-hd"><span id="m-ai-title">✦ Assistente IA</span> <button class="xbtn" onclick="closeM('m-ai')">✕</button></div>
+  <div id="m-ai-body"></div>
 </div></div>
 
 <script>
@@ -749,7 +712,7 @@ function doLogin(){
   if(statusEl)statusEl.textContent='';
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
-  var ubl=document.getElementById('user-display-btn');if(ubl)ubl.textContent=user;
+  document.getElementById('user-display-btn').textContent='Conta: '+user;
   document.getElementById('acc-user').textContent=user;
   try{localStorage.setItem('leituras-last-user',user);}catch(e){}
   // Guardar sessão para auto-login em visitas futuras
@@ -962,28 +925,60 @@ function searchCoverForForm(){
 // Theme
 function toggleTheme(){
   var d=document.documentElement;
-  var isLight=d.getAttribute('data-theme')==='light';
-  d.setAttribute('data-theme',isLight?'':'light');
-  var tb=document.getElementById('theme-btn');
-  if(tb)tb.textContent=isLight?'☀':'🌙';
-  try{localStorage.setItem('leituras-theme',isLight?'dark':'light');}catch(e){}
+  var isDark=d.getAttribute('data-theme')==='dark';
+  d.setAttribute('data-theme',isDark?'':'dark');
+  document.getElementById('theme-btn').textContent=isDark?'Noturno':'Dia';
+  try{localStorage.setItem('leituras-theme',isDark?'light':'dark');}catch(e){}
 }
 
 // Navigation
 function showView(v){
   var views=document.querySelectorAll('.view');
   for(var i=0;i<views.length;i++)views[i].classList.remove('active');
-  // Update bottom nav
-  var bbtns=document.querySelectorAll('.bnav-btn');
-  for(var i=0;i<bbtns.length;i++){
-    bbtns[i].classList.remove('active');
-    if(bbtns[i].getAttribute('data-view')===v)bbtns[i].classList.add('active');
-  }
+  var tabs=document.querySelectorAll('.nav-tab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
   var map={biblioteca:'view-biblioteca','a-ler':'view-a-ler',lidos:'view-lidos','quero-ler':'view-quero-ler',detail:'view-detail',conta:'view-conta'};
   var el=document.getElementById(map[v]||'view-biblioteca');
   if(el)el.classList.add('active');
+  var ti={biblioteca:0,'a-ler':1,lidos:2,'quero-ler':3};
+  if(ti[v]!==undefined&&tabs[ti[v]])tabs[ti[v]].classList.add('active');
   if(v!=='detail')renderAll();
   var ms=document.querySelector('.main-scroll');if(ms)ms.scrollTop=0;
+  // FAB management
+  var fab=document.getElementById('fab-add');
+  var editBtn=document.getElementById('detail-edit-btn');
+  var aiBtn=document.getElementById('detail-ai-btn');
+  if(fab){
+    if(v==='detail'){fab.classList.remove('visible');}
+    else if(v!=='conta'){fab.classList.add('visible');}
+    else{fab.classList.remove('visible');}
+  }
+  if(editBtn)editBtn.style.display=v==='detail'?'':'none';
+  if(aiBtn)aiBtn.style.display=v==='detail'?'':'none';
+}
+
+// FAB action — context-sensitive
+function fabAction(){
+  var active=document.querySelector('.view.active');
+  if(!active)return openM('m-add');
+  var id=active.id;
+  if(id==='view-detail'){openAddNote(cBook);}
+  else if(id==='view-a-ler'){openMAdd('reading');}
+  else if(id==='view-lidos'){openMAdd('done');}
+  else if(id==='view-quero-ler'){openMAdd('want');}
+  else{openM('m-add');}
+}
+
+function openMAdd(status){
+  // Reset form
+  ['f-title','f-author','f-pages','f-chapters','f-synopsis'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  var fs=document.getElementById('f-status');if(fs)fs.value=status||'reading';
+  pendingCoverUrl=null;
+  var row=document.getElementById('cover-search-row');if(row)row.style.display='none';
+  var sd=document.getElementById('book-search-status');if(sd){sd.className='book-search-status';sd.textContent='';}
+  openM('m-add');
 }
 function openM(id){var el=document.getElementById(id);if(el)el.classList.add('open');}
 function closeM(id){
@@ -1307,6 +1302,11 @@ function openBook(id){
   var b=db.books.filter(function(x){return x.id===id;})[0];
   if(!b)return;
   renderDetail(b);showView('detail');
+  // Show detail action buttons
+  var editBtn=document.getElementById('detail-edit-btn');
+  var aiBtn=document.getElementById('detail-ai-btn');
+  if(editBtn)editBtn.style.display='';
+  if(aiBtn)aiBtn.style.display='';
 }
 function goBack(){showView('biblioteca');}
 
@@ -1332,7 +1332,7 @@ function renderDetail(b){
   html+='</div></div>';
   
   var detailHtml='<div class="detail-hd">'+html+'</div>';
-  detailHtml+='<div class="dtabs"><div class="dtab active" onclick="switchTab(\'t-prog\',this)">Progresso</div><div class="dtab" onclick="switchTab(\'t-notes\',this)">Notas</div><div class="dtab" onclick="switchTab(\'t-words\',this)">Dicionario</div><div class="dtab" onclick="switchTab(\'t-sum\',this)">Resumo</div></div>';
+  detailHtml+='<div class="dtabs"><div class="dtab active" onclick="switchTab(\'t-prog\',this)">Progresso</div><div class="dtab" onclick="switchTab(\'t-notes\',this)">Notas</div><div class="dtab" onclick="switchTab(\'t-words\',this)">Dicionario</div><div class="dtab" onclick="switchTab(\'t-sum\',this)">Resumo</div><div class="dtab" onclick="switchTab(\'t-ai\',this)">✦ IA</div></div>';
 
   // Progress tab
   var prog='';
@@ -1362,6 +1362,7 @@ function renderDetail(b){
   detailHtml+='<div class="dsec" id="t-notes">'+renderNotesSection(b)+'</div>';
   detailHtml+='<div class="dsec" id="t-words">'+renderDictSection(b)+'</div>';
   detailHtml+='<div class="dsec" id="t-sum">'+renderSumSection(b)+'</div>';
+  detailHtml+='<div class="dsec" id="t-ai">'+renderAISection(b)+'</div>';
 
   document.getElementById('detail-content').innerHTML=detailHtml;
 }
@@ -1373,6 +1374,66 @@ function refreshCover(bid){
     if(url){b.coverUrl=url;save();renderDetail(b);}
     else{alert('Capa nao encontrada.');}
   });
+}
+
+// ── EDITAR LIVRO ─────────────────────────────────────────────
+function openEditBook(){
+  var b=db.books.filter(function(x){return x.id===cBook;})[0];
+  if(!b)return;
+  document.getElementById('eb-title').value=b.title||'';
+  document.getElementById('eb-author').value=b.author||'';
+  document.getElementById('eb-pages').value=b.pages||'';
+  document.getElementById('eb-status').value=b.status||'reading';
+  document.getElementById('eb-chapters').value=(b.chapters||[]).join(', ');
+  document.getElementById('eb-synopsis').value=b.synopsis||'';
+  // Cover preview
+  var img=document.getElementById('eb-cover-img');
+  var txt=document.getElementById('eb-cover-txt');
+  if(b.coverUrl&&img){img.src=b.coverUrl;img.style.display='block';if(txt)txt.textContent='Capa atual';}
+  else{if(img)img.style.display='none';if(txt)txt.textContent='Sem capa';}
+  openM('m-edit-book');
+}
+
+function refreshEditCover(){
+  var titleEl=document.getElementById('eb-title');
+  var authorEl=document.getElementById('eb-author');
+  var title=titleEl?titleEl.value.trim():'';
+  var author=authorEl?authorEl.value.trim():'';
+  if(!title){alert('Introduz o título primeiro');return;}
+  var img=document.getElementById('eb-cover-img');
+  var txt=document.getElementById('eb-cover-txt');
+  if(txt)txt.textContent='A procurar capa...';
+  fetchBookCover(title,author,function(url){
+    if(url&&img){
+      img.src=url;img.style.display='block';
+      if(txt)txt.textContent='Capa encontrada';
+      // Store temporarily
+      img.dataset.pendingUrl=url;
+    } else {
+      if(txt)txt.textContent='Capa não encontrada';
+    }
+  });
+}
+
+function saveEditBook(){
+  var b=db.books.filter(function(x){return x.id===cBook;})[0];
+  if(!b)return;
+  var title=document.getElementById('eb-title').value.trim();
+  if(!title){alert('Título obrigatório');return;}
+  b.title=title;
+  b.author=document.getElementById('eb-author').value.trim();
+  b.pages=parseInt(document.getElementById('eb-pages').value)||0;
+  b.status=document.getElementById('eb-status').value;
+  var chapStr=document.getElementById('eb-chapters').value;
+  var newChaps=chapStr.split(',').map(function(c){return c.trim();}).filter(function(c){return c;});
+  b.chapters=newChaps.length?newChaps:['Geral'];
+  b.synopsis=document.getElementById('eb-synopsis').value.trim();
+  // Check for updated cover
+  var img=document.getElementById('eb-cover-img');
+  if(img&&img.dataset.pendingUrl)b.coverUrl=img.dataset.pendingUrl;
+  save();
+  closeM('m-edit-book');
+  renderDetail(b);
 }
 
 function switchTab(id,el){
@@ -1776,9 +1837,20 @@ function delWord(id){
 // Summary
 function renderSumSection(b){
   if(b.summary){
-    return '<div><div class="sumbox" id="sum-box">'+b.summary+'</div><div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="editSum(\''+b.id+'\')">Editar</button><button class="btn btn-p btn-s" onclick="genSummaryLocal(\''+b.id+'\')">↻ Regenerar das notas</button></div></div>';
+    return '<div><div class="sumbox" id="sum-box">'+escHtml(b.summary)+'</div>'
+      +'<div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap">'
+      +'<button class="btn btn-g btn-s" onclick="editSum(\''+b.id+'\')">Editar</button>'
+      +'<button class="btn btn-g btn-s" onclick="genSummaryLocal(\''+b.id+'\')">↻ Das notas</button>'
+      +'<button class="btn btn-p btn-s" onclick="genSummaryWithAI(\''+b.id+'\')">✦ Resumo com IA</button>'
+      +'</div></div>';
   }
-  return '<div><textarea id="sum-edit" style="min-height:110px" placeholder="Escreve o resumo..."></textarea><div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap"><button class="btn btn-g btn-s" onclick="saveManualSum(\''+b.id+'\')">Guardar manual</button><button class="btn btn-p btn-s" onclick="genSummaryLocal(\''+b.id+'\')">✦ Gerar das notas</button></div></div>';
+  return '<div>'
+    +'<textarea id="sum-edit" style="min-height:110px" placeholder="Escreve o resumo..."></textarea>'
+    +'<div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">'
+    +'<button class="btn btn-g btn-s" onclick="saveManualSum(\''+b.id+'\')">Guardar manual</button>'
+    +'<button class="btn btn-g btn-s" onclick="genSummaryLocal(\''+b.id+'\')">✦ Gerar das notas</button>'
+    +'<button class="btn btn-p btn-s" onclick="genSummaryWithAI(\''+b.id+'\')">✦ Gerar com IA</button>'
+    +'</div></div>';
 }
 function genSummaryLocal(bid){
   var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
@@ -1797,9 +1869,306 @@ function genSummaryLocal(bid){
   b.summary=lines.join('\n');b.summaryByAI=false;save();renderDetail(b);
   setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
 }
+
+function genSummaryWithAI(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  if(!isOnline){alert('Sem ligação à internet. Usa "Gerar das notas" para um resumo local.');return;}
+  // Show loading in summary section
+  var sumSec=document.getElementById('t-sum');
+  if(sumSec)sumSec.innerHTML='<div class="ai-loading"><div class="ai-spinner-lg"></div>A gerar resumo com IA...</div>';
+  var ctx=buildBookContext(b);
+  var prompt='És um assistente literário em português europeu. Com base nas informações do livro e nas notas do leitor, escreve um resumo pessoal e reflexivo (150-250 palavras) que capture a essência da experiência de leitura. Inclui os temas principais, momentos marcantes das notas, e uma reflexão final.\n\n'+ctx+'\n\nEscreve apenas o resumo, sem títulos nem formatação extra.';
+  callClaudeAPI(prompt,null,function(text){
+    b.summary=text.trim();b.summaryByAI=true;save();renderDetail(b);
+    setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
+  },function(err){
+    alert('Erro ao gerar resumo com IA: '+err+'\n\nUsa "Gerar das notas" para um resumo local.');
+    renderDetail(b);
+    setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
+  });
+}
 function genSummaryAI(bid){
-  // Gera resumo local a partir das notas (sem dependência de API externa)
   genSummaryLocal(bid);
+}
+
+// ── IA — ASSISTENTE DE LEITURA ───────────────────────────────
+function renderAISection(b){
+  var html='';
+  // Sugestões de notas
+  html+='<div class="ai-panel">';
+  html+='<div class="ai-panel-hd"><span class="ai-panel-ico">✦</span>Sugestões de notas com IA</div>';
+  html+='<div style="font-size:12px;color:var(--text2);margin-bottom:.65rem;line-height:1.5">A IA analisa o teu livro e sugere perguntas de reflexão e temas para explorar nas tuas notas.</div>';
+  html+='<button class="btn btn-p btn-s" onclick="aiSuggestNotes(\''+b.id+'\')">✦ Gerar sugestões de notas</button>';
+  html+='<div id="ai-suggestions-result" style="margin-top:.65rem"></div>';
+  html+='</div>';
+
+  // Resumo por capítulo
+  html+='<div class="ai-panel">';
+  html+='<div class="ai-panel-hd"><span class="ai-panel-ico">📖</span>Resumo por capítulo com IA</div>';
+  html+='<div style="font-size:12px;color:var(--text2);margin-bottom:.65rem;line-height:1.5">Gera um resumo inteligente para cada capítulo com base nas tuas notas e sinopse.</div>';
+  html+='<div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.65rem;flex-wrap:wrap">';
+  html+='<label style="text-transform:none;letter-spacing:0;font-size:12px;margin-bottom:0;color:var(--text2)">Capítulo:</label>';
+  html+='<select id="ai-chap-select" style="flex:1;min-width:120px;font-size:13px;padding:.35rem .7rem">';
+  html+='<option value="_all">— Todos os capítulos —</option>';
+  for(var ci=0;ci<b.chapters.length;ci++){
+    var cn=b.chapters[ci];
+    html+='<option value="'+escHtml(cn)+'">'+escHtml(cn)+'</option>';
+  }
+  html+='</select>';
+  html+='<button class="btn btn-p btn-s" onclick="aiGenChapterSummary(\''+b.id+'\')">✦ Gerar resumo</button>';
+  html+='</div>';
+  html+='<div id="ai-chsum-result"></div>';
+  // Show existing chapter summaries
+  var chKeys=b.chapterSummaries?Object.keys(b.chapterSummaries):[];
+  if(chKeys.length){
+    html+='<div style="border-top:1px solid var(--border);margin-top:.75rem;padding-top:.75rem">';
+    html+='<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Resumos guardados ('+chKeys.length+')</div>';
+    for(var ki=0;ki<chKeys.length;ki++){
+      var k=chKeys[ki];
+      html+='<div class="chsummary-item"><div class="chsummary-name"><span class="chsummary-sq"></span>'+escHtml(k)+'<button class="btn btn-d btn-xs" style="margin-left:auto" onclick="delChapterSummary(\''+b.id+'\',\''+escHtml(k)+'\')">×</button></div>';
+      html+='<div class="chsummary-text">'+escHtml(b.chapterSummaries[k])+'</div></div>';
+    }
+    html+='</div>';
+  }
+  html+='</div>';
+
+  // Análise de progresso
+  html+='<div class="ai-panel">';
+  html+='<div class="ai-panel-hd"><span class="ai-panel-ico">📊</span>Análise de leitura com IA</div>';
+  html+='<div style="font-size:12px;color:var(--text2);margin-bottom:.65rem;line-height:1.5">Recebe um comentário personalizado sobre o teu progresso, padrões de leitura e próximos passos sugeridos.</div>';
+  html+='<button class="btn btn-p btn-s" onclick="aiAnalyseReading(\''+b.id+'\')">✦ Analisar a minha leitura</button>';
+  html+='<div id="ai-analysis-result" style="margin-top:.65rem"></div>';
+  html+='</div>';
+
+  return html;
+}
+
+// Call Claude API
+function callClaudeAPI(prompt,onChunk,onDone,onError){
+  if(!isOnline){onError('Sem ligação à internet.');return;}
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.error){onError(data.error.message||'Erro da API');return;}
+    var text='';
+    if(data.content&&data.content.length){
+      for(var i=0;i<data.content.length;i++){
+        if(data.content[i].type==='text')text+=data.content[i].text;
+      }
+    }
+    onDone(text);
+  })
+  .catch(function(e){onError('Erro de ligação: '+e.message);});
+}
+
+// Contexto do livro para a IA
+function buildBookContext(b){
+  var ctx='Livro: "'+b.title+'"';
+  if(b.author)ctx+=' de '+b.author;
+  if(b.pages)ctx+=', '+b.pages+' páginas';
+  if(b.synopsis)ctx+='\nSinopse: '+b.synopsis;
+  var notes=b.notes.filter(function(n){return n.type!=='chsummary';});
+  if(notes.length){
+    ctx+='\n\nNotas do leitor ('+notes.length+' notas):';
+    var shown=notes.slice().sort(function(a,z){return a.page-z.page;}).slice(0,15);
+    for(var i=0;i<shown.length;i++){
+      var n=shown[i];
+      ctx+='\n- '+(n.page?'[p.'+n.page+'] ':'')+n.text;
+    }
+  }
+  var pct=b.pages&&b.currentPage?Math.round((b.currentPage/b.pages)*100):null;
+  if(pct!==null)ctx+='\nProgresso: '+pct+'% (página '+b.currentPage+' de '+b.pages+')';
+  return ctx;
+}
+
+// Sugestões de notas
+function aiSuggestNotes(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var area=document.getElementById('ai-suggestions-result');
+  if(!area)return;
+  area.innerHTML='<div class="ai-loading"><div class="ai-spinner-lg"></div>A gerar sugestões...</div>';
+  var ctx=buildBookContext(b);
+  var prompt='És um assistente de leitura literária em português europeu. Com base neste livro, sugere 4 perguntas de reflexão profunda e 2 temas para o leitor explorar nas suas notas. Sê específico ao livro e útil para um diário de leitura.\n\n'+ctx+'\n\nResponde APENAS com um JSON válido no formato:\n{"suggestions":[{"type":"reflexão","text":"..."},{"type":"tema","text":"..."}]}\nSem texto extra, sem markdown.';
+  callClaudeAPI(prompt,null,function(text){
+    try{
+      var clean=text.replace(/```json|```/g,'').trim();
+      var parsed=JSON.parse(clean);
+      var suggs=parsed.suggestions||[];
+      if(!suggs.length){area.innerHTML='<div class="dict-no-result">Sem sugestões disponíveis.</div>';return;}
+      var html='';
+      for(var i=0;i<suggs.length;i++){
+        var s=suggs[i];
+        var escapedText=escHtml(s.text).replace(/'/g,'&#39;');
+        html+='<div class="ai-suggestion-item">';
+        html+='<div class="ai-suggestion-meta">'+escHtml(s.type||'sugestão')+'</div>';
+        html+='<div class="ai-suggestion-txt">'+escHtml(s.text)+'</div>';
+        html+='<button class="ai-use-btn" onclick="useAISuggestion(\''+bid+'\',\''+escapedText+'\')">+ Usar como nota</button>';
+        html+='</div>';
+      }
+      area.innerHTML=html;
+    }catch(e){
+      area.innerHTML='<div class="dict-error">Erro ao processar sugestões. Tenta novamente.</div>';
+    }
+  },function(err){
+    area.innerHTML='<div class="dict-error">'+escHtml(err)+'</div>';
+  });
+}
+
+function useAISuggestion(bid,text){
+  cBook=bid;
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var sel=document.getElementById('n-chapter');
+  if(sel){sel.innerHTML='';for(var i=0;i<b.chapters.length;i++){var o=document.createElement('option');o.textContent=b.chapters[i];sel.appendChild(o);}}
+  var ntxt=document.getElementById('n-text');
+  if(ntxt)ntxt.value=text;
+  document.getElementById('n-page').value='';
+  openM('m-note');
+}
+
+// Resumo por capítulo com IA
+function aiGenChapterSummary(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var sel=document.getElementById('ai-chap-select');
+  var chapVal=sel?sel.value:'_all';
+  var area=document.getElementById('ai-chsum-result');
+  if(!area)return;
+  area.innerHTML='<div class="ai-loading"><div class="ai-spinner-lg"></div>A gerar resumo com IA...</div>';
+
+  var chapsToProcess=chapVal==='_all'?b.chapters:[chapVal];
+  var ctx=buildBookContext(b);
+
+  if(chapVal==='_all'){
+    // Generate for all chapters sequentially
+    area.innerHTML='<div class="ai-loading"><div class="ai-spinner-lg"></div>A gerar resumos para '+chapsToProcess.length+' capítulos...</div>';
+    var prompt='És um assistente literário em português europeu. Para cada capítulo deste livro, escreve um breve resumo (2-3 frases) baseado nas notas do leitor e na sinopse. Sê conciso e preciso.\n\n'+ctx+'\n\nCapítulos: '+chapsToProcess.join(', ')+'\n\nResponde APENAS com JSON válido:\n{"chapters":{"NomeCapitulo":"resumo aqui",...}}\nSem texto extra.';
+    callClaudeAPI(prompt,null,function(text){
+      try{
+        var clean=text.replace(/```json|```/g,'').trim();
+        var parsed=JSON.parse(clean);
+        var chapMap=parsed.chapters||{};
+        if(!b.chapterSummaries)b.chapterSummaries={};
+        var keys=Object.keys(chapMap);
+        for(var i=0;i<keys.length;i++){b.chapterSummaries[keys[i]]=chapMap[keys[i]];}
+        // Match to actual chapters
+        for(var ci=0;ci<chapsToProcess.length;ci++){
+          var cn=chapsToProcess[ci];
+          if(!chapMap[cn]){
+            // fuzzy match
+            for(var ki=0;ki<keys.length;ki++){
+              if(keys[ki].toLowerCase().indexOf(cn.toLowerCase())>=0||cn.toLowerCase().indexOf(keys[ki].toLowerCase())>=0){
+                b.chapterSummaries[cn]=chapMap[keys[ki]];break;
+              }
+            }
+          }
+        }
+        save();
+        var html='<div style="color:var(--success);font-size:13px;margin-bottom:.5rem">✓ '+keys.length+' resumos gerados e guardados!</div>';
+        area.innerHTML=html;
+        // Refresh AI section
+        var aiSec=document.getElementById('t-ai');
+        if(aiSec)aiSec.innerHTML=renderAISection(b);
+      }catch(e){area.innerHTML='<div class="dict-error">Erro ao processar. Tenta de novo.</div>';}
+    },function(err){area.innerHTML='<div class="dict-error">'+escHtml(err)+'</div>';});
+  } else {
+    var notes=b.notes.filter(function(n){return n.chapter===chapVal&&n.type!=='chsummary';});
+    var notesCtx=notes.length?'\nNotas deste capítulo:\n'+notes.map(function(n){return '- '+(n.page?'[p.'+n.page+'] ':'')+n.text;}).join('\n'):'(sem notas neste capítulo)';
+    var prompt2='És um assistente literário em português europeu. Escreve um resumo claro e conciso (3-4 frases) para o capítulo "'+chapVal+'" do livro "'+b.title+'"'+(b.author?' de '+b.author:'')+'. Baseia-te na sinopse e nas notas do leitor.\n\nSinopse: '+(b.synopsis||'não disponível')+notesCtx+'\n\nResponde APENAS com o texto do resumo, sem introduções nem formatação extra.';
+    callClaudeAPI(prompt2,null,function(text){
+      var summary=text.trim();
+      if(!b.chapterSummaries)b.chapterSummaries={};
+      b.chapterSummaries[chapVal]=summary;
+      save();
+      area.innerHTML='<div class="chsum-result">'+escHtml(summary)+'</div><div style="display:flex;gap:.5rem;margin-top:.5rem"><button class="btn btn-p btn-s" onclick="saveChSumAndShow(\''+bid+'\',\''+escHtml(chapVal).replace(/'/g,'&#39;')+'\')">✓ Guardado</button></div>';
+    },function(err){area.innerHTML='<div class="dict-error">'+escHtml(err)+'</div>';});
+  }
+}
+
+function saveChSumAndShow(bid,chap){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  save();
+  var aiSec=document.getElementById('t-ai');
+  if(aiSec)aiSec.innerHTML=renderAISection(b);
+}
+
+function delChapterSummary(bid,chap){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  if(!confirm('Apagar resumo de "'+chap+'"?'))return;
+  if(b.chapterSummaries)delete b.chapterSummaries[chap];
+  save();
+  var aiSec=document.getElementById('t-ai');
+  if(aiSec)aiSec.innerHTML=renderAISection(b);
+}
+
+// Análise de progresso
+function aiAnalyseReading(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var area=document.getElementById('ai-analysis-result');
+  if(!area)return;
+  area.innerHTML='<div class="ai-loading"><div class="ai-spinner-lg"></div>A analisar a tua leitura...</div>';
+  var ctx=buildBookContext(b);
+  var prompt='És um assistente de leitura em português europeu, amigável e encorajador. Analisa os dados de leitura abaixo e fornece:\n1. Uma observação sobre o ritmo/padrão de leitura\n2. Destaques das notas mais interessantes\n3. Uma sugestão motivacional para continuar\n\n'+ctx+'\n\nEscreve 3-4 parágrafos curtos, em tom pessoal e motivador. Sem formatação extra, texto simples.';
+  callClaudeAPI(prompt,null,function(text){
+    area.innerHTML='<div class="chsum-result">'+escHtml(text.trim())+'</div>';
+  },function(err){
+    area.innerHTML='<div class="dict-error">'+escHtml(err)+'</div>';
+  });
+}
+
+// Modal AI rápido (via botão no header)
+function openAIPanel(){
+  var b=db.books.filter(function(x){return x.id===cBook;})[0];
+  if(!b)return;
+  document.getElementById('m-ai-title').textContent='✦ Assistente IA — '+b.title;
+  var body=document.getElementById('m-ai-body');
+  body.innerHTML='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.85rem">'
+    +'<button class="btn btn-p btn-s" onclick="aiSuggestNotesModal(\''+b.id+'\')">✦ Sugestões de notas</button>'
+    +'<button class="btn btn-g btn-s" onclick="aiAnalyseReadingModal(\''+b.id+'\')">📊 Analisar progresso</button>'
+    +'</div>'
+    +'<div id="m-ai-result"></div>';
+  openM('m-ai');
+}
+
+function aiSuggestNotesModal(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var area=document.getElementById('m-ai-result');
+  area.innerHTML='<div class="ai-loading"><div class="ai-spinner-lg"></div>A gerar sugestões...</div>';
+  var ctx=buildBookContext(b);
+  var prompt='És um assistente de leitura literária em português europeu. Com base neste livro, sugere 4 perguntas de reflexão e 2 temas. Sê específico.\n\n'+ctx+'\n\nResponde APENAS com JSON:\n{"suggestions":[{"type":"reflexão","text":"..."}]}\nSem texto extra.';
+  callClaudeAPI(prompt,null,function(text){
+    try{
+      var clean=text.replace(/```json|```/g,'').trim();
+      var parsed=JSON.parse(clean);
+      var suggs=parsed.suggestions||[];
+      var html='';
+      for(var i=0;i<suggs.length;i++){
+        var s=suggs[i];
+        var escapedText=escHtml(s.text).replace(/'/g,'&#39;');
+        html+='<div class="ai-suggestion-item"><div class="ai-suggestion-meta">'+escHtml(s.type||'sugestão')+'</div>';
+        html+='<div class="ai-suggestion-txt">'+escHtml(s.text)+'</div>';
+        html+='<button class="ai-use-btn" onclick="useAISuggestion(\''+bid+'\',\''+escapedText+'\');closeM(\'m-ai\')">+ Usar como nota</button></div>';
+      }
+      area.innerHTML=html||'<div class="dict-no-result">Sem sugestões disponíveis.</div>';
+    }catch(e){area.innerHTML='<div class="dict-error">Erro ao processar. Tenta novamente.</div>';}
+  },function(err){area.innerHTML='<div class="dict-error">'+escHtml(err)+'</div>';});
+}
+
+function aiAnalyseReadingModal(bid){
+  var b=db.books.filter(function(x){return x.id===bid;})[0];if(!b)return;
+  var area=document.getElementById('m-ai-result');
+  area.innerHTML='<div class="ai-loading"><div class="ai-spinner-lg"></div>A analisar...</div>';
+  var ctx=buildBookContext(b);
+  var prompt='És um assistente de leitura em português europeu, amigável. Analisa brevemente: ritmo de leitura, notas interessantes e uma sugestão motivacional. '+ctx+'\n\n2-3 parágrafos curtos, tom pessoal.';
+  callClaudeAPI(prompt,null,function(text){
+    area.innerHTML='<div class="chsum-result">'+escHtml(text.trim())+'</div>';
+  },function(err){area.innerHTML='<div class="dict-error">'+escHtml(err)+'</div>';});
 }
 function editSum(bid){
   var b=db.books.filter(function(x){return x.id===bid;})[0];
@@ -1830,9 +2199,8 @@ document.addEventListener('DOMContentLoaded',function(){
   initOfflineSupport();
   // Restore theme
   try{
-    var t=localStorage.getItem('leituras-theme')||'dark';
-    if(t==='light'){document.documentElement.setAttribute('data-theme','light');var tb=document.getElementById('theme-btn');if(tb)tb.textContent='🌙';}
-    else{var tb=document.getElementById('theme-btn');if(tb)tb.textContent='☀';}
+    var t=localStorage.getItem('leituras-theme')||'light';
+    if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');var tb=document.getElementById('theme-btn');if(tb)tb.textContent='Dia';}
   }catch(e){}
 
   // Auto-login se sessão guardada
@@ -1854,7 +2222,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(localData){db=localData;if(!db.words)db.words=[];if(!db.version)db.version=4;}
       else{db={books:[],words:[],version:4};}
       document.getElementById('login-screen').style.display='none';
-      var uBtn=document.getElementById('user-display-btn');if(uBtn)uBtn.textContent=su;
+      var uBtn=document.getElementById('user-display-btn');if(uBtn)uBtn.textContent='Conta: '+su;
       var accU=document.getElementById('acc-user');if(accU)accU.textContent=su;
       // Mostrar ecrã rápido se tiver livros a ler, senão app completa
       var reading=db.books.filter(function(b){return b.status==='reading';});
