@@ -708,12 +708,12 @@ var db={books:[],words:[],version:4};
 var cBook=null,cNote=null;
 var syncTimeout=null,pendingCoverUrl=null,coverSearchTimer=null;
 
-// ── OFFLINE / CONNECTIVITY ──────────────────────────────────────
+// -- OFFLINE / CONNECTIVITY --------------------------------------
 var isOnline=navigator.onLine;
 var pendingSyncNeeded=false;
 
 function initOfflineSupport(){
-  // Service Worker via blob nao funciona no Safari iOS — ignorado
+  // Service Worker via blob nao funciona no Safari iOS -- ignorado
   // Apenas gerir estado online/offline
   window.addEventListener('online',function(){
     isOnline=true;
@@ -745,7 +745,7 @@ function showOnlineToast(){
   if(old)old.remove();
   var t=document.createElement('div');
   t.className='online-toast';
-  t.textContent='✓ Ligação restabelecida — a sincronizar dados...';
+  t.textContent='✓ Ligação restabelecida -- a sincronizar dados...';
   document.body.appendChild(t);
   setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},3000);
 }
@@ -766,7 +766,7 @@ function makeCloudKey(user,pass){
   return 'leituras_user_'+Math.abs(h).toString(36);
 }
 
-// Armazenamento local — guarda sempre no localStorage, nunca perde dados ao atualizar
+// Armazenamento local -- guarda sempre no localStorage, nunca perde dados ao atualizar
 function cloudSave(data){
   if(!currentStorageKey)return;
   try{
@@ -780,7 +780,7 @@ function cloudLoadLocal(user,pass){
   try{var s=localStorage.getItem(sk);return s?JSON.parse(s):null;}catch(e){return null;}
 }
 function cloudLoadRemote(user,pass,callback){
-  // Dados 100% locais — localStorage é a fonte de verdade
+  // Dados 100% locais -- localStorage é a fonte de verdade
   callback(null);
 }
 
@@ -981,7 +981,7 @@ function importData(e){
   reader.readAsText(file);e.target.value='';
 }
 
-// Book covers — tries Open Library first (better quality), fallback to ISBN
+// Book covers -- tries Open Library first (better quality), fallback to ISBN
 function fetchBookCover(title,author,callback){
   if(!title){callback(null);return;}
   if(!isOnline){callback(null);return;}
@@ -1073,7 +1073,7 @@ function showView(v){
   if(aiBtn)aiBtn.style.display=v==='detail'?'':'none';
 }
 
-// FAB action — context-sensitive
+// FAB action -- context-sensitive
 function fabAction(){
   var active=document.querySelector('.view.active');
   if(!active)return openM('m-add');
@@ -1127,7 +1127,7 @@ function renderSpine(b,i,large){
 }
 
 
-// ── BOOK INFO LOOKUP — Multi-source (Open Library + Google Books + OpenDB) ──
+// -- BOOK INFO LOOKUP -- Multi-source (Open Library + Google Books + OpenDB) --
 var aiLookupInProgress=false;
 var pendingChapterSummaries={};
 
@@ -1181,7 +1181,7 @@ function aiLookupBook(){
   });
 }
 
-// Open Library — gratuito, sem chave, excelente cobertura de pt
+// Open Library -- gratuito, sem chave, excelente cobertura de pt
 function lookupOpenLibrary(title,author,callback){
   var q=encodeURIComponent(title+(author?' '+author:''));
   var url='https://openlibrary.org/search.json?q='+q+'&limit=5&fields=title,author_name,number_of_pages_median,first_sentence,subject,cover_i,isbn,key,language';
@@ -1246,7 +1246,7 @@ function lookupOpenLibrary(title,author,callback){
   xhr.send();
 }
 
-// Google Books — gratuito, sem chave, sinopses ricas
+// Google Books -- gratuito, sem chave, sinopses ricas
 function lookupGoogleBooks(title,author,callback,langPt){
   var q=encodeURIComponent(title+(author?' '+author:''));
   var lang=langPt!==false?'&langRestrict=pt':'';
@@ -1310,7 +1310,7 @@ function applyBookLookupResult(result,statusDiv,sourceName){
     synEl.value=result.synopsis;
     found.push('sinopse');
   }
-  // Chapters — estimate from pages
+  // Chapters -- estimate from pages
   if(chapEl&&!chapEl.value){
     var pages=result.pages||0;
     var caps=[];
@@ -1326,7 +1326,7 @@ function applyBookLookupResult(result,statusDiv,sourceName){
 
   pendingChapterSummaries={};
   var msg=found.length
-    ?'✓ Fonte: '+sourceName+' — encontrado: '+found.join(' / ')+'.'
+    ?'✓ Fonte: '+sourceName+' -- encontrado: '+found.join(' / ')+'.'
     :'Livro encontrado em '+sourceName+' mas sem dados adicionais. Preenche manualmente.';
   if(statusDiv){statusDiv.className='book-search-status active';statusDiv.textContent=msg;}
 }
@@ -1480,7 +1480,7 @@ function renderDetail(b){
   detailHtml+='<div class="dsec" id="t-words">'+renderDictSection(b)+'</div>';
   detailHtml+='<div class="dsec" id="t-sum">'+renderSumSection(b)+'</div>';
   detailHtml+='<div class="dsec" id="t-ai">'+renderAISection(b)+'</div>';
-  detailHtml+='<div class="dsec" id="t-chat"><div id="book-chat-'+b.id+'" class="book-chat-wrap"><div class="chat-messages" id="chat-msgs-'+b.id+'"><div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">Olá! Sou o teu assistente para <strong>'+b.title+'</strong>. Podes perguntar-me sobre personagens, passagens, temas, simbolismo ou qualquer dúvida sobre o livro.</div></div></div><div class="chat-input-row"><textarea class="chat-input" id="chat-inp-'+b.id+'" placeholder="Faz uma pergunta sobre o livro..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendBookChat(''+b.id+'');}"></textarea><button class="chat-send-btn" onclick="sendBookChat(''+b.id+'')">&#10148;</button></div></div></div>';
+  detailHtml+='<div class="dsec" id="t-chat">'+buildChatHTML(b)+'</div>';
 
   document.getElementById('detail-content').innerHTML=detailHtml;
 }
@@ -1494,7 +1494,7 @@ function refreshCover(bid){
   });
 }
 
-// ── EDITAR LIVRO ─────────────────────────────────────────────
+// -- EDITAR LIVRO ---------------------------------------------
 function openEditBook(){
   var b=db.books.filter(function(x){return x.id===cBook;})[0];
   if(!b)return;
@@ -1920,7 +1920,7 @@ function parseAndShowInfopedia(html,query,bid){
   }
 
   if(defs.length===0){
-    // Word might not exist — try fallback
+    // Word might not exist -- try fallback
     searchWiktionaryPT(query,bid,area);
     return;
   }
@@ -2025,7 +2025,7 @@ function genSummaryAI(bid){
   genSummaryLocal(bid);
 }
 
-// ── IA — ASSISTENTE DE LEITURA ───────────────────────────────
+// -- IA -- ASSISTENTE DE LEITURA -------------------------------
 function renderAISection(b){
   var html='';
   // Sugestões de notas
@@ -2043,7 +2043,7 @@ function renderAISection(b){
   html+='<div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.65rem;flex-wrap:wrap">';
   html+='<label style="text-transform:none;letter-spacing:0;font-size:12px;margin-bottom:0;color:var(--text2)">Capítulo:</label>';
   html+='<select id="ai-chap-select" style="flex:1;min-width:120px;font-size:13px;padding:.35rem .7rem">';
-  html+='<option value="_all">— Todos os capítulos —</option>';
+  html+='<option value="_all">-- Todos os capítulos --</option>';
   for(var ci=0;ci<b.chapters.length;ci++){
     var cn=b.chapters[ci];
     html+='<option value="'+escHtml(cn)+'">'+escHtml(cn)+'</option>';
@@ -2077,10 +2077,10 @@ function renderAISection(b){
   return html;
 }
 
-// ── IA ENGINE ─────────────────────────────────────────────────
+// -- IA ENGINE -------------------------------------------------
 // A API da Anthropic bloqueia chamadas directas do browser (CORS).
 // Usamos um motor local inteligente que gera conteúdo real e útil
-// com base nos dados do livro — funciona 100% offline e sem CORS.
+// com base nos dados do livro -- funciona 100% offline e sem CORS.
 function callClaudeAPI(prompt,onChunk,onDone,onError){
   // A API da Anthropic bloqueia chamadas directas do browser (CORS sem proxy).
   // Usar sempre o motor local que funciona 100% offline e sem restrições CORS.
@@ -2202,7 +2202,7 @@ function generateChapterSummaryText(chapName,idx,info,total){
 
   var noteRef='';
   if(notes.length>idx){
-    noteRef=' O leitor registou: "'+notes[idx].slice(0,80)+(notes[idx].length>80?'...':'')+'" — uma observação que capta bem a essência desta secção.';
+    noteRef=' O leitor registou: "'+notes[idx].slice(0,80)+(notes[idx].length>80?'...':'')+'" -- uma observação que capta bem a essência desta secção.';
   }
 
   return intros[idx%intros.length]+' de "'+chapName+'" '+middles[idx%middles.length]
@@ -2220,19 +2220,19 @@ function localAIAnalysis(prompt){
   var pctM=progress.match(/(\d+)%/);if(pctM)pct=parseInt(pctM[1]);
 
   var ritmo='';
-  if(pct===0)ritmo='Estás no início da tua jornada com "'+title+'". Cada primeira página é uma porta que se abre — aproveita para registar as primeiras impressões antes que se misturem com o resto da leitura.';
-  else if(pct<25)ritmo='Estás a começar a mergulhar em "'+title+'". Com '+pct+'% concluído, ainda tens muito pela frente — é a fase ideal para deixar as personagens e o mundo da história instalarem-se na tua mente.';
-  else if(pct<50)ritmo='Já percorreste '+pct+'% de "'+title+'" — estás na fase onde a narrativa normalmente ganha profundidade e as tramas secundárias se entrelaçam. É um bom momento para reler as primeiras notas e ver como a tua perspectiva evoluiu.';
+  if(pct===0)ritmo='Estás no início da tua jornada com "'+title+'". Cada primeira página é uma porta que se abre -- aproveita para registar as primeiras impressões antes que se misturem com o resto da leitura.';
+  else if(pct<25)ritmo='Estás a começar a mergulhar em "'+title+'". Com '+pct+'% concluído, ainda tens muito pela frente -- é a fase ideal para deixar as personagens e o mundo da história instalarem-se na tua mente.';
+  else if(pct<50)ritmo='Já percorreste '+pct+'% de "'+title+'" -- estás na fase onde a narrativa normalmente ganha profundidade e as tramas secundárias se entrelaçam. É um bom momento para reler as primeiras notas e ver como a tua perspectiva evoluiu.';
   else if(pct<75)ritmo='Com mais de metade de "'+title+'" lida ('+pct+'%), já tens uma visão sólida da obra. As revelações desta fase costumam recontextualizar tudo o que leste antes.';
-  else if(pct<100)ritmo='Estás quase a terminar "'+title+'" com '+pct+'%! A reta final de um livro costuma ser a mais intensa — tenta resistir à tentação de acelerar e saboreia cada página.';
-  else ritmo='Terminaste "'+title+'"! É agora que a experiência de leitura verdadeiramente começa — com a distância para refletir sobre o impacto total da obra.';
+  else if(pct<100)ritmo='Estás quase a terminar "'+title+'" com '+pct+'%! A reta final de um livro costuma ser a mais intensa -- tenta resistir à tentação de acelerar e saboreia cada página.';
+  else ritmo='Terminaste "'+title+'"! É agora que a experiência de leitura verdadeiramente começa -- com a distância para refletir sobre o impacto total da obra.';
 
   var notasMsg='';
-  if(notes.length===0)notasMsg='Ainda não adicionaste notas. Escrever mesmo que uma frase por capítulo transforma completamente a qualidade da leitura — experimenta!';
+  if(notes.length===0)notasMsg='Ainda não adicionaste notas. Escrever mesmo que uma frase por capítulo transforma completamente a qualidade da leitura -- experimenta!';
   else if(notes.length<3)notasMsg='Tens '+notes.length+' nota(s) registada(s). Uma boa nota como "'+notes[0].slice(0,50)+'..." mostra que estás a ler de forma activa e reflexiva.';
-  else notasMsg='Com '+notes.length+' notas registadas, estás a criar um registo valioso desta leitura. Destaque para: "'+notes[Math.floor(notes.length/2)].slice(0,60)+'..." — uma observação que vale a pena desenvolver.';
+  else notasMsg='Com '+notes.length+' notas registadas, estás a criar um registo valioso desta leitura. Destaque para: "'+notes[Math.floor(notes.length/2)].slice(0,60)+'..." -- uma observação que vale a pena desenvolver.';
 
-  var motivacao='Lembra-te: cada livro que lês é um diálogo entre o autor e tu. As notas que escreves são a tua parte da conversa — e ninguém mais pode tê-la exactamente da mesma forma. Continua!';
+  var motivacao='Lembra-te: cada livro que lês é um diálogo entre o autor e tu. As notas que escreves são a tua parte da conversa -- e ninguém mais pode tê-la exactamente da mesma forma. Continua!';
 
   return ritmo+'\n\n'+notasMsg+'\n\n'+motivacao;
 }
@@ -2253,7 +2253,7 @@ function localAISummary(prompt){
     if(notes.length>2)parts.push('Outro aspecto que me chamou a atenção: "'+notes[Math.floor(notes.length/2)].slice(0,80)+(notes[Math.floor(notes.length/2)].length>80?'...':'')+'".');
   }
 
-  parts.push('Esta leitura deixa-me com questões que continuam a ressoar — sobre as escolhas das personagens, o contexto da obra e o que o autor quis transmitir. Uma experiência que certamente voltarei a revisitar.');
+  parts.push('Esta leitura deixa-me com questões que continuam a ressoar -- sobre as escolhas das personagens, o contexto da obra e o que o autor quis transmitir. Uma experiência que certamente voltarei a revisitar.');
 
   return parts.join('\n\n');
 }
@@ -2415,7 +2415,7 @@ function aiAnalyseReading(bid){
 function openAIPanel(){
   var b=db.books.filter(function(x){return x.id===cBook;})[0];
   if(!b)return;
-  document.getElementById('m-ai-title').textContent='✦ Assistente IA — '+b.title;
+  document.getElementById('m-ai-title').textContent='✦ Assistente IA -- '+b.title;
   var body=document.getElementById('m-ai-body');
   body.innerHTML='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.85rem">'
     +'<button class="btn btn-p btn-s" onclick="aiSuggestNotesModal(\''+b.id+'\')">✦ Sugestões de notas</button>'
@@ -2482,9 +2482,9 @@ function saveManualSum(bid){
   setTimeout(function(){switchTab('t-sum',document.querySelectorAll('.dtab')[3]);},50);
 }
 
-// ══════════════════════════════════════════════════════════════
-// ── GAMIFICAÇÃO ───────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════════
+// --------------------------------------------------------------
+// -- GAMIFICAÇÃO -----------------------------------------------
+// --------------------------------------------------------------
 
 var gmKey='leituras-gm:v1';
 var gm={
@@ -2746,7 +2746,7 @@ function renderPerfil(){
 
   // XP / Level bar
   html+='<div class="xp-bar-wrap">';
-  html+='<div class="xp-bar-top"><span class="xp-level-badge">Nível '+gm.level+' — '+levelTitle(gm.level)+'</span><span class="xp-label">'+gm.xp+' XP total</span></div>';
+  html+='<div class="xp-bar-top"><span class="xp-level-badge">Nível '+gm.level+' -- '+levelTitle(gm.level)+'</span><span class="xp-label">'+gm.xp+' XP total</span></div>';
   html+='<div class="xp-bar"><div class="xp-fill" style="width:'+Math.min(lvlInfo.pct,100)+'%"></div></div>';
   html+='<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:.3rem"><span>'+lvlInfo.current+' XP</span><span>'+(lvlInfo.pct<100?'Próximo nível: '+lvlInfo.needed+' XP':'Nível máximo! 🌟')+'</span></div>';
   html+='</div>';
@@ -2823,7 +2823,7 @@ function renderPerfil(){
   html+='</div></div>';
   if(unlocked>0)gmSave();// mark badges as seen
 
-  // Histórico semanal — mini chart
+  // Histórico semanal -- mini chart
   html+='<div style="margin-bottom:1rem">';
   html+='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:.65rem">📊 Páginas esta semana</div>';
   html+=renderWeekChart();
@@ -2874,9 +2874,9 @@ function renderWeekChart(){
 }
 
 
-// ══════════════════════════════════════════════════════════════
+// --------------------------------------------------------------
 // CHAT DO LIVRO
-// ══════════════════════════════════════════════════════════════
+// --------------------------------------------------------------
 var bookChatHistories = {}; // {bookId: [{role,content}]}
 
 function initBookChat(bid){
@@ -2884,7 +2884,7 @@ function initBookChat(bid){
 }
 
 
-// Motor local de chat do livro — funciona sem API externa
+// Motor local de chat do livro -- funciona sem API externa
 function localAIChatReply(b, userText){
   var lower = (userText||'').toLowerCase();
   var title = b.title||'este livro';
@@ -2901,7 +2901,7 @@ function localAIChatReply(b, userText){
   }
   if(lower.indexOf('progresso')>=0||lower.indexOf('página')>=0||lower.indexOf('quantas páginas')>=0){
     if(pct!==null){
-      return 'Estás na página '+b.currentPage+' de '+b.pages+' ('+pct+'% concluído). '+(pct<25?'Ainda no início — boa leitura!':pct<50?'Já passaste um quarto do livro!':pct<75?'Estás a mais de meio!':pct<100?'Quase a terminar!':'Livro concluído!');
+      return 'Estás na página '+b.currentPage+' de '+b.pages+' ('+pct+'% concluído). '+(pct<25?'Ainda no início -- boa leitura!':pct<50?'Já passaste um quarto do livro!':pct<75?'Estás a mais de meio!':pct<100?'Quase a terminar!':'Livro concluído!');
     }
     return 'Ainda não registaste o número de páginas de "'+title+'".';
   }
@@ -2932,7 +2932,7 @@ function localAIChatReply(b, userText){
   // Resposta genérica contextual
   var responses = [
     'Que boa pergunta sobre "'+title+'"! Para uma análise mais profunda, sugiro que registes as tuas reflexões nas notas do livro.',
-    'Estás a ler "'+title+'" de '+author+'. '+(notes.length>0?'Já tens '+notes.length+' nota'+(notes.length!==1?'s':'')+' — continua assim!':'Experimenta adicionar notas enquanto lês para registar as tuas impressões.'),
+    'Estás a ler "'+title+'" de '+author+'. '+(notes.length>0?'Já tens '+notes.length+' nota'+(notes.length!==1?'s':'')+' -- continua assim!':'Experimenta adicionar notas enquanto lês para registar as tuas impressões.'),
     'Para obter o máximo de "'+title+'", tenta registar as passagens que mais te marcam nas notas. Isso ajuda a consolidar a leitura.',
     '"'+title+'" parece ser uma leitura interessante! Usa as funcionalidades de notas e resumo para tirar o máximo proveito.'
   ];
@@ -2950,6 +2950,30 @@ function buildBookSystemPrompt(b){
   if(words) sys += '\nPalavras consultadas:\n'+words;
   sys += '\nAjuda o leitor a compreender passagens, personagens, temas e simbolismo. Evita spoilers a menos que o leitor peça.';
   return sys;
+}
+
+function buildChatHTML(b){
+  var bid = b.id;
+  var escapedTitle = escHtml(b.title);
+  var h = '<div id="book-chat-'+bid+'" class="book-chat-wrap">';
+  h += '<div class="chat-messages" id="chat-msgs-'+bid+'">';
+  h += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">';
+  h += 'Ola! Sou o teu assistente para <strong>'+escapedTitle+'</strong>. ';
+  h += 'Podes perguntar-me sobre personagens, passagens, temas, simbolismo ou qualquer duvida sobre o livro.';
+  h += '</div></div></div>';
+  h += '<div class="chat-input-row">';
+  h += '<textarea class="chat-input" id="chat-inp-'+bid+'" placeholder="Faz uma pergunta sobre o livro..." rows="2" data-bookid="'+bid+'" onkeydown="handleChatKey(event,this)"></textarea>';
+  h += '<button class="chat-send-btn" data-bookid="'+bid+'" onclick="sendBookChat(this.dataset.bookid)">&#10148;</button>';
+  h += '</div></div>';
+  return h;
+}
+
+function handleChatKey(e, el){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    var bid = el.dataset.bookid;
+    if(bid) sendBookChat(bid);
+  }
 }
 
 function sendBookChat(bid){
@@ -2975,7 +2999,7 @@ function sendBookChat(bid){
 
   // Build messages for API
   var msgs = bookChatHistories[bid].slice(-10); // keep last 10 turns
-  // Motor local de chat — sem CORS, funciona offline
+  // Motor local de chat -- sem CORS, funciona offline
   setTimeout(function(){
     var typing = document.getElementById(typingId);
     if(typing) typing.remove();
@@ -2991,9 +3015,9 @@ function sendBookChat(bid){
   }, 600);
 }
 
-// ══════════════════════════════════════════════════════════════
+// --------------------------------------------------------------
 // RECOMENDAÇÕES DE LIVROS
-// ══════════════════════════════════════════════════════════════
+// --------------------------------------------------------------
 function getRecommendations(){
   var genres = (document.getElementById('rec-genres')||{}).value||'';
   var loved = (document.getElementById('rec-loved')||{}).value||'';
@@ -3034,7 +3058,7 @@ function getRecommendations(){
       html += '<div class="rec-why">'+escHtml(l.motivo||'')+'</div>';
       html += '<div class="rec-actions">';
       var tEnc = encodeURIComponent(l.titulo||''); var aEnc = encodeURIComponent(l.autor||'');
-      html += '<button class="btn btn-p btn-s" onclick="addRecToWishlist(''+escHtml(l.titulo||'')+'',''+escHtml(l.autor||'')+'')">+ Quero ler</button>';
+      html += '<button class="btn btn-p btn-s" onclick="addRecToWishlist(\'' + escHtml(l.titulo||'') + '\',\'' + escHtml(l.autor||'') + '\')">+ Quero ler</button>';
       html += '<a href="https://www.bertrand.pt/pesquisa?q='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
       html += '<a href="https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
       html += '</div></div>';
@@ -3046,7 +3070,7 @@ function getRecommendations(){
 }
 
 
-// Motor local de recomendações — funciona sem API externa
+// Motor local de recomendações -- funciona sem API externa
 function localAIRecommendations(prompt){
   var recDB=[
     {titulo:'O Nome da Rosa',autor:'Umberto Eco',genero:'Mistério histórico',paginas:502,motivo:'Uma investigação medieval fascinante que combina filosofia, religião e suspense numa abadia italiana do século XIV.'},
@@ -3061,7 +3085,7 @@ function localAIRecommendations(prompt){
     {titulo:'Orgulho e Preconceito',autor:'Jane Austen',genero:'Romance clássico',paginas:432,motivo:'Uma comédia de costumes perspicaz com personagens memoráveis e diálogos que continuam a encantar leitores.'},
     {titulo:'Sapiens',autor:'Yuval Noah Harari',genero:'Não-ficção histórica',paginas:443,motivo:'Uma visão abrangente e provocadora da história da humanidade que muda a forma como vemos o mundo.'},
     {titulo:'O Alquimista',autor:'Paulo Coelho',genero:'Ficção filosófica',paginas:208,motivo:'Uma fábula inspiradora sobre seguir os sonhos e encontrar o próprio destino, traduzida em mais de 80 línguas.'},
-    {titulo:'Blindness',autor:'José Saramago',genero:'Ficção literária',paginas:352,motivo:'Uma reflexão poderosa sobre a humanidade e a sociedade quando privada da visão — e da razão.'},
+    {titulo:'Blindness',autor:'José Saramago',genero:'Ficção literária',paginas:352,motivo:'Uma reflexão poderosa sobre a humanidade e a sociedade quando privada da visão -- e da razão.'},
     {titulo:'O Apanhador no Centeio',autor:'J.D. Salinger',genero:'Ficção de formação',paginas:277,motivo:'Um retrato honesto e comovente da adolescência e da busca de identidade que atravessa gerações.'},
     {titulo:'Fahrenheit 451',autor:'Ray Bradbury',genero:'Distopia',paginas:256,motivo:'Um clássico sobre a censura e o valor dos livros que se torna mais relevante a cada ano que passa.'}
   ];
@@ -3084,9 +3108,9 @@ function addRecToWishlist(title, author){
   alert('"'+title+'" adicionado à lista "Quero ler"!');
 }
 
-// ══════════════════════════════════════════════════════════════
+// --------------------------------------------------------------
 // PESQUISA DE LIVROS + ISBN + PREÇO
-// ══════════════════════════════════════════════════════════════
+// --------------------------------------------------------------
 function switchSearchTab(id, el){
   document.getElementById('s-titulo').style.display = 'none';
   document.getElementById('s-isbn').style.display = 'none';
@@ -3182,7 +3206,7 @@ function renderSearchResults(items, maxPrice, resultEl){
 
     html += '<div class="search-book-card">';
     html += '<div class="search-book-cover">';
-    if(cover) html += '<img src="'+cover+'" alt="Capa" onerror="this.parentElement.innerHTML='📚'">';
+    if(cover) html += '<img src="'+cover+'" alt="Capa" onerror="this.parentElement.textContent=String.fromCodePoint(128218)">';
     else html += '📚';
     html += '</div>';
     html += '<div>';
@@ -3192,8 +3216,8 @@ function renderSearchResults(items, maxPrice, resultEl){
     if(desc) html += '<div class="search-book-desc">'+escHtml(desc)+'</div>';
     html += '<div style="display:flex;gap:.35rem;flex-wrap:wrap">';
     if(!isInLib){
-      html += '<button class="btn btn-p btn-s" onclick="addSearchBookToLib(''+escHtml(title)+'',''+escHtml(author)+'','+pages+',''+escHtml(cover||'')+'')">+ Adicionar</button>';
-      html += '<button class="btn btn-g btn-s" onclick="addSearchBookToWishlist(''+escHtml(title)+'',''+escHtml(author)+'','+pages+',''+escHtml(cover||'')+'')">+ Quero ler</button>';
+      html += '<button class="btn btn-p btn-s" data-stitle="' + escHtml(title) + '" data-sauthor="' + escHtml(author) + '" data-spages="' + pages + '" data-scover="' + escHtml(cover||'') + '" onclick="addSearchBookToLibEl(this)">+ Adicionar</button>';
+      html += '<button class="btn btn-g btn-s" data-stitle="' + escHtml(title) + '" data-sauthor="' + escHtml(author) + '" data-spages="' + pages + '" data-scover="' + escHtml(cover||'') + '" onclick="addSearchBookToWishlistEl(this)">+ Quero ler</button>';
     } else {
       html += '<span class="bdg bdg-d" style="align-self:center">Na biblioteca</span>';
     }
@@ -3221,8 +3245,18 @@ function addSearchBookToWishlist(title, author, pages, cover){
 
 // Update showView to handle new views
 
-// ── HOOKS: integrar GM nos eventos existentes ─────────────────
+// -- HOOKS: integrar GM nos eventos existentes -----------------
 // Chamados nos pontos certos do código existente
+
+function addSearchBookToLibEl(el){
+  var t=el.dataset.stitle||'', a=el.dataset.sauthor||'', p=parseInt(el.dataset.spages)||0, c=el.dataset.scover||'';
+  addSearchBookToLib(t,a,p,c);
+}
+function addSearchBookToWishlistEl(el){
+  var t=el.dataset.stitle||'', a=el.dataset.sauthor||'', p=parseInt(el.dataset.spages)||0, c=el.dataset.scover||'';
+  addSearchBookToWishlist(t,a,p,c);
+}
+
 document.addEventListener('DOMContentLoaded',function(){
   // Inicializar suporte offline
   initOfflineSupport();
