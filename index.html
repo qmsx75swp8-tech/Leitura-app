@@ -3090,7 +3090,9 @@ function getRecommendations(){
         html+='<div class="rec-author">'+(l.autor?escHtml(l.autor):'')+(l.genero?' · '+escHtml(l.genero):'')+(l.paginas?' · '+l.paginas+' págs.':'')+'</div>';
         html+='<div class="rec-why">'+escHtml(l.motivo||'')+'</div>';
         html+='<div class="rec-actions">';
-        html+='<button class="btn btn-p btn-s" onclick="addRecToWishlist(''+escHtml(l.titulo||'').replace(/'/g,'&#39;')+'',''+escHtml(l.autor||'').replace(/'/g,'&#39;')+'')">+ Quero ler</button>';
+        var safeT=(l.titulo||'').replace(/['"\\]/g,'');
+        var safeA=(l.autor||'').replace(/['"\\]/g,'');
+        html+='<button class="btn btn-p btn-s" onclick="addRecToWishlist(\'' + safeT + '\',\'' + safeA + '\')">+ Quero ler</button>';
         html+='<a href="https://www.bertrand.pt/pesquisa?q='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
         html+='<a href="https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
         html+='</div></div>';
