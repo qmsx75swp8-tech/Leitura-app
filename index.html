@@ -443,6 +443,42 @@ select option{background:var(--surface)}
   text-align:center;letter-spacing:.04em;margin:.6rem 0}
 .timer-btns{display:flex;gap:.5rem;justify-content:center}
 
+
+/* ── CHAT DO LIVRO ───────────────────────────────────────────── */
+.book-chat-wrap{display:flex;flex-direction:column;height:480px;max-height:60vh}
+.chat-messages{flex:1;overflow-y:auto;padding:.5rem 0;display:flex;flex-direction:column;gap:.6rem;-webkit-overflow-scrolling:touch}
+.chat-msg-user{display:flex;justify-content:flex-end}
+.chat-msg-ai{display:flex;justify-content:flex-start}
+.chat-bubble-user{background:var(--accent);color:#fff;border-radius:16px 16px 4px 16px;padding:.6rem .9rem;font-size:14px;line-height:1.55;max-width:85%}
+.chat-bubble-ai{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:16px 16px 16px 4px;padding:.6rem .9rem;font-size:14px;line-height:1.55;max-width:85%;white-space:pre-wrap}
+.chat-bubble-typing{background:var(--surface2);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:.6rem .9rem;display:flex;gap:.3rem;align-items:center}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--accent-mid);animation:typingBounce 1.2s ease infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.chat-input-row{display:flex;gap:.5rem;align-items:flex-end;padding:.65rem 0;border-top:1px solid var(--border);margin-top:.5rem}
+.chat-input{flex:1;min-height:44px;max-height:100px;padding:.55rem .75rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--surface2);color:var(--text);resize:none;line-height:1.5;font-family:'DM Sans',sans-serif}
+.chat-send-btn{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.chat-send-btn:active{background:var(--accent-dark)}
+
+/* ── RECOMENDAÇÕES ───────────────────────────────────────────── */
+.rec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem}
+.rec-title{font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--text);margin-bottom:.2rem}
+.rec-author{font-size:12px;color:var(--text2);margin-bottom:.5rem}
+.rec-why{font-size:13px;line-height:1.6;color:var(--text2);border-left:3px solid var(--accent-mid);padding-left:.65rem;margin-bottom:.6rem}
+.rec-actions{display:flex;gap:.4rem;flex-wrap:wrap}
+
+/* ── PESQUISA DE LIVROS ──────────────────────────────────────── */
+.search-book-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem;margin-bottom:.65rem;display:grid;grid-template-columns:auto 1fr;gap:.75rem;align-items:start}
+.search-book-cover{width:52px;height:72px;border-radius:5px;object-fit:cover;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
+.search-book-cover img{width:100%;height:100%;object-fit:cover;border-radius:5px}
+.search-book-title{font-family:'Lora',serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:.2rem}
+.search-book-author{font-size:12px;color:var(--text2);margin-bottom:.35rem}
+.search-book-meta{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.5rem}
+.search-book-desc{font-size:12px;line-height:1.55;color:var(--text2);margin-bottom:.5rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.price-tag{font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:20px;padding:.15rem .55rem;display:inline-block}
+.price-unavail{font-size:12px;color:var(--text3)}
+
 </style>
 
 <!-- OFFLINE BANNER -->
@@ -490,6 +526,8 @@ select option{background:var(--surface)}
   <div class="nav-tab" onclick="showView('lidos')">Lidos</div>
   <div class="nav-tab" onclick="showView('quero-ler')">Quero ler</div>
   <div class="nav-tab" onclick="showView('perfil')">🏆</div>
+  <div class="nav-tab" onclick="showView('recomendar')">✦ IA</div>
+  <div class="nav-tab" onclick="showView('pesquisa')">🔍</div>
   <button class="user-btn" onclick="showView('conta')" id="user-display-btn" title="A minha conta">👤 —</button>
   <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
 </nav>
@@ -550,6 +588,52 @@ select option{background:var(--surface)}
 </div>
 
 <div class="view" id="view-perfil"><div id="perfil-content"></div></div>
+
+<div class="view" id="view-recomendar">
+  <h2>✦ Recomendações IA</h2>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">A IA analisa os teus livros lidos e preferências para sugerir as próximas leituras.</div>
+  <div id="rec-prefs-box" style="margin-bottom:1rem">
+    <div class="fr fr1"><label>Os teus géneros favoritos</label><input id="rec-genres" placeholder="ex: ficção científica, romance histórico, policial..."></div>
+    <div class="fr fr1"><label>Livros que adoraste (além dos da biblioteca)</label><input id="rec-loved" placeholder="ex: Harry Potter, O Alquimista..."></div>
+    <div class="fr fr1"><label>O que queres evitar</label><input id="rec-avoid" placeholder="ex: violência, terror, muito longo..."></div>
+    <button class="btn btn-p" style="width:100%" onclick="getRecommendations()">✦ Gerar recomendações</button>
+  </div>
+  <div id="rec-result"></div>
+</div>
+
+<div class="view" id="view-pesquisa">
+  <h2>🔍 Pesquisar livros</h2>
+  <div class="card" style="margin-bottom:1rem">
+    <div class="dict-tab-row" style="margin-bottom:.85rem">
+      <div class="dict-tab active" onclick="switchSearchTab('s-titulo',this)">Por título/autor</div>
+      <div class="dict-tab" onclick="switchSearchTab('s-isbn',this)">Por ISBN</div>
+    </div>
+    <div id="s-titulo">
+      <div class="fr fr1"><label>Título ou autor</label>
+        <div style="display:flex;gap:.5rem">
+          <input id="search-q" placeholder="ex: José Saramago, Blindness..." style="flex:1" onkeydown="if(event.key==='Enter')searchBooks()">
+          <button class="btn btn-p" onclick="searchBooks()">Pesquisar</button>
+        </div>
+      </div>
+    </div>
+    <div id="s-isbn" style="display:none">
+      <div class="fr fr1"><label>ISBN (10 ou 13 dígitos)</label>
+        <div style="display:flex;gap:.5rem">
+          <input id="search-isbn" placeholder="ex: 9789722038218" inputmode="numeric" style="flex:1" onkeydown="if(event.key==='Enter')searchByISBN()">
+          <button class="btn btn-p" onclick="searchByISBN()">Pesquisar</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:.75rem">
+      <label>Filtro de preço máximo (€)</label>
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <input type="range" id="price-filter" min="0" max="50" value="50" step="1" style="flex:1;padding:0;height:4px;background:var(--border);-webkit-appearance:auto;appearance:auto" oninput="document.getElementById('price-val').textContent=this.value==50?'Sem limite':this.value+'€'">
+        <span id="price-val" style="font-size:13px;color:var(--accent);font-weight:600;white-space:nowrap;min-width:70px">Sem limite</span>
+      </div>
+    </div>
+  </div>
+  <div id="search-results"></div>
+</div>
 
 </div><!-- main-scroll -->
 
@@ -957,7 +1041,7 @@ function showView(v){
   for(var i=0;i<views.length;i++)views[i].classList.remove('active');
   var tabs=document.querySelectorAll('.nav-tab');
   for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
-  var map={biblioteca:'view-biblioteca','a-ler':'view-a-ler',lidos:'view-lidos','quero-ler':'view-quero-ler',detail:'view-detail',conta:'view-conta',perfil:'view-perfil'};
+  var map={biblioteca:'view-biblioteca','a-ler':'view-a-ler',lidos:'view-lidos','quero-ler':'view-quero-ler',detail:'view-detail',conta:'view-conta',perfil:'view-perfil',recomendar:'view-recomendar',pesquisa:'view-pesquisa'};
   var el=document.getElementById(map[v]||'view-biblioteca');
   if(el)el.classList.add('active');
   var ti={biblioteca:0,'a-ler':1,lidos:2,'quero-ler':3,perfil:4};
@@ -970,7 +1054,7 @@ function showView(v){
   var editBtn=document.getElementById('detail-edit-btn');
   var aiBtn=document.getElementById('detail-ai-btn');
   if(fab){
-    if(v==='detail'||v==='conta'||v==='perfil'){fab.classList.remove('visible');}
+    if(v==='detail'||v==='conta'||v==='perfil'||v==='recomendar'||v==='pesquisa'){fab.classList.remove('visible');}
     else{fab.classList.add('visible');}
   }
   if(editBtn)editBtn.style.display=v==='detail'?'':'none';
@@ -1353,7 +1437,7 @@ function renderDetail(b){
   html+='</div></div>';
   
   var detailHtml='<div class="detail-hd">'+html+'</div>';
-  detailHtml+='<div class="dtabs"><div class="dtab active" onclick="switchTab(\'t-prog\',this)">Progresso</div><div class="dtab" onclick="switchTab(\'t-notes\',this)">Notas</div><div class="dtab" onclick="switchTab(\'t-words\',this)">Dicionario</div><div class="dtab" onclick="switchTab(\'t-sum\',this)">Resumo</div><div class="dtab" onclick="switchTab(\'t-ai\',this)">✦ IA</div></div>';
+  detailHtml+='<div class="dtabs"><div class="dtab active" onclick="switchTab(\'t-prog\',this)">Progresso</div><div class="dtab" onclick="switchTab(\'t-notes\',this)">Notas</div><div class="dtab" onclick="switchTab(\'t-words\',this)">Dicionario</div><div class="dtab" onclick="switchTab(\'t-sum\',this)">Resumo</div><div class="dtab" onclick="switchTab(\'t-ai\',this)">✦ IA</div>'+'<div class="dtab" onclick="switchTab(\'t-chat\',this);initBookChat(\''+b.id+'\')\" >💬 Chat</div></div>';
 
   // Progress tab
   var prog='';
@@ -1384,6 +1468,7 @@ function renderDetail(b){
   detailHtml+='<div class="dsec" id="t-words">'+renderDictSection(b)+'</div>';
   detailHtml+='<div class="dsec" id="t-sum">'+renderSumSection(b)+'</div>';
   detailHtml+='<div class="dsec" id="t-ai">'+renderAISection(b)+'</div>';
+  detailHtml+='<div class="dsec" id="t-chat"><div id="book-chat-'+b.id+'" class="book-chat-wrap"><div class="chat-messages" id="chat-msgs-'+b.id+'"><div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">Olá! Sou o teu assistente para <strong>'+b.title+'</strong>. Podes perguntar-me sobre personagens, passagens, temas, simbolismo ou qualquer dúvida sobre o livro.</div></div></div><div class="chat-input-row"><textarea class="chat-input" id="chat-inp-'+b.id+'" placeholder="Faz uma pergunta sobre o livro..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendBookChat(''+b.id+'');}"></textarea><button class="chat-send-btn" onclick="sendBookChat(''+b.id+'')">&#10148;</button></div></div></div>';
 
   document.getElementById('detail-content').innerHTML=detailHtml;
 }
@@ -1985,15 +2070,23 @@ function renderAISection(b){
 // Usamos um motor local inteligente que gera conteúdo real e útil
 // com base nos dados do livro — funciona 100% offline e sem CORS.
 function callClaudeAPI(prompt,onChunk,onDone,onError){
-  // Motor local — analisa o prompt e gera resposta relevante
-  setTimeout(function(){
-    try{
-      var result=localAIEngine(prompt);
-      onDone(result);
-    }catch(e){
-      onError('Erro ao processar: '+e.message);
-    }
-  },600+Math.random()*800);// simula latência real
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1024,
+      system:'És um assistente literário em português europeu. Responde sempre em português europeu, de forma concisa e útil.',
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.error){if(onError)onError(d.error.message||'Erro da API');return;}
+    var text=(d.content&&d.content[0]&&d.content[0].text)||'';
+    if(onDone)onDone(text);
+  })
+  .catch(function(e){if(onError)onError('Erro de ligação: '+e.message);});
 }
 
 function localAIEngine(prompt){
@@ -2776,6 +2869,317 @@ function renderWeekChart(){
   html+='</div>';
   return html;
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// CHAT DO LIVRO
+// ══════════════════════════════════════════════════════════════
+var bookChatHistories = {}; // {bookId: [{role,content}]}
+
+function initBookChat(bid){
+  if(!bookChatHistories[bid]) bookChatHistories[bid] = [];
+}
+
+function buildBookSystemPrompt(b){
+  var notes = b.notes.slice(0,10).map(function(n){ return (n.page?'[p.'+n.page+'] ':'')+n.text; }).join('
+');
+  var words = db.words.filter(function(w){return w.bookId===b.id;}).slice(0,10).map(function(w){return w.word+': '+w.def;}).join('
+');
+  var sys = 'És um assistente literário especialista no livro "'+b.title+'"'+(b.author?' de '+b.author:'')+'. ';
+  sys += 'Responde sempre em português europeu, de forma clara e útil. ';
+  if(b.synopsis) sys += 'Sinopse: '+b.synopsis+' ';
+  if(b.pages) sys += 'O livro tem '+b.pages+' páginas. ';
+  if(notes) sys += '
+Notas do leitor:
+'+notes;
+  if(words) sys += '
+Palavras consultadas:
+'+words;
+  sys += '
+Ajuda o leitor a compreender passagens, personagens, temas e simbolismo. Evita spoilers a menos que o leitor peça.';
+  return sys;
+}
+
+function sendBookChat(bid){
+  var b = db.books.filter(function(x){return x.id===bid;})[0];
+  if(!b) return;
+  var inp = document.getElementById('chat-inp-'+bid);
+  var msgsEl = document.getElementById('chat-msgs-'+bid);
+  if(!inp||!msgsEl) return;
+  var text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  inp.style.height = '';
+
+  if(!bookChatHistories[bid]) bookChatHistories[bid] = [];
+  bookChatHistories[bid].push({role:'user', content:text});
+
+  // Render user message
+  msgsEl.innerHTML += '<div class="chat-msg chat-msg-user"><div class="chat-bubble-user">'+escHtml(text)+'</div></div>';
+  // Typing indicator
+  var typingId = 'typing-'+bid+'-'+Date.now();
+  msgsEl.innerHTML += '<div class="chat-msg chat-msg-ai" id="'+typingId+'"><div class="chat-bubble-typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  // Build messages for API
+  var msgs = bookChatHistories[bid].slice(-10); // keep last 10 turns
+
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:800,
+      system: buildBookSystemPrompt(b),
+      messages: msgs
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var typing = document.getElementById(typingId);
+    if(typing) typing.remove();
+    var reply = (d.content&&d.content[0]&&d.content[0].text)||'Não consegui responder. Tenta de novo.';
+    if(d.error) reply = 'Erro: '+d.error.message;
+    bookChatHistories[bid].push({role:'assistant', content:reply});
+    var msgsEl2 = document.getElementById('chat-msgs-'+bid);
+    if(msgsEl2){
+      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">'+escHtml(reply)+'</div></div>';
+      msgsEl2.scrollTop = msgsEl2.scrollHeight;
+    }
+  })
+  .catch(function(e){
+    var typing = document.getElementById(typingId);
+    if(typing) typing.remove();
+    var msgsEl2 = document.getElementById('chat-msgs-'+bid);
+    if(msgsEl2){
+      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai" style="color:var(--danger)">Erro de ligação. Verifica a tua ligação à internet.</div></div>';
+      msgsEl2.scrollTop = msgsEl2.scrollHeight;
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// RECOMENDAÇÕES DE LIVROS
+// ══════════════════════════════════════════════════════════════
+function getRecommendations(){
+  var genres = (document.getElementById('rec-genres')||{}).value||'';
+  var loved = (document.getElementById('rec-loved')||{}).value||'';
+  var avoid = (document.getElementById('rec-avoid')||{}).value||'';
+  var resultEl = document.getElementById('rec-result');
+  if(!resultEl) return;
+
+  resultEl.innerHTML = '<div class="ai-loading" style="padding:1.5rem 0"><div class="ai-spinner-lg"></div> A gerar recomendações personalizadas...</div>';
+
+  // Build context from user library
+  var done = db.books.filter(function(b){return b.status==='done';}).slice(0,8);
+  var reading = db.books.filter(function(b){return b.status==='reading';}).slice(0,3);
+  var want = db.books.filter(function(b){return b.status==='want';}).slice(0,5);
+
+  var ctx = 'Livros lidos: '+done.map(function(b){return '"'+b.title+'"'+(b.author?' ('+b.author+')':'');}).join(', ')||'nenhum';
+  if(reading.length) ctx += '
+A ler agora: '+reading.map(function(b){return '"'+b.title+'"';}).join(', ');
+  if(want.length) ctx += '
+Quer ler: '+want.map(function(b){return '"'+b.title+'"';}).join(', ');
+  if(genres) ctx += '
+Géneros favoritos: '+genres;
+  if(loved) ctx += '
+Livros adorados: '+loved;
+  if(avoid) ctx += '
+Evitar: '+avoid;
+
+  var prompt = ctx + '
+
+Com base neste perfil de leitor, recomenda exatamente 5 livros. Para cada um responde APENAS com JSON neste formato exato (sem markdown):
+{"livros":[{"titulo":"...","autor":"...","genero":"...","motivo":"1-2 frases porque este leitor vai adorar","paginas":000}]}';
+
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1200,
+      system:'És um especialista em literatura. Responde sempre em português europeu. Quando pedido JSON, responde APENAS com JSON válido sem markdown.',
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var text = (d.content&&d.content[0]&&d.content[0].text)||'';
+    try{
+      var clean = text.replace(/```json|```/g,'').trim();
+      var s = clean.indexOf('{'); var e = clean.lastIndexOf('}');
+      if(s>=0&&e>s) clean = clean.slice(s,e+1);
+      var data = JSON.parse(clean);
+      var livros = data.livros||[];
+      if(!livros.length) throw new Error('empty');
+      var html = '<div style="font-size:12px;color:var(--text3);margin-bottom:.75rem">'+livros.length+' recomendações geradas com base no teu perfil</div>';
+      for(var i=0;i<livros.length;i++){
+        var l = livros[i];
+        html += '<div class="rec-card">';
+        html += '<div class="rec-title">'+escHtml(l.titulo||'')+'</div>';
+        html += '<div class="rec-author">'+(l.autor?escHtml(l.autor):'')+(l.genero?' · '+escHtml(l.genero):'')+(l.paginas?' · '+l.paginas+' págs.':'')+'</div>';
+        html += '<div class="rec-why">'+escHtml(l.motivo||'')+'</div>';
+        html += '<div class="rec-actions">';
+        var tEnc = encodeURIComponent(l.titulo||''); var aEnc = encodeURIComponent(l.autor||'');
+        html += '<button class="btn btn-p btn-s" onclick="addRecToWishlist(''+escHtml(l.titulo||'')+'',''+escHtml(l.autor||'')+'')">+ Quero ler</button>';
+        html += '<a href="https://www.bertrand.pt/pesquisa?q='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
+        html += '<a href="https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
+        html += '</div></div>';
+      }
+      resultEl.innerHTML = html;
+    }catch(err){
+      resultEl.innerHTML = '<div class="dict-no-result">Não foi possível gerar recomendações. Tenta adicionar mais livros à tua biblioteca.</div>';
+    }
+  })
+  .catch(function(){
+    resultEl.innerHTML = '<div class="dict-error">Erro de ligação. Verifica a internet e tenta novamente.</div>';
+  });
+}
+
+function addRecToWishlist(title, author){
+  if(!title) return;
+  db.books.push({id:uid(),title:title,author:author,pages:0,status:'want',currentPage:0,
+    notes:[],summary:'',synopsis:'',chapters:['Geral'],addedAt:Date.now(),colorIdx:db.books.length,coverUrl:null,chapterSummaries:{}});
+  save(); renderAll();
+  alert('"'+title+'" adicionado à lista "Quero ler"!');
+}
+
+// ══════════════════════════════════════════════════════════════
+// PESQUISA DE LIVROS + ISBN + PREÇO
+// ══════════════════════════════════════════════════════════════
+function switchSearchTab(id, el){
+  document.getElementById('s-titulo').style.display = 'none';
+  document.getElementById('s-isbn').style.display = 'none';
+  document.getElementById(id).style.display = 'block';
+  var tabs = document.querySelectorAll('.dict-tab-row .dict-tab');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
+  el.classList.add('active');
+}
+
+function searchBooks(){
+  var q = (document.getElementById('search-q')||{}).value||'';
+  if(!q.trim()){alert('Introduz um título ou autor');return;}
+  var maxPrice = parseInt((document.getElementById('price-filter')||{}).value)||50;
+  var resultEl = document.getElementById('search-results');
+  resultEl.innerHTML = '<div class="ai-loading" style="padding:1.5rem 0"><div class="ai-spinner-lg"></div> A pesquisar...</div>';
+  runBookSearch(q, null, maxPrice, resultEl);
+}
+
+function searchByISBN(){
+  var isbn = ((document.getElementById('search-isbn')||{}).value||'').replace(/[^0-9X]/g,'');
+  if(isbn.length<10){alert('ISBN inválido (mínimo 10 dígitos)');return;}
+  var maxPrice = parseInt((document.getElementById('price-filter')||{}).value)||50;
+  var resultEl = document.getElementById('search-results');
+  resultEl.innerHTML = '<div class="ai-loading" style="padding:1.5rem 0"><div class="ai-spinner-lg"></div> A pesquisar por ISBN...</div>';
+  runBookSearch(null, isbn, maxPrice, resultEl);
+}
+
+function runBookSearch(q, isbn, maxPrice, resultEl){
+  var url;
+  if(isbn){
+    url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:'+isbn+'&maxResults=5&fields=items(volumeInfo(title,authors,pageCount,description,imageLinks,industryIdentifiers,publishedDate,categories),saleInfo(listPrice,buyLink))';
+  } else {
+    url = 'https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=10&langRestrict=pt&fields=items(volumeInfo(title,authors,pageCount,description,imageLinks,industryIdentifiers,publishedDate,categories),saleInfo(listPrice,buyLink))';
+  }
+
+  fetch(url)
+  .then(function(r){return r.json();})
+  .then(function(data){
+    var items = data.items||[];
+    if(!items.length && !isbn){
+      // retry without language restriction
+      return fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=10&fields=items(volumeInfo(title,authors,pageCount,description,imageLinks,industryIdentifiers,publishedDate,categories),saleInfo(listPrice,buyLink))')
+      .then(function(r2){return r2.json();})
+      .then(function(data2){renderSearchResults(data2.items||[], maxPrice, resultEl);});
+    }
+    renderSearchResults(items, maxPrice, resultEl);
+  })
+  .catch(function(){
+    resultEl.innerHTML = '<div class="dict-error">Erro de ligação. Verifica a internet.</div>';
+  });
+}
+
+function renderSearchResults(items, maxPrice, resultEl){
+  if(!items.length){resultEl.innerHTML='<div class="dict-no-result">Nenhum livro encontrado.</div>';return;}
+
+  var filtered = items.filter(function(it){
+    var price = it.saleInfo&&it.saleInfo.listPrice&&it.saleInfo.listPrice.amount;
+    if(maxPrice<50 && price && price>maxPrice) return false;
+    return true;
+  });
+
+  if(!filtered.length){
+    resultEl.innerHTML='<div class="dict-no-result">Nenhum resultado no intervalo de preço selecionado. Aumenta o filtro de preço.</div>';
+    return;
+  }
+
+  var html = '<div style="font-size:12px;color:var(--text3);margin-bottom:.65rem">'+filtered.length+' resultado'+(filtered.length!==1?'s':'')+'</div>';
+  for(var i=0;i<filtered.length;i++){
+    var it = filtered[i];
+    var vi = it.volumeInfo||{};
+    var si = it.saleInfo||{};
+    var title = vi.title||'Sem título';
+    var author = (vi.authors&&vi.authors[0])||'';
+    var cover = vi.imageLinks&&(vi.imageLinks.thumbnail||vi.imageLinks.smallThumbnail);
+    if(cover) cover = cover.replace('http://','https://');
+    var pages = vi.pageCount||0;
+    var desc = (vi.description||'').replace(/<[^>]+>/g,'').slice(0,200)+(vi.description&&vi.description.length>200?'...':'');
+    var isbn13 = '';
+    if(vi.industryIdentifiers){
+      for(var j=0;j<vi.industryIdentifiers.length;j++){
+        if(vi.industryIdentifiers[j].type==='ISBN_13'){isbn13=vi.industryIdentifiers[j].identifier;break;}
+      }
+    }
+    var priceHtml = '';
+    if(si.listPrice&&si.listPrice.amount){
+      priceHtml = '<span class="price-tag">'+si.listPrice.amount.toFixed(2)+' '+si.listPrice.currencyCode+'</span>';
+    } else {
+      priceHtml = '<span class="price-unavail">Preço não disponível</span>';
+    }
+    var isInLib = db.books.some(function(b){return b.title.toLowerCase()===title.toLowerCase();});
+    var buyLink = si.buyLink||('https://www.bertrand.pt/pesquisa?q='+encodeURIComponent(title));
+    var fnacLink = 'https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+encodeURIComponent(title+(author?' '+author:''));
+
+    html += '<div class="search-book-card">';
+    html += '<div class="search-book-cover">';
+    if(cover) html += '<img src="'+cover+'" alt="Capa" onerror="this.parentElement.innerHTML='📚'">';
+    else html += '📚';
+    html += '</div>';
+    html += '<div>';
+    html += '<div class="search-book-title">'+escHtml(title)+'</div>';
+    html += '<div class="search-book-author">'+(author?escHtml(author):'')+(pages?' · '+pages+' págs.':'')+(isbn13?' · ISBN: '+isbn13:'')+'</div>';
+    html += '<div class="search-book-meta">'+priceHtml+'</div>';
+    if(desc) html += '<div class="search-book-desc">'+escHtml(desc)+'</div>';
+    html += '<div style="display:flex;gap:.35rem;flex-wrap:wrap">';
+    if(!isInLib){
+      html += '<button class="btn btn-p btn-s" onclick="addSearchBookToLib(''+escHtml(title)+'',''+escHtml(author)+'','+pages+',''+escHtml(cover||'')+'')">+ Adicionar</button>';
+      html += '<button class="btn btn-g btn-s" onclick="addSearchBookToWishlist(''+escHtml(title)+'',''+escHtml(author)+'','+pages+',''+escHtml(cover||'')+'')">+ Quero ler</button>';
+    } else {
+      html += '<span class="bdg bdg-d" style="align-self:center">Na biblioteca</span>';
+    }
+    html += '<a href="'+buyLink+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
+    html += '<a href="'+fnacLink+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
+    html += '</div></div></div>';
+  }
+  resultEl.innerHTML = html;
+}
+
+function addSearchBookToLib(title, author, pages, cover){
+  db.books.push({id:uid(),title:title,author:author,pages:pages,status:'reading',currentPage:0,
+    notes:[],summary:'',synopsis:'',chapters:['Geral'],addedAt:Date.now(),colorIdx:db.books.length,
+    coverUrl:cover||null,chapterSummaries:{}});
+  save(); renderAll();
+  alert('"'+title+'" adicionado à biblioteca!');
+}
+function addSearchBookToWishlist(title, author, pages, cover){
+  db.books.push({id:uid(),title:title,author:author,pages:pages,status:'want',currentPage:0,
+    notes:[],summary:'',synopsis:'',chapters:['Geral'],addedAt:Date.now(),colorIdx:db.books.length,
+    coverUrl:cover||null,chapterSummaries:{}});
+  save(); renderAll();
+  alert('"'+title+'" adicionado à lista "Quero ler"!');
+}
+
+// Update showView to handle new views
 
 // ── HOOKS: integrar GM nos eventos existentes ─────────────────
 // Chamados nos pontos certos do código existente
