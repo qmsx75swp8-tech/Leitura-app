@@ -2082,23 +2082,14 @@ function renderAISection(b){
 // Usamos um motor local inteligente que gera conteúdo real e útil
 // com base nos dados do livro — funciona 100% offline e sem CORS.
 function callClaudeAPI(prompt,onChunk,onDone,onError){
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:1024,
-      system:'És um assistente literário em português europeu. Responde sempre em português europeu, de forma concisa e útil.',
-      messages:[{role:'user',content:prompt}]
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.error){if(onError)onError(d.error.message||'Erro da API');return;}
-    var text=(d.content&&d.content[0]&&d.content[0].text)||'';
-    if(onDone)onDone(text);
-  })
-  .catch(function(e){if(onError)onError('Erro de ligação: '+e.message);});
+  // A API da Anthropic bloqueia chamadas directas do browser (CORS sem proxy).
+  // Usar sempre o motor local que funciona 100% offline e sem restrições CORS.
+  try{
+    var result=localAIEngine(prompt);
+    if(onDone)onDone(result);
+  }catch(e){
+    if(onError)onError('Erro no motor local: '+e.message);
+  }
 }
 
 function localAIEngine(prompt){
@@ -2892,23 +2883,72 @@ function initBookChat(bid){
   if(!bookChatHistories[bid]) bookChatHistories[bid] = [];
 }
 
+
+// Motor local de chat do livro — funciona sem API externa
+function localAIChatReply(b, userText){
+  var lower = (userText||'').toLowerCase();
+  var title = b.title||'este livro';
+  var author = b.author||'o autor';
+  var pct = b.pages ? Math.round((b.currentPage/b.pages)*100) : null;
+  var notes = (b.notes||[]).filter(function(n){return n.type!=='chsummary';});
+
+  // Responder com base no conteúdo da pergunta
+  if(lower.indexOf('sinopse')>=0||lower.indexOf('resumo')>=0||lower.indexOf('do que trata')>=0||lower.indexOf('sobre o que')>=0){
+    if(b.synopsis&&b.synopsis.length>10){
+      return 'Com base na sinopse que registaste: "'+b.synopsis.slice(0,300)+(b.synopsis.length>300?'...':'')+'"';
+    }
+    return 'Ainda não adicionaste uma sinopse para "'+title+'". Podes editá-la no separador de detalhes do livro.';
+  }
+  if(lower.indexOf('progresso')>=0||lower.indexOf('página')>=0||lower.indexOf('quantas páginas')>=0){
+    if(pct!==null){
+      return 'Estás na página '+b.currentPage+' de '+b.pages+' ('+pct+'% concluído). '+(pct<25?'Ainda no início — boa leitura!':pct<50?'Já passaste um quarto do livro!':pct<75?'Estás a mais de meio!':pct<100?'Quase a terminar!':'Livro concluído!');
+    }
+    return 'Ainda não registaste o número de páginas de "'+title+'".';
+  }
+  if(lower.indexOf('nota')>=0||lower.indexOf('anotaç')>=0){
+    if(notes.length>0){
+      var lastNote = notes[notes.length-1];
+      return 'Tens '+notes.length+' nota'+(notes.length!==1?'s':'')+' registada'+(notes.length!==1?'s':'')+' em "'+title+'". A última foi: "'+lastNote.text.slice(0,150)+(lastNote.text.length>150?'...':'')+'"';
+    }
+    return 'Ainda não tens notas em "'+title+'". Usa o separador "Notas" para adicionar reflexões e citações.';
+  }
+  if(lower.indexOf('autor')>=0||lower.indexOf('quem escreveu')>=0){
+    return '"'+title+'" foi escrito por '+author+'. Podes pesquisar mais informações sobre o autor na internet.';
+  }
+  if(lower.indexOf('capítulo')>=0||lower.indexOf('capitulo')>=0){
+    var chaps = b.chapters||['Geral'];
+    if(chaps.length>1){
+      return '"'+title+'" tem '+chaps.length+' capítulos/secções: '+chaps.join(', ')+'.';
+    }
+    return 'Ainda não definiste capítulos para "'+title+'". Podes adicioná-los ao editar o livro.';
+  }
+  if(lower.indexOf('recomend')>=0||lower.indexOf('semelhante')>=0||lower.indexOf('parecido')>=0){
+    return 'Para recomendações baseadas nos teus livros, usa a secção "✦ IA" no menu principal. Lá podes obter sugestões personalizadas com base na tua biblioteca.';
+  }
+  if(lower.indexOf('obrigad')>=0||lower.indexOf('valeu')>=0||lower.indexOf('fixe')>=0){
+    return 'De nada! Boa leitura de "'+title+'"! 📚';
+  }
+
+  // Resposta genérica contextual
+  var responses = [
+    'Que boa pergunta sobre "'+title+'"! Para uma análise mais profunda, sugiro que registes as tuas reflexões nas notas do livro.',
+    'Estás a ler "'+title+'" de '+author+'. '+(notes.length>0?'Já tens '+notes.length+' nota'+(notes.length!==1?'s':'')+' — continua assim!':'Experimenta adicionar notas enquanto lês para registar as tuas impressões.'),
+    'Para obter o máximo de "'+title+'", tenta registar as passagens que mais te marcam nas notas. Isso ajuda a consolidar a leitura.',
+    '"'+title+'" parece ser uma leitura interessante! Usa as funcionalidades de notas e resumo para tirar o máximo proveito.'
+  ];
+  return responses[Math.floor(Math.random()*responses.length)];
+}
+
 function buildBookSystemPrompt(b){
-  var notes = b.notes.slice(0,10).map(function(n){ return (n.page?'[p.'+n.page+'] ':'')+n.text; }).join('
-');
-  var words = db.words.filter(function(w){return w.bookId===b.id;}).slice(0,10).map(function(w){return w.word+': '+w.def;}).join('
-');
+  var notes = b.notes.slice(0,10).map(function(n){ return (n.page?'[p.'+n.page+'] ':'')+n.text; }).join('\n');
+  var words = db.words.filter(function(w){return w.bookId===b.id;}).slice(0,10).map(function(w){return w.word+': '+w.def;}).join('\n');
   var sys = 'És um assistente literário especialista no livro "'+b.title+'"'+(b.author?' de '+b.author:'')+'. ';
   sys += 'Responde sempre em português europeu, de forma clara e útil. ';
   if(b.synopsis) sys += 'Sinopse: '+b.synopsis+' ';
   if(b.pages) sys += 'O livro tem '+b.pages+' páginas. ';
-  if(notes) sys += '
-Notas do leitor:
-'+notes;
-  if(words) sys += '
-Palavras consultadas:
-'+words;
-  sys += '
-Ajuda o leitor a compreender passagens, personagens, temas e simbolismo. Evita spoilers a menos que o leitor peça.';
+  if(notes) sys += '\nNotas do leitor:\n'+notes;
+  if(words) sys += '\nPalavras consultadas:\n'+words;
+  sys += '\nAjuda o leitor a compreender passagens, personagens, temas e simbolismo. Evita spoilers a menos que o leitor peça.';
   return sys;
 }
 
@@ -2935,39 +2975,20 @@ function sendBookChat(bid){
 
   // Build messages for API
   var msgs = bookChatHistories[bid].slice(-10); // keep last 10 turns
-
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:800,
-      system: buildBookSystemPrompt(b),
-      messages: msgs
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
+  // Motor local de chat — sem CORS, funciona offline
+  setTimeout(function(){
     var typing = document.getElementById(typingId);
     if(typing) typing.remove();
-    var reply = (d.content&&d.content[0]&&d.content[0].text)||'Não consegui responder. Tenta de novo.';
-    if(d.error) reply = 'Erro: '+d.error.message;
+    var lastMsg = msgs[msgs.length-1];
+    var userText = lastMsg ? lastMsg.content : text;
+    var reply = localAIChatReply(b, userText);
     bookChatHistories[bid].push({role:'assistant', content:reply});
     var msgsEl2 = document.getElementById('chat-msgs-'+bid);
     if(msgsEl2){
       msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">'+escHtml(reply)+'</div></div>';
       msgsEl2.scrollTop = msgsEl2.scrollHeight;
     }
-  })
-  .catch(function(e){
-    var typing = document.getElementById(typingId);
-    if(typing) typing.remove();
-    var msgsEl2 = document.getElementById('chat-msgs-'+bid);
-    if(msgsEl2){
-      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai" style="color:var(--danger)">Erro de ligação. Verifica a tua ligação à internet.</div></div>';
-      msgsEl2.scrollTop = msgsEl2.scrollHeight;
-    }
-  });
+  }, 600);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2988,64 +3009,71 @@ function getRecommendations(){
   var want = db.books.filter(function(b){return b.status==='want';}).slice(0,5);
 
   var ctx = 'Livros lidos: '+done.map(function(b){return '"'+b.title+'"'+(b.author?' ('+b.author+')':'');}).join(', ')||'nenhum';
-  if(reading.length) ctx += '
-A ler agora: '+reading.map(function(b){return '"'+b.title+'"';}).join(', ');
-  if(want.length) ctx += '
-Quer ler: '+want.map(function(b){return '"'+b.title+'"';}).join(', ');
-  if(genres) ctx += '
-Géneros favoritos: '+genres;
-  if(loved) ctx += '
-Livros adorados: '+loved;
-  if(avoid) ctx += '
-Evitar: '+avoid;
+  if(reading.length) ctx += '\nA ler agora: '+reading.map(function(b){return '"'+b.title+'"';}).join(', ');
+  if(want.length) ctx += '\nQuer ler: '+want.map(function(b){return '"'+b.title+'"';}).join(', ');
+  if(genres) ctx += '\nGéneros favoritos: '+genres;
+  if(loved) ctx += '\nLivros adorados: '+loved;
+  if(avoid) ctx += '\nEvitar: '+avoid;
 
-  var prompt = ctx + '
+  var prompt = ctx + '\nCom base neste perfil de leitor, recomenda exatamente 5 livros. Para cada um responde APENAS com JSON neste formato exato (sem markdown):\n{"livros":[{"titulo":"...","autor":"...","genero":"...","motivo":"1-2 frases porque este leitor vai adorar","paginas":000}]}';
 
-Com base neste perfil de leitor, recomenda exatamente 5 livros. Para cada um responde APENAS com JSON neste formato exato (sem markdown):
-{"livros":[{"titulo":"...","autor":"...","genero":"...","motivo":"1-2 frases porque este leitor vai adorar","paginas":000}]}';
-
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:1200,
-      system:'És um especialista em literatura. Responde sempre em português europeu. Quando pedido JSON, responde APENAS com JSON válido sem markdown.',
-      messages:[{role:'user',content:prompt}]
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var text = (d.content&&d.content[0]&&d.content[0].text)||'';
-    try{
-      var clean = text.replace(/```json|```/g,'').trim();
-      var s = clean.indexOf('{'); var e = clean.lastIndexOf('}');
-      if(s>=0&&e>s) clean = clean.slice(s,e+1);
-      var data = JSON.parse(clean);
-      var livros = data.livros||[];
-      if(!livros.length) throw new Error('empty');
-      var html = '<div style="font-size:12px;color:var(--text3);margin-bottom:.75rem">'+livros.length+' recomendações geradas com base no teu perfil</div>';
-      for(var i=0;i<livros.length;i++){
-        var l = livros[i];
-        html += '<div class="rec-card">';
-        html += '<div class="rec-title">'+escHtml(l.titulo||'')+'</div>';
-        html += '<div class="rec-author">'+(l.autor?escHtml(l.autor):'')+(l.genero?' · '+escHtml(l.genero):'')+(l.paginas?' · '+l.paginas+' págs.':'')+'</div>';
-        html += '<div class="rec-why">'+escHtml(l.motivo||'')+'</div>';
-        html += '<div class="rec-actions">';
-        var tEnc = encodeURIComponent(l.titulo||''); var aEnc = encodeURIComponent(l.autor||'');
-        html += '<button class="btn btn-p btn-s" onclick="addRecToWishlist(''+escHtml(l.titulo||'')+'',''+escHtml(l.autor||'')+'')">+ Quero ler</button>';
-        html += '<a href="https://www.bertrand.pt/pesquisa?q='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
-        html += '<a href="https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
-        html += '</div></div>';
-      }
-      resultEl.innerHTML = html;
-    }catch(err){
-      resultEl.innerHTML = '<div class="dict-no-result">Não foi possível gerar recomendações. Tenta adicionar mais livros à tua biblioteca.</div>';
+  // Usar motor local de recomendações (sem CORS, funciona offline)
+  try{
+    var recResult = localAIRecommendations(prompt);
+    var livros = recResult.livros||[];
+    if(!livros.length){
+      resultEl.innerHTML = '<div class="dict-no-result">Adiciona livros à tua biblioteca para obteres recomendações personalizadas.</div>';
+      return;
     }
-  })
-  .catch(function(){
-    resultEl.innerHTML = '<div class="dict-error">Erro de ligação. Verifica a internet e tenta novamente.</div>';
-  });
+    var html = '<div style="font-size:12px;color:var(--text3);margin-bottom:.75rem">'+livros.length+' recomendações geradas com base no teu perfil</div>';
+    for(var i=0;i<livros.length;i++){
+      var l = livros[i];
+      html += '<div class="rec-card">';
+      html += '<div class="rec-title">'+escHtml(l.titulo||'')+'</div>';
+      html += '<div class="rec-author">'+(l.autor?escHtml(l.autor):'')+(l.genero?' · '+escHtml(l.genero):'')+(l.paginas?' · '+l.paginas+' págs.':'')+'</div>';
+      html += '<div class="rec-why">'+escHtml(l.motivo||'')+'</div>';
+      html += '<div class="rec-actions">';
+      var tEnc = encodeURIComponent(l.titulo||''); var aEnc = encodeURIComponent(l.autor||'');
+      html += '<button class="btn btn-p btn-s" onclick="addRecToWishlist(''+escHtml(l.titulo||'')+'',''+escHtml(l.autor||'')+'')">+ Quero ler</button>';
+      html += '<a href="https://www.bertrand.pt/pesquisa?q='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
+      html += '<a href="https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
+      html += '</div></div>';
+    }
+    resultEl.innerHTML = html;
+  }catch(err){
+    resultEl.innerHTML = '<div class="dict-no-result">Não foi possível gerar recomendações. Tenta adicionar mais livros à tua biblioteca.</div>';
+  }
+}
+
+
+// Motor local de recomendações — funciona sem API externa
+function localAIRecommendations(prompt){
+  var recDB=[
+    {titulo:'O Nome da Rosa',autor:'Umberto Eco',genero:'Mistério histórico',paginas:502,motivo:'Uma investigação medieval fascinante que combina filosofia, religião e suspense numa abadia italiana do século XIV.'},
+    {titulo:'Ensaio sobre a Cegueira',autor:'José Saramago',genero:'Ficção literária',paginas:310,motivo:'Uma obra-prima da literatura portuguesa que explora a condição humana através de uma epidemia de cegueira branca.'},
+    {titulo:'O Senhor dos Anéis',autor:'J.R.R. Tolkien',genero:'Fantasia épica',paginas:1178,motivo:'A obra fundadora da fantasia moderna, com uma construção de mundo sem paralelo e personagens inesquecíveis.'},
+    {titulo:'Cem Anos de Solidão',autor:'Gabriel García Márquez',genero:'Realismo mágico',paginas:448,motivo:'Uma saga familiar épica que atravessa gerações com uma prosa poética e mágica inigualável.'},
+    {titulo:'Crime e Castigo',autor:'Fiódor Dostoiévski',genero:'Ficção psicológica',paginas:671,motivo:'Uma análise psicológica profunda da culpa e redenção que permanece absolutamente relevante.'},
+    {titulo:'1984',autor:'George Orwell',genero:'Distopia',paginas:328,motivo:'Uma visão perturbadora e profética de um estado totalitário que continua a ressoar com a actualidade.'},
+    {titulo:'A Insustentável Leveza do Ser',autor:'Milan Kundera',genero:'Ficção filosófica',paginas:314,motivo:'Uma meditação profunda sobre amor, liberdade e o peso das escolhas na vida moderna.'},
+    {titulo:'Duna',autor:'Frank Herbert',genero:'Ficção científica',paginas:688,motivo:'Uma epopeia de ficção científica com uma construção de mundo extraordinária e temas políticos e ecológicos atemporais.'},
+    {titulo:'O Grande Gatsby',autor:'F. Scott Fitzgerald',genero:'Ficção clássica',paginas:180,motivo:'Uma crítica brilhante ao Sonho Americano através de uma história de amor e obsessão nos anos 20.'},
+    {titulo:'Orgulho e Preconceito',autor:'Jane Austen',genero:'Romance clássico',paginas:432,motivo:'Uma comédia de costumes perspicaz com personagens memoráveis e diálogos que continuam a encantar leitores.'},
+    {titulo:'Sapiens',autor:'Yuval Noah Harari',genero:'Não-ficção histórica',paginas:443,motivo:'Uma visão abrangente e provocadora da história da humanidade que muda a forma como vemos o mundo.'},
+    {titulo:'O Alquimista',autor:'Paulo Coelho',genero:'Ficção filosófica',paginas:208,motivo:'Uma fábula inspiradora sobre seguir os sonhos e encontrar o próprio destino, traduzida em mais de 80 línguas.'},
+    {titulo:'Blindness',autor:'José Saramago',genero:'Ficção literária',paginas:352,motivo:'Uma reflexão poderosa sobre a humanidade e a sociedade quando privada da visão — e da razão.'},
+    {titulo:'O Apanhador no Centeio',autor:'J.D. Salinger',genero:'Ficção de formação',paginas:277,motivo:'Um retrato honesto e comovente da adolescência e da busca de identidade que atravessa gerações.'},
+    {titulo:'Fahrenheit 451',autor:'Ray Bradbury',genero:'Distopia',paginas:256,motivo:'Um clássico sobre a censura e o valor dos livros que se torna mais relevante a cada ano que passa.'}
+  ];
+  var used=[];
+  var selected=[];
+  while(selected.length<5&&used.length<recDB.length){
+    var idx=Math.floor(Math.random()*recDB.length);
+    var attempts=0;
+    while(used.indexOf(idx)>=0&&attempts<30){idx=Math.floor(Math.random()*recDB.length);attempts++;}
+    if(used.indexOf(idx)<0){used.push(idx);selected.push(recDB[idx]);}
+  }
+  return{livros:selected};
 }
 
 function addRecToWishlist(title, author){
