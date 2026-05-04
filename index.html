@@ -2997,22 +2997,41 @@ function sendBookChat(bid){
   msgsEl.innerHTML += '<div class="chat-msg chat-msg-ai" id="'+typingId+'"><div class="chat-bubble-typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
   msgsEl.scrollTop = msgsEl.scrollHeight;
 
-  // Build messages for API
-  var msgs = bookChatHistories[bid].slice(-10); // keep last 10 turns
-  // Motor local de chat -- sem CORS, funciona offline
-  setTimeout(function(){
+  var msgs = bookChatHistories[bid].slice(-12);
+
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:800,
+      system: buildBookSystemPrompt(b),
+      messages: msgs
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
     var typing = document.getElementById(typingId);
     if(typing) typing.remove();
-    var lastMsg = msgs[msgs.length-1];
-    var userText = lastMsg ? lastMsg.content : text;
-    var reply = localAIChatReply(b, userText);
+    var reply = (d.content&&d.content[0]&&d.content[0].text)||'';
+    if(d.error) reply = '⚠ Erro: '+d.error.message;
+    if(!reply) reply = 'Não consegui gerar uma resposta. Tenta novamente.';
     bookChatHistories[bid].push({role:'assistant', content:reply});
     var msgsEl2 = document.getElementById('chat-msgs-'+bid);
     if(msgsEl2){
       msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">'+escHtml(reply)+'</div></div>';
       msgsEl2.scrollTop = msgsEl2.scrollHeight;
     }
-  }, 600);
+  })
+  .catch(function(e){
+    var typing = document.getElementById(typingId);
+    if(typing) typing.remove();
+    var msgsEl2 = document.getElementById('chat-msgs-'+bid);
+    if(msgsEl2){
+      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai" style="color:var(--danger)">⚠ Erro de ligação. Verifica a internet e tenta novamente.</div></div>';
+      msgsEl2.scrollTop = msgsEl2.scrollHeight;
+    }
+  });
 }
 
 // --------------------------------------------------------------
@@ -3041,32 +3060,49 @@ function getRecommendations(){
 
   var prompt = ctx + '\nCom base neste perfil de leitor, recomenda exatamente 5 livros. Para cada um responde APENAS com JSON neste formato exato (sem markdown):\n{"livros":[{"titulo":"...","autor":"...","genero":"...","motivo":"1-2 frases porque este leitor vai adorar","paginas":000}]}';
 
-  // Usar motor local de recomendações (sem CORS, funciona offline)
-  try{
-    var recResult = localAIRecommendations(prompt);
-    var livros = recResult.livros||[];
-    if(!livros.length){
-      resultEl.innerHTML = '<div class="dict-no-result">Adiciona livros à tua biblioteca para obteres recomendações personalizadas.</div>';
-      return;
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1500,
+      system:'És um especialista em literatura. Responde SEMPRE em português europeu. Quando pedido JSON, responde APENAS com JSON válido sem markdown, sem texto antes ou depois.',
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var text=(d.content&&d.content[0]&&d.content[0].text)||'';
+    if(d.error){resultEl.innerHTML='<div class="dict-error">Erro: '+escHtml(d.error.message||'')+'</div>';return;}
+    try{
+      var clean=text.replace(/```json|```/g,'').trim();
+      var s=clean.indexOf('{');var e=clean.lastIndexOf('}');
+      if(s>=0&&e>s)clean=clean.slice(s,e+1);
+      var data=JSON.parse(clean);
+      var livros=data.livros||[];
+      if(!livros.length)throw new Error('empty');
+      var html='<div style="font-size:12px;color:var(--text3);margin-bottom:.75rem">'+livros.length+' recomendações personalizadas com IA ✦</div>';
+      for(var i=0;i<livros.length;i++){
+        var l=livros[i];
+        var tEnc=encodeURIComponent(l.titulo||'');
+        html+='<div class="rec-card">';
+        html+='<div class="rec-title">'+escHtml(l.titulo||'')+'</div>';
+        html+='<div class="rec-author">'+(l.autor?escHtml(l.autor):'')+(l.genero?' · '+escHtml(l.genero):'')+(l.paginas?' · '+l.paginas+' págs.':'')+'</div>';
+        html+='<div class="rec-why">'+escHtml(l.motivo||'')+'</div>';
+        html+='<div class="rec-actions">';
+        html+='<button class="btn btn-p btn-s" onclick="addRecToWishlist(''+escHtml(l.titulo||'').replace(/'/g,'&#39;')+'',''+escHtml(l.autor||'').replace(/'/g,'&#39;')+'')">+ Quero ler</button>';
+        html+='<a href="https://www.bertrand.pt/pesquisa?q='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
+        html+='<a href="https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
+        html+='</div></div>';
+      }
+      resultEl.innerHTML=html;
+    }catch(err){
+      resultEl.innerHTML='<div class="dict-no-result">Não foi possível processar as recomendações. Tenta de novo.</div>';
     }
-    var html = '<div style="font-size:12px;color:var(--text3);margin-bottom:.75rem">'+livros.length+' recomendações geradas com base no teu perfil</div>';
-    for(var i=0;i<livros.length;i++){
-      var l = livros[i];
-      html += '<div class="rec-card">';
-      html += '<div class="rec-title">'+escHtml(l.titulo||'')+'</div>';
-      html += '<div class="rec-author">'+(l.autor?escHtml(l.autor):'')+(l.genero?' · '+escHtml(l.genero):'')+(l.paginas?' · '+l.paginas+' págs.':'')+'</div>';
-      html += '<div class="rec-why">'+escHtml(l.motivo||'')+'</div>';
-      html += '<div class="rec-actions">';
-      var tEnc = encodeURIComponent(l.titulo||''); var aEnc = encodeURIComponent(l.autor||'');
-      html += '<button class="btn btn-p btn-s" onclick="addRecToWishlist(\'' + escHtml(l.titulo||'') + '\',\'' + escHtml(l.autor||'') + '\')">+ Quero ler</button>';
-      html += '<a href="https://www.bertrand.pt/pesquisa?q='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
-      html += '<a href="https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+tEnc+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
-      html += '</div></div>';
-    }
-    resultEl.innerHTML = html;
-  }catch(err){
-    resultEl.innerHTML = '<div class="dict-no-result">Não foi possível gerar recomendações. Tenta adicionar mais livros à tua biblioteca.</div>';
-  }
+  })
+  .catch(function(){
+    resultEl.innerHTML='<div class="dict-error">⚠ Erro de ligação. Verifica a internet e tenta novamente.</div>';
+  });
 }
 
 
@@ -3139,11 +3175,13 @@ function searchByISBN(){
 }
 
 function runBookSearch(q, isbn, maxPrice, resultEl){
+  // Nota: a Google Books API não devolve preços reais na maioria dos países — mostramos link para compra
   var url;
   if(isbn){
-    url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:'+isbn+'&maxResults=5&fields=items(volumeInfo(title,authors,pageCount,description,imageLinks,industryIdentifiers,publishedDate,categories),saleInfo(listPrice,buyLink))';
+    url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:'+isbn+'&maxResults=5';
   } else {
-    url = 'https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=10&langRestrict=pt&fields=items(volumeInfo(title,authors,pageCount,description,imageLinks,industryIdentifiers,publishedDate,categories),saleInfo(listPrice,buyLink))';
+    // Pesquisar primeiro em português, depois sem restrição se sem resultados
+    url = 'https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=12';
   }
 
   fetch(url)
@@ -3151,15 +3189,15 @@ function runBookSearch(q, isbn, maxPrice, resultEl){
   .then(function(data){
     var items = data.items||[];
     if(!items.length && !isbn){
-      // retry without language restriction
-      return fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=10&fields=items(volumeInfo(title,authors,pageCount,description,imageLinks,industryIdentifiers,publishedDate,categories),saleInfo(listPrice,buyLink))')
+      // retry sem restrição de língua
+      return fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=12')
       .then(function(r2){return r2.json();})
       .then(function(data2){renderSearchResults(data2.items||[], maxPrice, resultEl);});
     }
     renderSearchResults(items, maxPrice, resultEl);
   })
   .catch(function(){
-    resultEl.innerHTML = '<div class="dict-error">Erro de ligação. Verifica a internet.</div>';
+    resultEl.innerHTML = '<div class="dict-error">⚠ Erro de ligação. Verifica a internet e tenta novamente.</div>';
   });
 }
 
@@ -3168,8 +3206,9 @@ function renderSearchResults(items, maxPrice, resultEl){
 
   var filtered = items.filter(function(it){
     var price = it.saleInfo&&it.saleInfo.listPrice&&it.saleInfo.listPrice.amount;
+    // Só filtrar se o preço for conhecido E estiver acima do limite
     if(maxPrice<50 && price && price>maxPrice) return false;
-    return true;
+    return true; // se preço desconhecido, mostrar sempre
   });
 
   if(!filtered.length){
@@ -3196,9 +3235,10 @@ function renderSearchResults(items, maxPrice, resultEl){
     }
     var priceHtml = '';
     if(si.listPrice&&si.listPrice.amount){
-      priceHtml = '<span class="price-tag">'+si.listPrice.amount.toFixed(2)+' '+si.listPrice.currencyCode+'</span>';
+      priceHtml = '<span class="price-tag">'+si.listPrice.amount.toFixed(2)+' '+(si.listPrice.currencyCode||'€')+'</span>';
     } else {
-      priceHtml = '<span class="price-unavail">Preço não disponível</span>';
+      // Google Books não fornece preços na maioria dos países — mostrar link de compra
+      priceHtml = '<span class="price-unavail">Ver preço na loja ↓</span>';
     }
     var isInLib = db.books.some(function(b){return b.title.toLowerCase()===title.toLowerCase();});
     var buyLink = si.buyLink||('https://www.bertrand.pt/pesquisa?q='+encodeURIComponent(title));
