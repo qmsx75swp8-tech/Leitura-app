@@ -800,34 +800,46 @@ function doLogin(){
   if(!user){alert('Introduz um nome de utilizador');return;}
   if(!pass||pass.length<3){alert('O codigo deve ter pelo menos 3 caracteres');return;}
   if(statusEl)statusEl.textContent='A carregar os teus dados...';
-  currentUser=user;currentRawPass=pass;currentStorageKey=makeStorageKey(user,pass);
-  // Migrate data from old versioned keys (leituras-v4:...) if new key is empty
-  var localData=cloudLoadLocal(user,pass);
-  if(!localData){
-    // Try old v4 key format
-    try{
-      var rawOld='leituras:'+user.toLowerCase().trim()+':'+pass;
-      var hOld=0;for(var i=0;i<rawOld.length;i++){hOld=((hOld<<5)-hOld)+rawOld.charCodeAt(i);hOld|=0;}
-      var oldKey='leituras-v4:'+Math.abs(hOld).toString(36)+':'+user.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
-      var oldData=localStorage.getItem(oldKey);
-      if(oldData){localData=JSON.parse(oldData);localStorage.setItem(currentStorageKey,oldData);}
-    }catch(e){}
+  try{
+    currentUser=user;currentRawPass=pass;currentStorageKey=makeStorageKey(user,pass);
+    // Migrate data from old versioned keys (leituras-v4:...) if new key is empty
+    var localData=cloudLoadLocal(user,pass);
+    if(!localData){
+      // Try old v4 key format
+      try{
+        var rawOld='leituras:'+user.toLowerCase().trim()+':'+pass;
+        var hOld=0;for(var i=0;i<rawOld.length;i++){hOld=((hOld<<5)-hOld)+rawOld.charCodeAt(i);hOld|=0;}
+        var oldKey='leituras-v4:'+Math.abs(hOld).toString(36)+':'+user.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,12);
+        var oldData=localStorage.getItem(oldKey);
+        if(oldData){localData=JSON.parse(oldData);localStorage.setItem(currentStorageKey,oldData);}
+      }catch(e){}
+    }
+    if(localData){db=localData;if(!db.words)db.words=[];if(!db.version)db.version=4;}
+    else{db={books:[],words:[],version:4};}
+    // Guardar sessão para auto-login em visitas futuras
+    try{localStorage.setItem('leituras-last-user',user);}catch(e){}
+    try{localStorage.setItem('leituras-session-user',user);localStorage.setItem('leituras-session-pass',pass);}catch(e){}
+    // Esconder ecrã de login
+    if(statusEl)statusEl.textContent='';
+    document.getElementById('login-screen').style.display='none';
+    // Actualizar nome do utilizador nos elementos da UI
+    var uBtn=document.getElementById('user-display-btn');if(uBtn)uBtn.textContent='Conta: '+user;
+    var accU=document.getElementById('acc-user');if(accU)accU.textContent=user;
+    // Mostrar ecrã rápido se tiver livros a ler, senão app completa
+    var reading=db.books.filter(function(b){return b.status==='reading';});
+    if(reading.length>0){
+      showQuickScreen();
+    } else {
+      document.getElementById('app').style.display='flex';
+      try{renderAll();}catch(e){}
+    }
+    updateSyncBadge('local');
+    try{gmLoad();}catch(e){}
+    cloudSave(db);
+  }catch(err){
+    if(statusEl)statusEl.textContent='Erro ao entrar. Tenta novamente.';
+    console.error('doLogin error:',err);
   }
-  if(localData){db=localData;if(!db.words)db.words=[];if(!db.version)db.version=4;}
-  else{db={books:[],words:[],version:4};}
-  // Show app immediately with local data
-  if(statusEl)statusEl.textContent='';
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  document.getElementById('user-display-btn').textContent='Conta: '+user;
-  document.getElementById('acc-user').textContent=user;
-  try{localStorage.setItem('leituras-last-user',user);}catch(e){}
-  // Guardar sessão para auto-login em visitas futuras
-  try{localStorage.setItem('leituras-session-user',user);localStorage.setItem('leituras-session-pass',pass);}catch(e){}
-  renderAll();updateSyncBadge('local');
-  gmLoad();
-  // Guardar sessão localmente
-  cloudSave(db);
 }
 
 // -- ECRÃ RÁPIDO ----------------------------------------------
