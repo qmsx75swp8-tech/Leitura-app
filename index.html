@@ -752,6 +752,51 @@ function showOnlineToast(){
 
 // Storage key - stable across file updates, depends ONLY on user+pass
 // Never changes even when the HTML file is replaced
+
+// ══════════════════════════════════════════════════════════════
+// CORE: CHAMADA CENTRALIZADA À API DA ANTHROPIC
+// Usa um proxy Cloudflare Worker para evitar bloqueio CORS
+// ══════════════════════════════════════════════════════════════
+var CLAUDE_PROXY = 'https://leituras-ai.jose-leituras.workers.dev';
+
+function claudeAPI(opts, onSuccess, onError) {
+  // opts: { system, messages, max_tokens }
+  var payload = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: opts.max_tokens || 1024,
+    messages: opts.messages
+  };
+  if(opts.system) payload.system = opts.system;
+
+  fetch(CLAUDE_PROXY, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(d){
+    if(d.error){ if(onError) onError('Erro da API: ' + (d.error.message||d.error)); return; }
+    var text = (d.content && d.content[0] && d.content[0].text) || '';
+    if(!text){ if(onError) onError('Resposta vazia. Tenta novamente.'); return; }
+    if(onSuccess) onSuccess(text);
+  })
+  .catch(function(e){
+    var msg = 'Sem ligação ao servidor IA. Verifica a internet.';
+    if(onError) onError(msg);
+  });
+}
+
+// Formata texto da IA: negrito **texto** e quebras de linha
+function formatAIReply(text) {
+  if(!text) return '';
+  return escHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
 function makeStorageKey(user,pass){
   var raw='leituras:'+user.toLowerCase().trim()+':'+pass;
   var h=0;
@@ -2999,36 +3044,25 @@ function sendBookChat(bid){
 
   var msgs = bookChatHistories[bid].slice(-12);
 
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:800,
-      system: buildBookSystemPrompt(b),
-      messages: msgs
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
+  claudeAPI({
+    system: buildBookSystemPrompt(b),
+    messages: msgs,
+    max_tokens: 800
+  }, function(reply){
     var typing = document.getElementById(typingId);
     if(typing) typing.remove();
-    var reply = (d.content&&d.content[0]&&d.content[0].text)||'';
-    if(d.error) reply = '⚠ Erro: '+d.error.message;
-    if(!reply) reply = 'Não consegui gerar uma resposta. Tenta novamente.';
     bookChatHistories[bid].push({role:'assistant', content:reply});
     var msgsEl2 = document.getElementById('chat-msgs-'+bid);
     if(msgsEl2){
-      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">'+escHtml(reply)+'</div></div>';
+      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai">'+formatAIReply(reply)+'</div></div>';
       msgsEl2.scrollTop = msgsEl2.scrollHeight;
     }
-  })
-  .catch(function(e){
+  }, function(err){
     var typing = document.getElementById(typingId);
     if(typing) typing.remove();
     var msgsEl2 = document.getElementById('chat-msgs-'+bid);
     if(msgsEl2){
-      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai" style="color:var(--danger)">⚠ Erro de ligação. Verifica a internet e tenta novamente.</div></div>';
+      msgsEl2.innerHTML += '<div class="chat-msg chat-msg-ai"><div class="chat-bubble-ai" style="color:var(--danger)">⚠ '+escHtml(err)+'</div></div>';
       msgsEl2.scrollTop = msgsEl2.scrollHeight;
     }
   });
@@ -3060,20 +3094,13 @@ function getRecommendations(){
 
   var prompt = ctx + '\nCom base neste perfil de leitor, recomenda exatamente 5 livros. Para cada um responde APENAS com JSON neste formato exato (sem markdown):\n{"livros":[{"titulo":"...","autor":"...","genero":"...","motivo":"1-2 frases porque este leitor vai adorar","paginas":000}]}';
 
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:1500,
-      system:'És um especialista em literatura. Responde SEMPRE em português europeu. Quando pedido JSON, responde APENAS com JSON válido sem markdown, sem texto antes ou depois.',
-      messages:[{role:'user',content:prompt}]
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var text=(d.content&&d.content[0]&&d.content[0].text)||'';
-    if(d.error){resultEl.innerHTML='<div class="dict-error">Erro: '+escHtml(d.error.message||'')+'</div>';return;}
+  claudeAPI({
+    system:'És um especialista em literatura. Responde SEMPRE em português europeu. Quando pedido JSON, responde APENAS com JSON válido sem markdown, sem texto antes ou depois.',
+    messages:[{role:'user',content:prompt}],
+    max_tokens:1500
+  }, function(text){
+    var d = {content:[{text:text}]};
+    {
     try{
       var clean=text.replace(/```json|```/g,'').trim();
       var s=clean.indexOf('{');var e=clean.lastIndexOf('}');
@@ -3101,9 +3128,8 @@ function getRecommendations(){
     }catch(err){
       resultEl.innerHTML='<div class="dict-no-result">Não foi possível processar as recomendações. Tenta de novo.</div>';
     }
-  })
-  .catch(function(){
-    resultEl.innerHTML='<div class="dict-error">⚠ Erro de ligação. Verifica a internet e tenta novamente.</div>';
+  }}, function(err){
+    resultEl.innerHTML='<div class="dict-error">⚠ '+escHtml(err)+'</div>';
   });
 }
 
@@ -3270,6 +3296,20 @@ function renderSearchResults(items, maxPrice, resultEl){
   resultEl.innerHTML = html;
 }
 
+function addSearchBookToLibEl(btn){
+  var t=btn.getAttribute('data-stitle')||'';
+  var a=btn.getAttribute('data-sauthor')||'';
+  var p=parseInt(btn.getAttribute('data-spages'))||0;
+  var c=btn.getAttribute('data-scover')||'';
+  addSearchBookToLib(t,a,p,c);
+}
+function addSearchBookToWishlistEl(btn){
+  var t=btn.getAttribute('data-stitle')||'';
+  var a=btn.getAttribute('data-sauthor')||'';
+  var p=parseInt(btn.getAttribute('data-spages'))||0;
+  var c=btn.getAttribute('data-scover')||'';
+  addSearchBookToWishlist(t,a,p,c);
+}
 function addSearchBookToLib(title, author, pages, cover){
   db.books.push({id:uid(),title:title,author:author,pages:pages,status:'reading',currentPage:0,
     notes:[],summary:'',synopsis:'',chapters:['Geral'],addedAt:Date.now(),colorIdx:db.books.length,
