@@ -757,7 +757,7 @@ function showOnlineToast(){
 // CORE: CHAMADA CENTRALIZADA À API DA ANTHROPIC
 // Usa um proxy Cloudflare Worker para evitar bloqueio CORS
 // ══════════════════════════════════════════════════════════════
-var CLAUDE_PROXY = 'autumn-cake-bb6e.martim-simoes28.workers.dev';
+var CLAUDE_PROXY = 'https://autumn-cake-bb6e.martim-simoes28.workers.dev';
 
 function claudeAPI(opts, onSuccess, onError) {
   // opts: { system, messages, max_tokens }
@@ -3262,11 +3262,13 @@ function renderSearchResults(items, maxPrice, resultEl){
       }
     }
     var priceHtml = '';
-    if(si.listPrice&&si.listPrice.amount){
+    var saleability = si.saleability || '';
+    if(si.listPrice && si.listPrice.amount){
       priceHtml = '<span class="price-tag">'+si.listPrice.amount.toFixed(2)+' '+(si.listPrice.currencyCode||'€')+'</span>';
+    } else if(saleability === 'FREE'){
+      priceHtml = '<span class="bdg bdg-d">Gratuito</span>';
     } else {
-      // Google Books não fornece preços na maioria dos países — mostrar link de compra
-      priceHtml = '<span class="price-unavail">Ver preço na loja ↓</span>';
+      priceHtml = '';
     }
     var isInLib = db.books.some(function(b){return b.title.toLowerCase()===title.toLowerCase();});
     var buyLink = si.buyLink||('https://www.bertrand.pt/pesquisa?q='+encodeURIComponent(title));
@@ -3280,17 +3282,27 @@ function renderSearchResults(items, maxPrice, resultEl){
     html += '<div>';
     html += '<div class="search-book-title">'+escHtml(title)+'</div>';
     html += '<div class="search-book-author">'+(author?escHtml(author):'')+(pages?' · '+pages+' págs.':'')+(isbn13?' · ISBN: '+isbn13:'')+'</div>';
-    html += '<div class="search-book-meta">'+priceHtml+'</div>';
+    // Linha de preço + lojas
+    var searchQ = encodeURIComponent(isbn13 || (title+(author?' '+author:'')));
+    var bertrandLink = isbn13
+      ? 'https://www.bertrand.pt/pesquisa?q='+isbn13
+      : 'https://www.bertrand.pt/pesquisa?q='+encodeURIComponent(title+(author?' '+author:''));
+    var fnacSearchLink = 'https://www.fnac.pt/SearchResult/ResultList.aspx?SCat=0!1&Search='+searchQ;
+    var wookLink = 'https://www.wook.pt/pesquisa?keyword='+searchQ;
+    html += '<div class="search-book-meta" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">';
+    if(priceHtml) html += priceHtml;
+    html += '<a href="'+bertrandLink+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none;font-size:11px">Bertrand</a>';
+    html += '<a href="'+fnacSearchLink+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none;font-size:11px">Fnac</a>';
+    html += '<a href="'+wookLink+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none;font-size:11px">Wook</a>';
+    html += '</div>';
     if(desc) html += '<div class="search-book-desc">'+escHtml(desc)+'</div>';
-    html += '<div style="display:flex;gap:.35rem;flex-wrap:wrap">';
+    html += '<div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem">';
     if(!isInLib){
       html += '<button class="btn btn-p btn-s" data-stitle="' + escHtml(title) + '" data-sauthor="' + escHtml(author) + '" data-spages="' + pages + '" data-scover="' + escHtml(cover||'') + '" onclick="addSearchBookToLibEl(this)">+ Adicionar</button>';
       html += '<button class="btn btn-g btn-s" data-stitle="' + escHtml(title) + '" data-sauthor="' + escHtml(author) + '" data-spages="' + pages + '" data-scover="' + escHtml(cover||'') + '" onclick="addSearchBookToWishlistEl(this)">+ Quero ler</button>';
     } else {
       html += '<span class="bdg bdg-d" style="align-self:center">Na biblioteca</span>';
     }
-    html += '<a href="'+buyLink+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Bertrand</a>';
-    html += '<a href="'+fnacLink+'" target="_blank" class="btn btn-g btn-s" style="text-decoration:none">Fnac</a>';
     html += '</div></div></div>';
   }
   resultEl.innerHTML = html;
